@@ -1,0 +1,196 @@
+/* App Container Constraint (Mobile view on desktop for prototyping) */
+#app-container {
+    width: 100%;
+    max-width: 480px;
+    height: 100vh;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Views */
+.view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: calc(60px + var(--spacing-lg)) var(--spacing-lg) calc(150px + var(--spacing-lg)) var(--spacing-lg);
+    gap: var(--spacing-lg);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Header areas */
+.header-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    padding: 0 var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Center the title */
+    background-color: var(--header-bg);
+    z-index: 100;
+    border-bottom: 1.2px solid var(--btn-primary-border);
+}
+
+/* Absolute position for the theme toggle to keep title centered */
+.header-actions {
+    position: absolute;
+    right: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.theme-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle .lucide {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    /* Extremely thin */
+}
+
+/* Force stroke color on toggle icons just to be absolutely sure */
+[data-theme="light"] .theme-toggle .lucide {
+    stroke: #000000 !important;
+}
+
+[data-theme="dark"] .theme-toggle .lucide {
+    stroke: #FFFFFF !important;
+}
+
+.theme-toggle:hover {
+    color: var(--text-main);
+    transform: scale(1.05);
+    /* subtle bump */
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: var(--line-height-base);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    letter-spacing: var(--letter-spacing-base);
+    transition: background-color 0.4s ease, color 0.4s ease;
+    overflow-x: hidden;
+}
+
+.title {
+    font-family: 'Inter', 'Helvetica', sans-serif;
+    font-size: var(--text-large);
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: normal;
+    display: flex;
+    align-items: flex-start;
+}
+
+.title-tm {
+    font-size: 0.4em;
+    font-weight: 400;
+    line-height: 1;
+    margin-left: 2px;
+    margin-top: 4px;
+}
+
+/* Content blocks */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+/* Actions */
+.action-area {
+    margin-top: auto;
+    padding-top: var(--spacing-md);
+    padding-bottom: var(--spacing-xl);
+}
+
+/* Bottom Navigation - Icon Only */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 480px;
+    background-color: var(--bg-color);
+    /* Solid background */
+    border-top: 1.2px solid var(--btn-primary-border);
+    /* Ultra-thin outline aesthetic */
+    display: flex;
+    justify-content: space-around;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg) 0;
+    /* Taller touch targets */
+    color: var(--text-muted);
+    transition: color 0.2s ease, opacity 0.2s ease;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    opacity: 0.6;
+    /* Unselected state */
+}
+
+.nav-item .lucide {
+    width: 26px;
+    height: 26px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+    opacity: 1;
+    color: var(--text-main);
+    /* Monotone hover */
+}
+
+.nav-item.active {
+    opacity: 1;
+    color: var(--accent-neo-blue);
+    /* Electric blue active state */
+    filter: drop-shadow(0 0 4px rgba(29, 155, 240, 0.4));
+}
+
+.nav-item.active .lucide {
+    stroke-width: 2.0;
+    /* Slightly bolder on active */
+}
+
+/* Removed lucide specific rules entirely */

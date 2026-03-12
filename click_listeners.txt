@@ -1,0 +1,42 @@
+156: btnStart.addEventListener('click', () => {
+206: document.addEventListener('click', (e) => {
+505: btn.addEventListener('click', () => {
+1303: mic.addEventListener('click', (e) => {
+1311: btn.addEventListener('click', (e) => {
+1324: item.addEventListener('click', () => {
+1491: btnFilterProjects.addEventListener('click', (e) => {
+1497: document.addEventListener('click', (e) => {
+1506: opt.addEventListener('click', () => {
+1646: item.addEventListener('click', () => {
+2059: fabButton.addEventListener('click', onFabClick);
+2129: opt.addEventListener('click', () => {
+2171: btnCloseSelector.addEventListener('click', () => {
+2195: drop.addEventListener('click', (e) => {
+2203: btnCreateProject.addEventListener('click', () => {
+2236: projectBackBtn.addEventListener('click', () => {
+2245: btnCloseModal.addEventListener('click', () => {
+2253: btnSaveProject.addEventListener('click', () => {
+2336: btnProjectMenuToggle.addEventListener('click', (e) => {
+2342: document.addEventListener('click', (e) => {
+2352: btnEditProj.addEventListener('click', () => {
+2359: btnDeleteProj.addEventListener('click', () => {
+2372: btnCloseEditModal.addEventListener('click', () => {
+2403: btnUpdateProject.addEventListener('click', () => {
+2447: btnCancelDelete.addEventListener('click', () => {
+2455: btnConfirmDelete.addEventListener('click', () => {
+2549: btnCloseDocModal.addEventListener('click', window.closeDocGenModal);
+2554: modalDocGen.addEventListener('click', (e) => {
+2606: btnExecuteDocGen.addEventListener('click', window.executeDocGen);
+2612: btnDoneDocModal.addEventListener('click', window.closeDocGenModal);
+2668: btnCloseExpenseModal.addEventListener('click', window.closeExpenseScannerModal);
+2672: modalExpenseScanner.addEventListener('click', (e) => {
+2680: btnExecuteExpense.addEventListener('click', () => {
+2722: btnExportCsv.addEventListener('click', () => {
+2795: btnExportPdfGrid.addEventListener('click', () => {
+2888: btnUpdateProject2.addEventListener('click', () => {
+2937: btnCloseEditModal2.addEventListener('click', () => {
+2946: modalEditProject2.addEventListener('click', (e) => {
+2995: btnExecuteDocGen2.addEventListener('click', () => {
+3016: btnCloseDocModal2.addEventListener('click', () => {
+3024: btnDoneDocModal2.addEventListener('click', () => {
+3033: modalDocGen2.addEventListener('click', (e) => {

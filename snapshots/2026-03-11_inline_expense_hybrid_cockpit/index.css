@@ -1,0 +1,127 @@
+:root {
+  /* Minimal Professional Branding - Light by Default */
+  --bg-color: #FFFFFF;
+  --text-main: #0F1419;
+  --text-muted: #536471;
+
+  --accent-neo-yellow: #FFD400;
+  --accent-neo-blue: #1D9BF0;
+
+  --btn-primary-bg: #FFFFFF;
+  --btn-primary-border: #EFF3F4;
+  --btn-primary-text: #0F1419;
+
+  --btn-secondary-bg: #EFF3F4;
+  --btn-secondary-border: #EFF3F4;
+
+  --header-bg: rgba(255, 255, 255, 0.95);
+
+  /* Typography - Strict Professional Coolness */
+  --font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Noto Sans JP', sans-serif;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-bold: 600;
+  --text-huge: 2rem;
+  /* 32px */
+  --text-large: 1.5rem;
+  /* 24px */
+  --text-base: 1.125rem;
+  /* 18px */
+  --text-small: 0.875rem;
+  /* 14px */
+  --text-tiny: 0.75rem;
+  /* 12px */
+
+  /* Spacing */
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+
+  /* Borders */
+  --radius-md: 12px;
+  --radius-lg: 24px;
+}
+
+[data-theme="dark"] {
+  /* Minimal Dark Mode - Pitch Black */
+  --bg-color: #000000;
+  /* Pitch black */
+  --text-main: #E7E9EA;
+  /* Light text for dark mode */
+  --text-muted: #71767B;
+  /* Muted text for dark mode */
+
+  --accent-neo-yellow: #FFD400;
+  /* Subtle warning/accent (same as light) */
+  --accent-neo-blue: #1D9BF0;
+  /* X Blue (same as light) */
+
+  --btn-primary-bg: #000000;
+  --btn-primary-border: #EFF3F4;
+  /* Darker border */
+  --btn-primary-text: #E7E9EA;
+
+  --btn-secondary-bg: #17181C;
+  /* Dark faint background */
+  --btn-secondary-text: #E7E9EA;
+
+  --header-bg: rgba(0, 0, 0, 0.95);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  /* Tighter letter spacing */
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Base utility classes */
+.hidden {
+  display: none !important;
+}
+
+/* --- Neo-Sync v2.0 Animations --- */
+.neo-sync-glow {
+  position: relative;
+  color: var(--accent-neo-blue) !important;
+}
+
+.neo-sync-glow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 32px;
+  background: radial-gradient(circle, rgba(29, 155, 240, 0.4) 0%, rgba(29, 155, 240, 0) 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  animation: sync-pulse 1.5s ease-out infinite;
+}
+
+@keyframes sync-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}

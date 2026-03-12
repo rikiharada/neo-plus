@@ -1,0 +1,285 @@
+:root {
+  /* Minimal Professional Branding - Light by Default */
+  --bg-color: #FFFFFF;
+  --text-main: #0F1419;
+  --text-muted: #536471;
+
+  --accent-neo-yellow: #FFD400;
+  --accent-neo-blue: #1D9BF0;
+
+  --btn-primary-bg: #FFFFFF;
+  --btn-primary-border: #EFF3F4;
+  --btn-primary-text: #0F1419;
+
+  --btn-secondary-bg: #EFF3F4;
+  --btn-secondary-border: #EFF3F4;
+
+  --header-bg: rgba(255, 255, 255, 0.95);
+
+  /* Typography - Strict Professional Coolness */
+  --font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Noto Sans JP', sans-serif;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-bold: 600;
+  --text-huge: 2rem;
+  /* 32px */
+  --text-large: 1.5rem;
+  /* 24px */
+  --text-base: 1.125rem;
+  /* 18px */
+  --text-small: 0.875rem;
+  /* 14px */
+  --text-tiny: 0.75rem;
+  /* 12px */
+
+  /* Spacing */
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+
+  /* Borders */
+  --radius-md: 12px;
+  --radius-lg: 24px;
+}
+
+[data-theme="dark"] {
+  /* Minimal Dark Mode - Pitch Black */
+  --bg-color: #000000;
+  /* Pitch black */
+  --text-main: #E7E9EA;
+  /* Light text for dark mode */
+  --text-muted: #71767B;
+  /* Muted text for dark mode */
+
+  --accent-neo-yellow: #FFD400;
+  /* Subtle warning/accent (same as light) */
+  --accent-neo-blue: #1D9BF0;
+  /* X Blue (same as light) */
+
+  --btn-primary-bg: #000000;
+  --btn-primary-border: #EFF3F4;
+  /* Darker border */
+  --btn-primary-text: #E7E9EA;
+
+  --btn-secondary-bg: #17181C;
+  /* Dark faint background */
+  --btn-secondary-text: #E7E9EA;
+
+  --header-bg: rgba(0, 0, 0, 0.95);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  /* Tighter letter spacing */
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Base utility classes */
+.icon {
+  width: 32px !important;
+  height: 32px !important;
+  display: block !important;
+}
+
+.modal-overlay select,
+.half-modal-overlay select {
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* --- Neo-Sync v2.0 Animations --- */
+.neo-sync-glow {
+  position: relative;
+  color: var(--accent-neo-blue) !important;
+}
+
+.neo-sync-glow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 32px;
+  background: radial-gradient(circle, rgba(29, 155, 240, 0.4) 0%, rgba(29, 155, 240, 0) 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  animation: sync-pulse 1.5s ease-out infinite;
+}
+
+@keyframes sync-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   Global Input Overrides (Remove Native Number Spinners)
+   ========================================================================== */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* ==========================================================================
+   Mobile Responsive Overrides (iPhone SE / Small Screens)
+   ========================================================================== */
+@media (max-width: 400px) {
+  /* App container adjustments */
+  #app-container {
+    max-width: 100% !important;
+  }
+
+  /* Profit Card: Adjust 3 buttons row to prevent text overflow */
+  #view-project-detail .passbook-header > div:last-child {
+      gap: 6px !important;
+  }
+  #view-project-detail .passbook-header > div:last-child button {
+      padding: 10px 4px !important;
+      font-size: 11px !important;
+      border-radius: 12px !important;
+  }
+
+  /* Cockpit: Ensure padding is tight */
+  #neo-cockpit {
+      max-width: 100% !important;
+  }
+  
+  /* Health Indicators */
+  .health-indicator-card {
+      padding: 8px !important;
+  }
+  .health-indicator-value {
+      font-size: 14px !important;
+  }
+  .health-indicator-label {
+      font-size: 10px !important;
+  }
+
+  /* Decrease some massive typography sizes slightly on very small screens */
+  #detail-profit {
+      font-size: 3rem !important;
+  }
+  .view {
+      padding-left: var(--spacing-md) !important;
+      padding-right: var(--spacing-md) !important;
+  }
+  .header-actions {
+      right: var(--spacing-md) !important;
+  }
+  .header-area {
+      padding: 0 var(--spacing-md) !important;
+  }
+}
+
+/* ==========================================================================
+   Print Optimization (Digital Clone Canvas)
+   ========================================================================== */
+@media print {
+  /* Force exact A4 dimensions and eliminate all margins */
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  /* Force a pure white background for printing */
+  html, body {
+    display: block !important;
+    background-color: #FFFFFF !important;
+    background: #FFFFFF !important;
+    color: #0F1419 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    overflow: hidden !important;
+  }
+
+  /* Hide all UI layers completely */
+  body > *:not(#app-container),
+  .view,
+  #bottom-nav,
+  .modal-overlay:not(#modal-doc-preview):not(#modal-receipt-grid),
+  .half-modal-overlay,
+  .floating-action-button,
+  #neo-fab-bubble,
+  #preview-floating-header,
+  #preview-floating-footer,
+  #doc-neo-parsing-overlay,
+  #modal-doc-gen {
+    display: none !important;
+  }
+
+  /* Expose ONLY the preview container hierarchy */
+  #app-container,
+  #modal-doc-preview,
+  #modal-receipt-grid,
+  .doc-gen-preview-container {
+    display: block !important;
+    position: static !important;
+    visibility: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+    width: 210mm !important;
+    max-width: none !important;
+    overflow: visible !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  /* Reset paper scaling to print at native A4 size without clipping */
+  /* Scale slightly to 0.95 to act as a 100% safe margin against iOS Airprint hardware clipping */
+  #doc-preview-paper, #a4-print-container {
+    position: relative !important;
+    margin: 0 !important;
+    margin-top: 8mm !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    max-width: none !important;
+    transform: scale(0.95) !important;
+    transform-origin: top center !important;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+  }
+
+  /* Force background colors (like gray section backgrounds) to print correctly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

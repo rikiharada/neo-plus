@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neo+</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+
+    <div id="app-container">
+
+        <!-- SETUP VIEW -->
+        <div id="view-setup" class="view hidden">
+            <div class="header-area">
+                <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
+                <div class="header-actions">
+                    <button id="btn-theme-toggle-setup" class="theme-toggle" aria-label="Toggle Theme"><i
+                            data-lucide="sun" class="icon-sun"></i><i data-lucide="moon" class="icon-moon"
+                            style="display: none;"></i></button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="settings-group">
+                    <p data-i18n="setup_text_size_label"
+                        style="margin-bottom: var(--spacing-sm); font-size: var(--text-large); color: var(--text-muted);">
+                    </p>
+                    <select id="select-font-size" class="select-huge">
+                        <option value="huge">巨大 (Huge)</option>
+                        <option value="normal">普通 (Normal)</option>
+                    </select>
+                </div>
+
+                <div class="settings-group">
+                    <p data-i18n="setup_industry_label"
+                        style="margin-bottom: var(--spacing-sm); font-size: var(--text-large); color: var(--text-muted);">
+                    </p>
+                    <select id="select-industry" class="select-huge">
+                        <option value="construction" data-i18n="setup_industry_construction">建設・工事</option>
+                        <option value="freelance" data-i18n="setup_industry_freelance">フリーランス・個人</option>
+                        <option value="general">一般事業（会社員・事務）</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="action-area">
+                <button id="btn-start" class="btn-huge btn-primary">
+                    <span data-i18n="setup_start_btn">はじめる</span>
+                </button>
+            </div>
+        </div>
+
+
+        <!-- DASHBOARD VIEW (INTERACTIVE COCKPIT) -->
+        <div id="view-dash" class="view hidden"
+            style="background-color: var(--bg-color); display: flex; flex-direction: column; height: 100vh;">
+            <div class="header-area">
+                <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
+                <div class="header-actions">
+                    <div style="display: flex; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
+                        <div style="position: relative;">
+                            <i data-lucide="cloud-check"
+                                style="width: 18px; height: 18px; stroke-width: 1.2px; color: #10b981;"
+                                title="iCloud同期中"></i>
+                            <div class="scan-pulse"></div>
+                        </div>
+                        <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun"
+                                class="icon-sun"></i><i data-lucide="moon" class="icon-moon"
+                                style="display: none;"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cockpit Area -->
+            <div
+                style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--spacing-xl); padding-bottom: 120px;">
+                <!-- Floating Neo Avatar -->
+                <div
+                    style="margin-bottom: var(--spacing-lg); display: flex; flex-direction: column; align-items: center; gap: 12px; animation: float 6s ease-in-out infinite;">
+                    <img src="img/neo_avatar.jpg" alt="Neo"
+                        onerror="this.src=''; this.alt='NEO'; this.style.fontSize='var(--text-small)'; this.style.color='var(--bg-color)';"
+                        style="width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 8px 32px rgba(29, 155, 240, 0.4); border: 2px solid rgba(255,255,255,0.1);">
+                    <span
+                        style="font-size: 13px; color: var(--text-muted); letter-spacing: 0.1em; font-weight: 300;">Ready</span>
+                </div>
+
+                <!-- Premium Multi-Modal Message Box -->
+                <div style="width: 100%; max-width: 600px; position: relative;">
+                    <div
+                        style="position: relative; border-radius: 24px; border: 1.2px solid var(--btn-secondary-border); background: var(--bg-color); box-shadow: 0 4px 20px rgba(0,0,0,0.02); overflow: hidden; display: flex; flex-direction: column;">
+                        <textarea id="main-instruction-input" class="form-control" placeholder="CEO、今日はどのプロジェクトを進めますか？"
+                            style="width: 100%; border: none; padding: 20px 24px; background: transparent; color: var(--text-main); font-size: 16px; resize: none; min-height: 120px; line-height: 1.6; outline: none;"></textarea>
+
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; padding: 0 16px 16px 16px;">
+                            <button id="btn-attach-image"
+                                style="background: rgba(29, 155, 240, 0.05); color: var(--accent-neo-blue); border: 1px dashed rgba(29, 155, 240, 0.4); border-radius: 12px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;">
+                                <i data-lucide="camera" style="width: 18px; height: 18px;"></i>
+                                <span style="font-size: 12px; font-weight: 600;">レシート読取</span>
+                            </button>
+
+                            <button id="main-mic-btn"
+                                style="background: var(--text-main); color: var(--bg-color); border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <i data-lucide="arrow-up" style="width: 20px; height: 20px; stroke-width: 2.5px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SITES VIEW (BANK ACCOUNTS OVERVIEW) -->
+        <div id="view-sites" class="view hidden" style="background-color: var(--bg-color); padding: 0;">
+            <!-- Header section matching passbook style but lighter/card-based -->
+            <div
+                style="background: linear-gradient(135deg, #0a192f, #0d274a); color: #fff; padding: calc(env(safe-area-inset-top) + 20px) var(--spacing-lg) var(--spacing-lg) var(--spacing-lg); border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; z-index: 10;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
+                    <h1 style="font-size: 20px; font-weight: 700; margin: 0; letter-spacing: 0.05em;">Neo<sup
+                            style="font-size: 10px; color: var(--accent-neo-blue); margin-left: 2px;">+</sup></h1>
+                    <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                        <div style="position: relative;">
+                            <i data-lucide="cloud-check"
+                                style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;"
+                                title="iCloud同期中"></i>
+                            <div class="scan-pulse"></div>
+                        </div>
+                        <button class="theme-toggle" aria-label="Toggle Theme"
+                            style="background: rgba(255,255,255,0.1); border-radius: 50%; padding: 8px; color: #fff; border: none; cursor: pointer;">
+                            <i data-lucide="sun" class="icon-sun" style="width: 18px; height: 18px;"></i>
+                            <i data-lucide="moon" class="icon-moon"
+                                style="display: none; width: 18px; height: 18px;"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Total Balance Overview -->
+                <div style="text-align: center; margin-bottom: var(--spacing-md);">
+                    <span
+                        style="font-size: 12px; font-weight: 400; opacity: 0.8; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">Total
+                        Profit (累計利益)</span>
+                    <div id="total-wealth-balance"
+                        style="font-size: 2.8rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em;">
+                        ¥0
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area"
+                style="padding: var(--spacing-lg); gap: var(--spacing-md); display: flex; flex-direction: column;">
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2
+                        style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin: 0; letter-spacing: 0.05em;">
+                        アカウント (プロジェクト)</h2>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button id="btn-create-project"
+                            style="background: none; border: none; color: var(--accent-neo-blue); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px;">
+                            <i data-lucide="plus" style="width: 16px; height: 16px;"></i> 新規プロジェクト
+                        </button>
+                        <div style="position: relative;">
+                            <button class="theme-toggle" id="btn-filter-projects" aria-label="Filter Projects"
+                                style="background: none; border: none; color: var(--text-muted); padding: 4px; cursor: pointer;">
+                                <i data-lucide="filter" class="icon-filter" style="width: 18px; height: 18px;"></i>
+                            </button>
+                            <!-- Filter Dropdown -->
+                            <div id="filter-dropdown" class="filter-dropdown hidden" style="top: 30px; right: 0;">
+                                <button class="filter-option active" data-filter="date-desc">日付順</button>
+                                <button class="filter-option" data-filter="name-asc">顧客順</button>
+                                <button class="filter-option" data-filter="unpaid">未入金のみ</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Project List Container -->
+                <div id="project-list-container"
+                    style="display: flex; flex-direction: column; gap: 0; visibility: visible !important;">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- EXPENSE & AI VIEW -->
+        <div id="view-expense" class="view hidden">
+            <div class="header-area">
+                <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun" class="icon-sun"></i><i
+                            data-lucide="moon" class="icon-moon" style="display: none;"></i></button>
+                </div>
+            </div>
+            <div class="content-area chat-container" id="expense-chat-container">
+                <!-- Chat history mock -->
+                <div class="chat-bubble neo" data-i18n="ai_chat_initial_msg">
+                    どうしたの？ 経費の相談？ それともプロジェクトの記録？
+                </div>
+
+                <!-- Quick Replies -->
+                <div class="quick-replies">
+                    <button class="btn-quick-reply" data-i18n="quick_reply_1">経費で落ちるか聞きたい</button>
+                    <button class="btn-quick-reply" data-i18n="quick_reply_2">人工（プロジェクト）の記録</button>
+                    <button class="btn-quick-reply" data-i18n="quick_reply_3">その他相談</button>
+                </div>
+            </div>
+
+            <!-- Smart Selector Overlay (Hidden by default) -->
+            <div id="smart-selector-overlay" class="smart-selector hidden">
+                <div class="smart-selector-header">
+                    <span style="font-size: 13px; color: var(--text-muted);">AI Suggestion</span>
+                    <button id="btn-close-selector"
+                        style="background:none; border:none; color:var(--text-muted); cursor:pointer;"><i
+                            data-lucide="x" style="width: 16px; height: 16px;"></i></button>
+                </div>
+                <div class="smart-selector-options" id="smart-selector-options">
+                    <!-- Options injected via JS -->
+                </div>
+            </div>
+
+            <div class="chat-input-area"
+                style="position: sticky; bottom: 0; background-color: var(--bg-color); padding-top: var(--spacing-sm); z-index: 10;">
+                <button class="chat-action-btn" title="Camera">📸</button>
+                <input type="text" class="chat-input" data-i18n-placeholder="ai_chat_placeholder">
+                <button class="chat-action-btn" title="Voice">🎙️</button>
+                <button class="btn-primary" style="padding: 0 var(--spacing-md); border-radius: var(--radius-md);"
+                    data-i18n="btn_send"></button>
+            </div>
+        </div>
+        <!-- WALLET VIEW (HEALTHCARE MONITOR & TAX HUB) -->
+        <div id="view-wallet" class="view hidden">
+            <div class="header-area">
+                <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
+                <div class="header-actions">
+                    <div style="display: flex; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
+                        <div style="position: relative;">
+                            <i data-lucide="cloud-check"
+                                style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;"
+                                title="iCloud同期中"></i>
+                            <div class="scan-pulse"></div>
+                        </div>
+                        <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun"
+                                class="icon-sun"></i><i data-lucide="moon" class="icon-moon"
+                                style="display: none;"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area dashboard-health"
+                style="padding: 0 var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-xl); background-color: var(--bg-color); padding-bottom: 120px;">
+
+                <!-- Center Profit Ring -->
+                <div
+                    style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: var(--spacing-md); position: relative;">
+                    <svg width="240" height="240" viewBox="0 0 240 240" style="transform: rotate(-90deg);">
+                        <circle cx="120" cy="120" r="100" fill="none" stroke="rgba(29, 155, 240, 0.05)"
+                            stroke-width="8">
+                        </circle>
+                        <circle cx="120" cy="120" r="100" fill="none" class="profit-ring-progress"
+                            id="wallet-ring-progress" stroke="url(#blue-gradient)" stroke-width="8"
+                            stroke-dasharray="628" stroke-dashoffset="150" stroke-linecap="round"
+                            style="transition: stroke-dashoffset 1s ease-out;"></circle>
+                        <defs>
+                            <linearGradient id="blue-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#0F62FE" />
+                                <stop offset="100%" stop-color="#1D9BF0" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div style="position: absolute; text-align: center; pointer-events: none;">
+                        <span
+                            style="display: block; font-size: 13px; color: var(--text-muted); font-weight: 300; letter-spacing: 0.1em; margin-bottom: 4px;">月商/目標純利益</span>
+                        <span
+                            style="display: block; font-size: 36px; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; line-height: 1;"
+                            id="wallet-global-profit">¥0</span>
+                        <span
+                            style="display: block; font-size: 13px; color: #10b981; margin-top: 8px; font-weight: 400;"><i
+                                data-lucide="trending-up"
+                                style="width: 14px; height: 14px; display: inline-block; vertical-align: text-bottom;"></i>
+                            +15% vs 先月</span>
+                    </div>
+                </div>
+
+                <!-- 3 Indicators (Tax, Fixed Costs, Investment) -->
+                <div style="display: flex; justify-content: space-between; gap: var(--spacing-sm);">
+                    <div class="health-indicator-card">
+                        <div class="health-indicator-label">納税準備</div>
+                        <div class="health-indicator-value" id="wallet-tax-prep">¥0</div>
+                        <div class="health-indicator-bar-container">
+                            <div class="health-indicator-bar" id="wallet-tax-bar"
+                                style="width: 0%; background: #FFD400;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="health-indicator-card">
+                        <div class="health-indicator-label">固定費</div>
+                        <div class="health-indicator-value">¥120k</div>
+                        <div class="health-indicator-bar-container">
+                            <div class="health-indicator-bar" style="width: 40%; background: #ef4444;"></div>
+                        </div>
+                    </div>
+                    <div class="health-indicator-card">
+                        <div class="health-indicator-label">投資余力</div>
+                        <div class="health-indicator-value">¥475k</div>
+                        <div class="health-indicator-bar-container">
+                            <div class="health-indicator-bar" style="width: 85%; background: var(--accent-neo-blue);">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cash Flow Wave (Bar Chart) -->
+                <div style="margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                        <h3
+                            style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin: 0; letter-spacing: 0.05em;">
+                            キャッシュフロー残高（3ヶ月先予測）</h3>
+                        <span style="font-size: 12px; color: var(--accent-neo-blue); font-weight: 600;">AI
+                            Forecast</span>
+                    </div>
+                    <div id="wallet-cf-container"
+                        style="display: flex; align-items: flex-end; justify-content: space-between; height: 120px; padding: 0 8px;">
+                        <!-- JS Injected Bars -->
+                    </div>
+                    <div style="height: 1px; background: var(--btn-secondary-border); margin-top: 8px;"></div>
+                </div>
+
+                <!-- Tax & Accountant Sync Section -->
+                <div
+                    style="margin-top: var(--spacing-lg); padding: var(--spacing-lg); background: rgba(29, 155, 240, 0.03); border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
+                    <h3
+                        style="font-size: 14px; font-weight: 600; color: var(--accent-neo-blue); margin: 0 0 12px 0; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="landmark" style="width: 16px; height: 16px;"></i>
+                        確定申告・税理士連携
+                    </h3>
+
+                    <div style="font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 16px; font-family: 'Noto Sans JP', sans-serif;"
+                        id="wallet-tax-summary">
+                        CEO、現在の売上合計は <strong>¥0</strong>、経費合計は <strong>¥0</strong> です。<br>
+                        予測される申告所得は <strong>¥0</strong> となります。連携用のCSV・PDF出力が可能です。
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button id="btn-export-csv" class="btn-primary"
+                            style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i data-lucide="file-down" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                            CSV / PDF 書き出し
+                        </button>
+                        <button class="btn-primary"
+                            style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i data-lucide="send" style="width: 16px; height: 16px; color: var(--accent-neo-blue);"></i>
+                            税理士へデータ送信
+                        </button>
+                        <button id="btn-export-pdf-grid" class="btn-primary"
+                            style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i data-lucide="receipt" style="width: 16px; height: 16px; color: #10b981;"></i>
+                            レシート全件ダウンロード
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SETTINGS VIEW -->
+        <div id="view-settings" class="view hidden">
+            <div class="header-area">
+                <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
+                <div class="header-actions">
+                    <div style="display: flex; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
+                        <div style="position: relative;">
+                            <i data-lucide="cloud-check"
+                                style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;"
+                                title="iCloud同期中"></i>
+                            <div class="scan-pulse"></div>
+                        </div>
+                        <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun"
+                                class="icon-sun"></i><i data-lucide="moon" class="icon-moon"
+                                style="display: none;"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="content-area" style="padding: var(--spacing-lg);">
+                <div class="settings-group" style="margin-bottom: var(--spacing-xl); text-align: left;">
+                    <h3
+                        style="font-size: var(--text-small); color: var(--text-muted); font-weight: 600; margin-bottom: var(--spacing-sm);">
+                        Neo+ 分散型クラウド連携 (BYOC)</h3>
+                    <div
+                        style="background: #f9fafb; border: 1.2px solid var(--btn-primary-border); border-radius: 12px; padding: var(--spacing-md); font-size: 13px; color: var(--text-main); margin-bottom: var(--spacing-md); line-height: 1.5;">
+                        <p style="margin: 0 0 8px 0;"><strong>データについて</strong></p>
+                        <p style="margin: 0; color: var(--text-muted);">
+                            Neo+は自社サーバーを持ちません。あなたのiPhone/Macの中やクラウドにデータを直接、暗号化して保存します。機密データ（金額・顧客リスト）は100%あなたのものです。
+                        </p>
+                    </div>
+
+                    <label
+                        style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="cloud" style="width: 20px; height: 20px; color: #007AFF;"></i>
+                            <span style="font-size: 14px; font-weight: 500;">Apple iCloud</span>
+                        </div>
+                        <input type="radio" name="cloudSync" value="icloud" checked
+                            style="accent-color: var(--accent-neo-blue);">
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="triangle" style="width: 20px; height: 20px; color: #34A853;"></i>
+                            <span style="font-size: 14px; font-weight: 500;">Google Drive</span>
+                        </div>
+                        <input type="radio" name="cloudSync" value="gdrive"
+                            style="accent-color: var(--accent-neo-blue);">
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="box" style="width: 20px; height: 20px; color: #0061FF;"></i>
+                            <span style="font-size: 14px; font-weight: 500;">Dropbox</span>
+                        </div>
+                        <input type="radio" name="cloudSync" value="dropbox"
+                            style="accent-color: var(--accent-neo-blue);">
+                    </label>
+                </div>
+
+                <div class="settings-group"
+                    style="margin-bottom: var(--spacing-xl); text-align: center; margin-top: 60px;">
+                    <div
+                        style="font-size: 10px; font-weight: 300; color: var(--text-muted); opacity: 0.4; letter-spacing: 0.05em; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+                        Neo+ System - Dedicated Node / ¥499 monthly (Billed Annually)
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <button class="btn-huge btn-secondary" onclick="window.resetSetup()">
+                        ♻️ アプリ初期化 (Reset)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROJECT DETAIL VIEW (BUSINESS COCKPIT) -->
+        <div id="view-project-detail" class="view hidden"
+            style="background-color: var(--bg-color); position: relative; padding: 0;">
+
+            <!-- Passbook Header -->
+            <div class="passbook-header"
+                style="position: relative; width: 100%; background: linear-gradient(135deg, #0a192f, #1D9BF0); padding: calc(env(safe-area-inset-top) + 20px) var(--spacing-lg) var(--spacing-xl) var(--spacing-lg); color: #fff; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 20px rgba(29, 155, 240, 0.2); overflow: hidden;">
+                <!-- Subtle Background Image Cover Idea -->
+                <div
+                    style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('img/pattern_dot.png'); opacity: 0.1; mix-blend-mode: overlay; pointer-events: none;">
+                </div>
+
+                <!-- Navbar Area -->
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl); position: relative; z-index: 2;">
+                    <button class="nav-item passbook-back" data-target="view-sites" aria-label="戻る"
+                        style="background: none; border: none; padding: 8px; color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.1); backdrop-filter: blur(4px);">
+                        <i data-lucide="chevron-left" style="width: 24px; height: 24px;"></i>
+                    </button>
+                    <!-- Small title -->
+                    <h1 id="detail-project-name"
+                        style="font-size: 14px; font-weight: 500; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; text-align: center; opacity: 0.9;">
+                        プロジェクト名</h1>
+                    <button id="btn-project-menu-toggle" aria-label="設定"
+                        style="background: none; border: none; padding: 8px; color: #fff; background: rgba(255,255,255,0.1); border-radius: 50%; cursor: pointer;">
+                        <i data-lucide="more-horizontal"></i>
+                    </button>
+
+                    <!-- Action Menu Dropdown (Re-used) -->
+                    <div id="project-action-menu" class="hidden"
+                        style="position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg-color); border: 1px solid var(--btn-primary-border); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 140px; z-index: 200; display: flex; flex-direction: column; overflow: hidden;">
+                        <button id="btn-project-edit"
+                            style="width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; border-bottom: 1px solid var(--btn-primary-border); font-size: 14px; font-weight: 500; color: var(--text-main); cursor: pointer; transition: background 0.2s;">
+                            編集
+                        </button>
+                        <button id="btn-project-delete"
+                            style="width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; font-size: 14px; font-weight: 500; color: #FF3B30; cursor: pointer; transition: background 0.2s;">
+                            削除
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Profit Display -->
+                <div style="text-align: center; position: relative; z-index: 2;">
+                    <span
+                        style="font-size: 12px; font-weight: 400; opacity: 0.8; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">現在の社長の利益</span>
+                    <div id="detail-profit"
+                        style="font-size: 3.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; margin-bottom: var(--spacing-lg); text-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                        ¥0
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div
+                    style="display: flex; gap: var(--spacing-md); position: relative; z-index: 2; margin-top: var(--spacing-xl);">
+                    <button onclick="window.openExpenseScannerModal()"
+                        style="flex: 1; background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 12px; border-radius: 16px; font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i> 経費追加
+                    </button>
+                    <button onclick="window.openDocGenModal()"
+                        style="flex: 1; background: #fff; color: #1D9BF0; border: none; padding: 12px; border-radius: 16px; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                        ⚡️ 書類作成
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content Area (Data Dashboard) -->
+            <div class="passbook-content"
+                style="flex: 1; background: var(--bg-color); padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-md); padding-bottom: 120px;">
+
+                <div class="dashboard-grid"
+                    style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
+
+                    <!-- 1. Notes (Full Width) -->
+                    <div class="dash-card"
+                        style="grid-column: 1 / -1; padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px; background: rgba(29, 155, 240, 0.02);">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                            <i data-lucide="sticky-note"
+                                style="width: 14px; height: 14px; color: var(--accent-neo-blue);"></i>
+                            <h3
+                                style="font-size: 13px; font-weight: 600; color: var(--accent-neo-blue); margin: 0; letter-spacing: 0.05em;">
+                                プロジェクトメモ</h3>
+                        </div>
+                        <div id="detail-project-note"
+                            style="font-size: 14px; color: var(--text-main); line-height: 1.5;">
+                            プロジェクトのメモがここに表示されます。</div>
+                    </div>
+
+                    <!-- 2. Documents (Half Width) -->
+                    <div class="dash-card"
+                        style="padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <i data-lucide="file-text" style="width: 20px; height: 20px; color: var(--text-muted);"></i>
+                            <span
+                                style="font-size: 11px; background: var(--btn-secondary-bg); padding: 2px 6px; border-radius: 4px; color: var(--text-muted); font-weight: 600;">NEW</span>
+                        </div>
+                        <h3 style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 4px 0;">
+                            PDF書類
+                        </h3>
+                        <div
+                            style="font-size: 24px; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em;">
+                            3<span
+                                style="font-size: 14px; font-weight: 400; color: var(--text-muted); margin-left: 2px;">件</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. Photos (Half Width) -->
+                    <div class="dash-card"
+                        style="padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
+                        <i data-lucide="image"
+                            style="width: 20px; height: 20px; color: var(--text-muted); margin-bottom: 12px;"></i>
+                        <h3 style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 8px 0;">
+                            現場写真・資料
+                        </h3>
+                        <div style="display: flex; gap: 6px; overflow-x: hidden;">
+                            <div
+                                style="width: 32px; height: 32px; background: url('images/mock-site1.jpg') center/cover; border-radius: 8px;">
+                            </div>
+                            <div
+                                style="width: 32px; height: 32px; background: url('images/mock-site2.jpg') center/cover; border-radius: 8px;">
+                            </div>
+                            <div
+                                style="width: 32px; height: 32px; background: var(--btn-secondary-bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); font-weight: 600;">
+                                +5</div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Financials & Activity (Full Width) -->
+                    <div class="dash-card"
+                        style="grid-column: 1 / -1; padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3
+                                style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 0; letter-spacing: 0.05em;">
+                                収支明細・アクティビティ</h3>
+                            <div style="position: relative;">
+                                <i data-lucide="search"
+                                    style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; color: var(--text-muted);"></i>
+                                <input type="text" id="passbook-search" placeholder="検索"
+                                    style="width: 100px; padding: 6px 8px 6px 24px; border-radius: 8px; border: 1px solid var(--btn-secondary-border); background-color: var(--btn-secondary-bg); color: var(--text-main); font-size: 12px; outline: none;">
+                            </div>
+                        </div>
+
+                        <div id="activity-list-container" style="display: flex; flex-direction: column; gap: 0;">
+                            <!-- Activity items populated by JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- NEO FAB (Appears across views) -->
+        <div id="neo-fab-container" class="neo-fab-container hidden">
+            <div id="neo-fab-bubble" class="neo-fab-bubble">お疲れ様！何でも聞いてね</div>
+            <button id="neo-fab-button" class="neo-fab-button" aria-label="Neo AI">
+                <img src="img/neo_avatar.jpg" alt="Neo"
+                    onerror="this.src=''; this.alt='NEO'; this.style.fontSize='var(--text-small)'; this.style.color='var(--bg-color)';">
+            </button>
+        </div>
+
+        <!-- Document Generation view (tab-docs) -->
+        <div id="tab-docs" class="tab-content hidden"
+            style="flex: 1; overflow-y: auto; padding: var(--spacing-lg); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+            <div
+                style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.4)); border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 24px; padding: var(--spacing-xxl) var(--spacing-lg); max-width: 400px; width: 100%; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); backdrop-filter: blur(10px);">
+
+                <div style="margin-bottom: var(--spacing-lg); position: relative; display: inline-block;">
+                    <i data-lucide="file-text"
+                        style="width: 48px; height: 48px; stroke-width: 1px; color: var(--accent-neo-blue);"></i>
+                    <div
+                        style="position: absolute; top: -4px; right: -4px; background: #FF3B30; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 8px; border: 2px solid white;">
+                        WIP</div>
+                </div>
+
+                <h2
+                    style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: var(--spacing-sm); letter-spacing: -0.02em;">
+                    Document Generator</h2>
+                <p
+                    style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: var(--spacing-xl);">
+                    AIがプロジェクトの進捗と経費から、<br>最適な請求書や領収書をワンタップで自動生成します。
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-md); width: 100%;">
+                    <button class="btn-primary"
+                        style="background: #fff; color: var(--text-main); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s;"
+                        onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'"
+                        onmouseleave="this.style.transform='scale(1)'">
+                        <i data-lucide="file-check-2"
+                            style="width: 18px; height: 18px; color: var(--accent-neo-blue);"></i>
+                        請求書を作成する
+                    </button>
+                    <button class="btn-primary"
+                        style="background: #fff; color: var(--text-main); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s;"
+                        onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'"
+                        onmouseleave="this.style.transform='scale(1)'">
+                        <i data-lucide="receipt" style="width: 18px; height: 18px; color: #10b981;"></i>
+                        領収書を発行する
+                    </button>
+                    <button class="btn-primary"
+                        style="background: #fff; color: var(--text-main); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s;"
+                        onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'"
+                        onmouseleave="this.style.transform='scale(1)'">
+                        <i data-lucide="clipboard-list" style="width: 18px; height: 18px; color: #f59e0b;"></i>
+                        見積書を作成する
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Project Modal -->
+        <div id="modal-new-project" class="modal-overlay">
+            <div class="modal-content" style="position: relative; padding: var(--spacing-lg); text-align: center;">
+                <button id="btn-close-modal" class="modal-close-icon" aria-label="閉じる"
+                    style="position: absolute; top: 12px; right: 12px; padding: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="x"
+                        style="width: 28px; height: 28px; stroke-width: 1.5px; color: var(--text-muted);"></i>
+                </button>
+                <h3 class="modal-title" style="margin-bottom: var(--spacing-xl); padding: 0 32px;">新規プロジェクト登録</h3>
+
+                <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                    <input type="text" id="new-proj-name" class="form-control" placeholder="プロジェクト名を入力"
+                        style="padding: 12px 16px;">
+                </div>
+                <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                    <input type="text" id="new-proj-location" class="form-control" placeholder="場所 / リンク"
+                        style="padding: 12px 16px;">
+                </div>
+                <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                    <input type="text" id="new-proj-note" class="form-control" placeholder="メモ (一言)"
+                        style="padding: 12px 16px;">
+                </div>
+
+                <!-- Color Picker -->
+                <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                    <div class="color-picker-container">
+                        <button type="button" class="color-picker-drop selected" data-color="#FF3B30"
+                            style="background-color: #FF3B30;"></button>
+                        <button type="button" class="color-picker-drop" data-color="#FF9500"
+                            style="background-color: #FF9500;"></button>
+                        <button type="button" class="color-picker-drop" data-color="#FFCC00"
+                            style="background-color: #FFCC00;"></button>
+                        <button type="button" class="color-picker-drop" data-color="#34C759"
+                            style="background-color: #34C759;"></button>
+                        <button type="button" class="color-picker-drop" data-color="#007AFF"
+                            style="background-color: #007AFF;"></button>
+                        <button type="button" class="color-picker-drop" data-color="#AF52DE"
+                            style="background-color: #AF52DE;"></button>
+                        <button type="button" class="color-picker-drop" data-color="#8E8E93"
+                            style="background-color: #8E8E93;"></button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); text-align: left;">
+                    <div class="select-wrapper" style="position: relative; flex: 1;">
+                        <select id="new-proj-category" class="form-control"
+                            style="appearance: none; -webkit-appearance: none; cursor: pointer; padding: 12px 32px 12px 12px; font-size: 14px;">
+                            <option value="" disabled selected>業種</option>
+                            <option value="construction">建設・工事</option>
+                            <option value="freelance">フリーランス・個人</option>
+                            <option value="general">一般事業（会社員・事務）</option>
+                            <option value="other">その他</option>
+                        </select>
+                        <i data-lucide="chevron-down"
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); width: 16px; height: 16px; stroke-width: 1.5px;"></i>
+                    </div>
+                    <!-- Native Date Range -->
+                    <div style="display: flex; gap: 4px; flex: 2; align-items: center;">
+                        <input type="date" id="new-proj-start-date" class="form-control"
+                            style="padding: 10px 8px; flex: 1; font-size: 12px; text-align: center;">
+                        <span style="color: var(--text-muted); font-size: 12px;">-</span>
+                        <input type="date" id="new-proj-end-date" class="form-control"
+                            style="padding: 10px 8px; flex: 1; font-size: 12px; text-align: center;">
+                    </div>
+                </div>
+
+                <button class="btn-electric" id="btn-save-project"
+                    style="width: 100%; padding: 10px 0; border-radius: 12px;">保存</button>
+            </div>
+        </div>
+
+        <!-- Edit Project Modal -->
+        <div id="modal-edit-project" class="modal-overlay">
+            <div class="modal-content" style="position: relative; padding: var(--spacing-lg); text-align: center;">
+                <button id="btn-close-edit-modal" class="modal-close-icon" aria-label="閉じる"
+                    style="position: absolute; top: 12px; right: 12px; padding: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="x"
+                        style="width: 28px; height: 28px; stroke-width: 1.5px; color: var(--text-muted);"></i>
+                </button>
+                <h3 class="modal-title" style="margin-bottom: var(--spacing-xl); padding: 0 32px;">プロジェクト情報の編集</h3>
+
+                <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                    <input type="text" id="edit-proj-name" class="form-control" placeholder="プロジェクト名を入力"
+                        style="padding: 12px 16px;">
+                </div>
+                <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                    <input type="text" id="edit-proj-location" class="form-control" placeholder="場所 / リンク"
+                        style="padding: 12px 16px;">
+                </div>
+                <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                    <input type="text" id="edit-proj-note" class="form-control" placeholder="メモ (一言)"
+                        style="padding: 12px 16px;">
+                </div>
+
+                <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); text-align: left;">
+                    <div class="select-wrapper" style="position: relative; flex: 1;">
+                        <select id="edit-proj-category" class="form-control"
+                            style="appearance: none; -webkit-appearance: none; cursor: pointer; padding: 12px 32px 12px 12px; font-size: 14px;">
+                            <option value="" disabled>業種</option>
+                            <option value="construction">建設・工事</option>
+                            <option value="freelance">フリーランス・個人</option>
+                            <option value="general">一般事業（会社員・事務）</option>
+                            <option value="other">その他</option>
+                        </select>
+                        <i data-lucide="chevron-down"
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); width: 16px; height: 16px; stroke-width: 1.5px;"></i>
+                    </div>
+                </div>
+
+                <button class="btn-electric" id="btn-update-project"
+                    style="width: 100%; padding: 10px 0; border-radius: 12px;">保存</button>
+            </div>
+        </div>
+
+        <!-- Delete Confirm Modal -->
+        <div id="modal-delete-confirm" class="modal-overlay">
+            <div class="modal-content"
+                style="position: relative; padding: var(--spacing-lg); text-align: center; max-width: 320px;">
+                <div
+                    style="width: 48px; height: 48px; border-radius: 50%; background-color: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--spacing-md) auto;">
+                    <i data-lucide="alert-triangle" style="width: 24px; height: 24px;"></i>
+                </div>
+                <h3 class="modal-title" style="margin-bottom: var(--spacing-sm); font-size: 1.1rem;">プロジェクトの削除</h3>
+                <p
+                    style="color: var(--text-muted); font-size: 14px; margin-bottom: var(--spacing-xl); line-height: 1.4;">
+                    本当にプロジェクトを削除してよろしいですか？<br>この操作は取り消せません。</p>
+
+                <div style="display: flex; gap: var(--spacing-sm);">
+                    <button id="btn-cancel-delete"
+                        style="flex: 1; padding: 12px 0; border-radius: 12px; border: 1px solid #EFF3F4; background: transparent; color: var(--text-main); font-weight: 600;">いいえ</button>
+                    <button id="btn-confirm-delete"
+                        style="flex: 1; padding: 12px 0; border-radius: 12px; border: none; background: #FF3B30; color: white; font-weight: 600; box-shadow: 0 4px 10px rgba(255,59,48,0.3);">はい（削除）</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAV BAR (Visible after setup) -->
+        <!-- Bottom Navigation -->
+        <div id="bottom-nav" class="bottom-nav hidden">
+            <button class="nav-item" data-target="view-dash" aria-label="ホーム">
+                <i data-lucide="home"></i>
+            </button>
+            <button class="nav-item" data-target="view-sites" aria-label="プロジェクト"
+                onclick="window.switchView('view-sites'); return false;" style="display: flex !important;">
+                <i data-lucide="folder"></i>
+            </button>
+            <button class="nav-item" data-target="view-wallet" aria-label="Wallet">
+                <i data-lucide="wallet"></i>
+            </button>
+            <button class="nav-item" data-target="view-settings" aria-label="Profile">
+                <i data-lucide="user"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Half Modal for Document Generation -->
+    <div id="modal-doc-gen" class="half-modal-overlay">
+        <div class="half-modal-content" id="doc-gen-step-1">
+            <div class="half-modal-handle"></div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 700;">書類作成 <span
+                        style="font-size: 14px; font-weight: 400; color: var(--accent-neo-blue);">⚡️ 自動入力</span></h3>
+                <button id="btn-close-doc-modal"
+                    style="background: none; border: none; color: var(--text-muted); padding: 4px; cursor: pointer;">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </button>
+            </div>
+
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 16px 0;">
+                以下のプロジェクト情報をもとに書類を生成します。Neoが自動で入力を補助しています。</p>
+
+            <div
+                style="background: rgba(29, 155, 240, 0.05); border: 1px solid rgba(29, 155, 240, 0.2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                    <span style="color: var(--text-muted);">対象現場:</span>
+                    <strong id="doc-gen-project-name" style="color: var(--text-main);">Project Name</strong>
+                </div>
+                <!-- Adding unbilled amount context as a suggested value -->
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                    <span style="color: var(--text-muted);">未請求額 (推定):</span>
+                    <strong id="doc-gen-unbilled" style="color: var(--accent-neo-blue);">¥---</strong>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 8px;">
+                <label>書類の種類</label>
+                <div class="select-wrapper">
+                    <select id="doc-gen-type" class="form-control"
+                        style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);">
+                        <!-- Options injected dynamically via JS based on industry -->
+                    </select>
+                    <i data-lucide="chevron-down"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); width: 16px; height: 16px; stroke-width: 1.5px;"></i>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>金額 (税込)</label>
+                <!-- Pre-filled via JS based on the unbilled amount context -->
+                <input type="number" id="doc-gen-amount" class="form-control"
+                    style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border); font-size: 18px; font-weight: 600;"
+                    placeholder="0">
+            </div>
+
+            <button id="btn-execute-doc-gen" class="btn-primary"
+                style="width: 100%; border-radius: 16px; padding: 16px; font-size: 16px; margin-top: 8px; box-shadow: 0 4px 15px rgba(29, 155, 240, 0.3); border: none;">
+                ✨ ワンタップ生成
+            </button>
+        </div>
+
+        <!-- Step 2: Success State (Hidden by default) -->
+        <div class="half-modal-content hidden" id="doc-gen-step-2" style="text-align: center; padding-bottom: 32px;">
+            <div class="half-modal-handle"></div>
+
+            <div
+                style="width: 64px; height: 64px; border-radius: 50%; background-color: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                <i data-lucide="check-circle" style="width: 32px; height: 32px; stroke-width: 2px;"></i>
+            </div>
+
+            <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 700;" id="success-doc-title">請求書の生成完了</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 24px 0;">
+                書類データがプロジェクトに保存されました。<br>次のアクションを選択してください。
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn-primary doc-action-btn"
+                    style="background: rgba(29, 155, 240, 0.1); color: var(--accent-neo-blue); border: 1px solid rgba(29, 155, 240, 0.2); border-radius: 12px; padding: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i data-lucide="mail" style="width: 18px; height: 18px;"></i> メールで転送する
+                </button>
+                <button class="btn-primary doc-action-btn"
+                    style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i data-lucide="cloud" style="width: 18px; height: 18px;"></i> クラウドへ保存
+                </button>
+                <button class="btn-primary doc-action-btn"
+                    style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 12px; padding: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i data-lucide="download" style="width: 18px; height: 18px;"></i> 端末にダウンロード
+                </button>
+            </div>
+
+            <button id="btn-done-doc-modal"
+                style="margin-top: 24px; background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer;">
+                完了
+            </button>
+        </div>
+    </div>
+
+    <!-- Half Modal for Expense AI Scanner -->
+    <div id="modal-expense-scanner" class="half-modal-overlay">
+        <div class="half-modal-content">
+            <div class="half-modal-handle"></div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 700;">領収書スキャン <span
+                        style="font-size: 14px; font-weight: 400; color: var(--accent-neo-blue);">⚡️ AI自動抽出</span></h3>
+                <button id="btn-close-expense-modal"
+                    style="background: none; border: none; color: var(--text-muted); padding: 4px; cursor: pointer;">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </button>
+            </div>
+
+            <div
+                style="width: 100%; height: 160px; background-color: var(--btn-secondary-bg); border-radius: 16px; border: 1px dashed rgba(29, 155, 240, 0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 16px; position: relative; overflow: hidden;">
+                <i data-lucide="camera"
+                    style="width: 32px; height: 32px; color: var(--accent-neo-blue); margin-bottom: 8px;"></i>
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">AIスキャン完了</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>日付</label>
+                <input type="text" id="expense-modal-date" class="form-control"
+                    style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border); color: #10b981;"
+                    value="2026/03/11">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>店舗・支払先</label>
+                <input type="text" id="expense-modal-store" class="form-control"
+                    style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);"
+                    value="ホームセンター コーナン">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label>金額 (税込)</label>
+                <input type="number" id="expense-modal-amount" class="form-control"
+                    style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border); font-size: 18px; font-weight: 600;"
+                    value="15400">
+            </div>
+
+            <button id="btn-execute-expense" class="btn-primary"
+                style="width: 100%; border-radius: 16px; padding: 16px; font-size: 16px; box-shadow: 0 4px 15px rgba(29, 155, 240, 0.3); border: none;">
+                OK（経費計上）
+            </button>
+        </div>
+        <!-- Phase 5: Intelligent A4 PDF Grid (Hidden until Export) -->
+        <div id="a4-print-container" class="hidden"
+            style="background: white; width: 210mm; min-height: 297mm; padding: 20mm; font-family: 'Noto Sans JP', sans-serif; color: #333; position: absolute; top: -9999px; left: -9999px;">
+            <div
+                style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.1em;">領収書画像 原本台帳 (Neo-Sync)
+                </h1>
+                <div style="text-align: right;">
+                    <p style="margin: 0; font-size: 14px; color: #666;" id="a4-print-date">抽出日: 2026/03/11</p>
+                    <p style="margin: 0; font-size: 14px; font-weight: 600;" id="a4-print-user">CEO: 〇〇様</p>
+                </div>
+            </div>
+
+            <div id="a4-receipt-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15mm;">
+                <!-- Rendered by JS -->
+            </div>
+
+            <div style="margin-top: 30mm; text-align: center; color: #999; font-size: 12px;">
+                -- End of Document generated by Neo+ Business OS --
+            </div>
+        </div>
+
+        <!-- Scripts -->
+        <script src="js/i18n.js"></script>
+        <script src="js/gemini.js"></script>
+        <script src="js/neo.js"></script>
+        <script src="js/app.js"></script>
+</body>
+
+</html>
