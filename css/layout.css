@@ -161,7 +161,7 @@ body {
     right: 10px !important;
     border-radius: 20px !important;
     height: 80px !important;
-    z-index: 99999 !important;
+    z-index: 2147483647 !important;
     background-color: var(--header-bg);
     border: 1px solid rgba(150, 150, 150, 0.15); /* Replaced border-top with full border for floating shape */
     display: flex;

@@ -59,10 +59,7 @@
             alert('Unhandled Promise Rejection: ' + event.reason);
         };
     </script>
-    <style>
 </head>
-
-<body>
     <!-- NEO+ Premium Boot Loader & Service Worker Init -->
     <script>
         // Register PWA Service Worker for offline capabilities
@@ -178,7 +175,7 @@
 
 
         <!-- DASHBOARD VIEW (INTERACTIVE COCKPIT) -->
-        <div id="view-dash" class="view hidden" style="background-color: var(--bg-color); display: flex; flex-direction: column; height: 100%;">
+        <div id="view-dash" class="view hidden" style="flex: 1; background-color: var(--bg-color); display: flex; flex-direction: column;">
             <div class="header-area">
                 <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
                 <div class="header-actions">
@@ -1476,7 +1473,7 @@
     </div>
 
     <!-- AI Chat Room View (N+) -->
-    <div id="view-chat" class="view hidden" style="background-color: var(--bg-color); display: none; flex-direction: column; height: calc(100vh - 80px) !important; overflow-y: auto; box-sizing: border-box; position: fixed; top: 0; left: 0; width: 100%; z-index: 9000;">
+    <div id="view-chat" class="view hidden" style="flex: 1; background-color: var(--bg-color); display: none; flex-direction: column; overflow-y: auto; box-sizing: border-box; z-index: 9000;">
         <div class="header-area" style="position: relative; z-index: 20;">
             <button class="icon-btn" onclick="window.switchView('view-dash')" style="background:none; border:none; color:var(--text-main); cursor:pointer;"><i data-lucide="arrow-left"></i></button>
             <h1 class="title" style="margin-left: 12px;">Neo<sup class="title-plus">+</sup> <span style="font-size: 14px; font-weight: normal; margin-left:8px; color: var(--text-muted); padding-top:4px;">AI Core</span></h1>
