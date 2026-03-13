@@ -1541,3 +1541,20 @@ button:active {
   cursor: pointer;
   padding-bottom: 8px !important; /* 入力欄と高さを合わせる */
 }
+
+/* Document Line Item labels */
+.line-item .input-group label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.line-item .input-group.qty label {
+  text-align: center;
+}
+
+.line-item .input-group.price label {
+  text-align: right;
+}
