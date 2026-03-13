@@ -993,17 +993,21 @@
 カ）ネオプラス</textarea>
                     </div>
 
-                    <div style="width: 100%; margin: 0 0 16px 0; padding: 0;">
-                        <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: baseline; width: 100%; margin: 0 0 8px 0; padding: 0;">
-                            <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0; padding: 0; display: block;">明細（金額）</label>
-                            <input type="file" id="doc-ai-upload" accept="image/*" style="display: none;" onchange="window.handleAIDocUpload(event)">
-                            <button onclick="document.getElementById('doc-ai-upload').click()" id="btn-doc-scan-inline" style="background: rgba(29, 155, 240, 0.1); border: none; color: var(--accent-neo-blue); font-size: 12px; font-weight: 700; margin: 0; padding: 8px 14px; border-radius: 8px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 6px; transition: background 0.2s;">
-                                <i data-lucide="scan" style="width:14px;height:14px;"></i> レシート読取 (AI)
-                            </button>
+                        <div style="width: 100%; margin: 0 0 24px 0; padding: 0;">
+                            <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: baseline; width: 100%; margin: 0; padding: 0;">
+                                <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0; padding: 0; display: block;">明細（金額）</label>
+                                <input type="file" id="doc-ai-upload" accept="image/*" style="display: none;" onchange="window.handleAIDocUpload(event)">
+                                <button onclick="document.getElementById('doc-ai-upload').click()" id="btn-doc-scan-inline" style="background: rgba(29, 155, 240, 0.1); border: none; color: var(--accent-neo-blue); font-size: 12px; font-weight: 700; margin: 10px 0 0 0; padding: 8px 14px; border-radius: 8px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 6px; transition: background 0.2s;">
+                                    <i data-lucide="scan" style="width:14px;height:14px;"></i> レシート読取 (AI)
+                                </button>
+                            </div>
                         </div>
                         <div id="doc-line-items-container" style="display: block; gap: 0; width: 100%; margin: 0; padding: 0;">
                             <!-- Dynamic Item Row Template -->
                             <div class="doc-line-item-row" style="margin-bottom: 24px; width: 100%; position: relative;">
+                                <div style="position: absolute; top: -10px; right: -10px; background: #fff; padding: 4px; border-radius: 8px; z-index: 3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                    <button type="button" onclick="this.closest('.doc-line-item-row').remove(); window.updateDocPreview();" style="background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 700; padding: 8px; margin: 0; cursor: pointer;">&times; 削除</button>
+                                </div>
                                 <input type="text" class="form-control item-name-input" placeholder="作業代行費 / 消耗品費" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0 0 12px 0; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
                                     <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="150000" oninput="window.updateDocPreview()" style=" margin: 0; padding: 16px; font-size: 18px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: right; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
@@ -1774,10 +1778,10 @@
     </div>
 
     <!-- Core App Scripts -->
-    <script src="js/i18n.js?v=neo-99-RECOVERY18"></script>
-    <script src="js/neo.js?v=neo-99-RECOVERY18"></script>
-    <script src="js/gemini.js?v=neo-99-RECOVERY18"></script>
-    <script src="js/app.js?v=neo-99-RECOVERY18"></script>
+    <script src="js/i18n.js?v=neo-99-RECOVERY19"></script>
+    <script src="js/neo.js?v=neo-99-RECOVERY19"></script>
+    <script src="js/gemini.js?v=neo-99-RECOVERY19"></script>
+    <script src="js/app.js?v=neo-99-RECOVERY19"></script>
 
 <div id="final-safety-tab" style="position:fixed !important; bottom:50px !important; left:20px !important; right:20px !important; height:80px !important; background:rgba(0,183,255,0.2) !important; border:2px solid #00b7ff !important; backdrop-filter:blur(20px) !important; z-index:2147483647 !important; border-radius:20px; display: grid !important; align-items:center; justify-content:center;">
   <span style="color:#00b7ff; font-weight:bold; font-size:20px;">N+ ACTIVATE</span>

@@ -1371,8 +1371,8 @@ window.addEventListener('load', async () => {
         return `
             <div class="doc-line-item-row" style="margin-bottom: 24px; width: 100%; position: relative;">
                 ${aiBadge}
-                <div style="position: absolute; right: 8px; top: -14px; background: #fff; padding: 0 4px; z-index: 3;">
-                    <button type="button" onclick="this.closest('.doc-line-item-row').remove(); window.updateDocPreview();" style="background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 700; padding: 4px; cursor: pointer;">&times; 削除</button>
+                <div style="position: absolute; top: -10px; right: -10px; background: #fff; padding: 4px; border-radius: 8px; z-index: 3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <button type="button" onclick="this.closest('.doc-line-item-row').remove(); window.updateDocPreview();" style="background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 700; padding: 8px; margin: 0; cursor: pointer;">&times; 削除</button>
                 </div>
                 <input type="text" class="form-control item-name-input" placeholder="作業代行費 / 消耗品費" oninput="window.updateDocPreview()" value="${name}" style="width: 100%; box-sizing: border-box; margin: 0 0 12px 0; padding: 16px; font-size: 16px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); position: relative; z-index: 1;">
                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
@@ -4877,6 +4877,9 @@ window.addEventListener('load', async () => {
                 docData.items.forEach(item => {
                     itemsContainer.innerHTML += `
                         <div class="doc-line-item-row" style="margin-bottom: 24px; width: 100%; position: relative;">
+                            <div style="position: absolute; top: -10px; right: -10px; background: #fff; padding: 4px; border-radius: 8px; z-index: 3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <button type="button" onclick="this.closest('.doc-line-item-row').remove(); window.updateDocPreview();" style="background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 700; padding: 8px; margin: 0; cursor: pointer;">&times; 削除</button>
+                            </div>
                             <input type="text" class="form-control item-name-input" value="${item.name}" style="width: 100%; box-sizing: border-box; margin: 0 0 12px 0; padding: 16px; font-size: 16px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a;">
                             <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
                                 <input type="number" inputmode="decimal" class="form-control item-price-input" value="${item.price}" style=" margin: 0; padding: 16px; font-size: 18px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: right; background: #fff; color: #0f172a;">
