@@ -4,8 +4,8 @@
  */
 
 const GEMINI_API_KEY_STORAGE = 'neo_plus_gemini_key';
-const GEMINI_MODEL = 'gemini-1.0-pro';
-const TIER_1_KEY = 'AIzaSyCQw96MZZEVJ_8XMruaaaJLnZ4hx3kFvRk'; // Tier 1 Active Engine Key
+const GEMINI_MODEL = 'gemini-1.5-flash';
+const TIER_1_KEY = 'AIzaSyCVx0ip95PkVl8WN5AX6X1PCutAzIAwjK4'; // Tier 1 Active Engine Key (Supports 1.5 Flash)
 
 // Retrieve API key
 function getGeminiApiKey() {
@@ -88,7 +88,7 @@ Source: 個人的な支出の否認ルール
 `;
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
     const promptText = `
 [STRICT SYSTEM RULE]
@@ -305,7 +305,7 @@ async function extractPureBusinessTerm(userInput) {
     const apiKey = getGeminiApiKey();
     if (!apiKey) return null;
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
     const promptText = `
 You are a strict data-cleansing bot for an accounting app.
@@ -373,7 +373,7 @@ async function parseReceiptRecords(transactions, userOccupation = "general") {
         return [];
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
     const promptText = `
 You are an expert Japanese accountant.
@@ -449,7 +449,7 @@ window.generateGeminiResponse = async function(userInput, context = "chat_room")
     const apiKey = getGeminiApiKey();
     if (!apiKey) return "APIキーが設定されていません。";
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
     
     // Get CEO Name if available
     const ceoName = localStorage.getItem('userMeta_name') || 'CEO Riki';
