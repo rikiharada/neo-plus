@@ -1066,14 +1066,22 @@ window.addEventListener('load', async () => {
             });
         }, 300);
 
+        const content = selectedData.title || selectedData.content || '名目なし';
+        const price = selectedData.amount || selectedData.cost || selectedData.price || 0;
+        const quantity = selectedData.unit || selectedData.quantity || 1;
+
+        // Call dedicated injection function per CEO request
+        window.injectActivityIntoLineItem(content, quantity, price);
+    };
+
+    window.injectActivityIntoLineItem = function(content, quantity, price) {
         const container = document.getElementById('doc-line-items-container');
-        if (!container) return;
+        if (!container) {
+            console.error("Target container #doc-line-items-container not found.");
+            return;
+        }
 
-        const name = selectedData.title || selectedData.content || '名目なし';
-        const amount = selectedData.amount || selectedData.cost || selectedData.price || 0;
-        const unit = selectedData.unit || selectedData.quantity || 1;
-
-        // Check if the only existing row is completely empty
+        // Check if the only existing row is completely empty to overwrite it
         const rows = container.querySelectorAll('.line-item');
         let injected = false;
         if (rows.length === 1) {
@@ -1081,19 +1089,24 @@ window.addEventListener('load', async () => {
             const priceInp = rows[0].querySelector('.item-price-input');
             const qtyInp = rows[0].querySelector('.item-qty-input');
             if (nameInp && priceInp && qtyInp && !nameInp.value && (!priceInp.value || priceInp.value == 0 || priceInp.value === "")) {
-                nameInp.value = name;
-                priceInp.value = amount || 0;
-                qtyInp.value = unit || 1;
+                nameInp.value = content;
+                priceInp.value = price || 0;
+                qtyInp.value = quantity || 1;
                 injected = true;
             }
         }
 
         if (!injected) {
-            // Append a new row mapped to this activity
-            container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(name, amount || 0, unit || 1, false));
+            // Append a new row using the template generator
+            container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(content, price || 0, quantity || 1, false));
         }
 
-        window.updateDocPreview();
+        // recalculate totals
+        if (typeof window.updateDocPreview === 'function') {
+            window.updateDocPreview();
+        } else if (typeof calculateTotal === 'function') {
+            calculateTotal();
+        }
     };
 
     window.switchDocTab = (type) => {
