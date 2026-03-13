@@ -1516,7 +1516,8 @@ button:active {
 .receipt-scan-wrapper {
   display: flex !important;
   justify-content: center !important;
-  margin: 20px 0 30px 0 !important; /* 下側にしっかり余白を作る */
+  width: 100% !important;
+  margin: 10px 0 !important;
 }
 
 /* 明細一行ごとの設定 */
