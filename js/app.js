@@ -5394,6 +5394,92 @@ window.addEventListener('load', async () => {
         });
     }
 
+    // ==========================================
+    // N+ CHAT ENGINE (CEO COCKPIT)
+    // ==========================================
+    window.sendChatMessage = async function() {
+        const inputField = document.getElementById('chat-input-field');
+        if (!inputField) return;
+        const text = inputField.value.trim();
+        if (!text) return;
+
+        // Clear input
+        inputField.value = '';
+
+        const messagesContainer = document.getElementById('chat-messages');
+
+        // 1. Create User (CEO) Message Bubble (Right-aligned, Dark gray)
+        const userRow = document.createElement('div');
+        userRow.className = 'chat-message-row user-message-row';
+        userRow.style.display = 'flex';
+        userRow.style.flexDirection = 'row-reverse';
+        userRow.style.alignItems = 'flex-end';
+        userRow.style.gap = '12px';
+        userRow.style.marginBottom = '8px';
+
+        userRow.innerHTML = `
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+                <i data-lucide="user" style="color: white; width: 16px; height: 16px;"></i>
+            </div>
+            <div class="chat-bubble right-bubble" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px 20px 4px 20px; padding: 14px 18px; max-width: 80%; color: white; font-size: 15px; line-height: 1.5; font-family: system-ui, -apple-system, sans-serif;">
+                ${text}
+            </div>
+        `;
+        messagesContainer.appendChild(userRow);
+        if(window.lucide) window.lucide.createIcons({root: userRow});
+
+        // Auto-scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // 2. Create AI (Neo) Placeholder Bubble (Left-aligned, Blue)
+        const neoRow = document.createElement('div');
+        neoRow.className = 'chat-message-row neo-message-row';
+        neoRow.style.display = 'flex';
+        neoRow.style.flexDirection = 'row';
+        neoRow.style.alignItems = 'flex-end';
+        neoRow.style.gap = '12px';
+        neoRow.style.marginBottom = '8px';
+
+        neoRow.innerHTML = `
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #1D9BF0, #0F62FE); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 10px rgba(29, 155, 240, 0.3);">
+                <span style="color: white; font-size: 14px; font-weight: 800; font-family: system-ui, -apple-system, sans-serif;">N+</span>
+            </div>
+            <div class="chat-bubble left-bubble" style="background: rgba(29, 155, 240, 0.1); border: 1px solid rgba(29, 155, 240, 0.2); border-radius: 20px 20px 20px 4px; padding: 14px 18px; max-width: 80%; color: white; font-size: 15px; line-height: 1.5; font-family: system-ui, -apple-system, sans-serif;">
+                <span class="typing-indicator" style="animation: pulse 1.5s infinite opacity;">解析中...</span>
+            </div>
+        `;
+        messagesContainer.appendChild(neoRow);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        const neoBubbleText = neoRow.querySelector('.chat-bubble');
+
+        try {
+            // Wait for full text response from Gemini
+            const fullResponse = await window.generateGeminiResponse(text, 'chat_room');
+            
+            // Clear the placeholder
+            neoBubbleText.innerHTML = '';
+            
+            // Streaming Effect (Character by Character)
+            let i = 0;
+            const streamInterval = setInterval(() => {
+                // Ignore HTML tags for the raw streaming effect, handle cleanly later if needed
+                neoBubbleText.textContent += fullResponse.charAt(i);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                i++;
+                if (i >= fullResponse.length) {
+                    clearInterval(streamInterval);
+                    // After streaming finishes, replace straight text with interpreted HTML for styling
+                    neoBubbleText.innerHTML = fullResponse.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                }
+            }, 10); // 10ms speed
+
+        } catch (error) {
+            neoBubbleText.innerHTML = `<span style="color: #f87171;">エラーが発生しました。接続を確認してください。</span>`;
+            console.error("Chat Error:", error);
+        }
+    };
+
     // Debug toggle to reset setup
     window.resetSetup = () => {
         localStorage.removeItem('fini_setup_complete');
