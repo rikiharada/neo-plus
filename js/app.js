@@ -1095,14 +1095,15 @@ window.addEventListener('load', async () => {
         }
 
         // Item Logic (Dynamic Multi-Row)
-        const itemRows = document.querySelectorAll('#doc-items-container .doc-line-item-row');
+        const itemRows = document.querySelectorAll('#doc-items-container .line-item, #doc-line-items-container .line-item');
         let linesHTML = '';
         let subTotal = 0;
 
         itemRows.forEach(row => {
             const name = row.querySelector('.item-name-input').value || '作業代行費';
             const price = parseInt(row.querySelector('.item-price-input').value || '0', 10);
-            const qty = 1; // Assuming 1 for simplicity based on provided mockup, but setup for future extraction
+            const qtyInput = row.querySelector('.item-qty-input');
+            const qty = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
             const lineTotal = price * qty;
             subTotal += lineTotal;
 
@@ -1251,12 +1252,13 @@ window.addEventListener('load', async () => {
                 try {
                     // Extract items perfectly
                     const items = [];
-                    const rowsForQR = document.querySelectorAll('#doc-items-container .doc-line-item-row');
+                    const rowsForQR = document.querySelectorAll('#doc-items-container .line-item, #doc-line-items-container .line-item');
                     rowsForQR.forEach(row => {
+                        const qtyInput = row.querySelector('.item-qty-input');
                         items.push({
                             name: row.querySelector('.item-name-input').value || '作業代行費',
                             price: parseInt(row.querySelector('.item-price-input').value || '0', 10),
-                            qty: 1
+                            qty: qtyInput ? parseInt(qtyInput.value || '1', 10) : 1
                         });
                     });
 
@@ -1369,16 +1371,15 @@ window.addEventListener('load', async () => {
         ` : '';
 
         return `
-            <div class="doc-line-item-row" style="margin-bottom: 24px; width: 100%; position: relative;">
+            <div class="line-item">
                 ${aiBadge}
-                <div style="position: absolute; top: -10px; right: -10px; background: #fff; padding: 4px; border-radius: 8px; z-index: 3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    <button type="button" onclick="this.closest('.doc-line-item-row').remove(); window.updateDocPreview();" style="background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 700; padding: 8px; margin: 0; cursor: pointer;">&times; 削除</button>
+                <div style="position: absolute; top: -14px; right: -10px; background: #fff; padding: 4px; border-radius: 8px; z-index: 3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <button type="button" onclick="this.closest('.line-item').remove(); window.updateDocPreview();" style="background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 700; padding: 4px 8px; margin: 0; cursor: pointer;">&times; 削除</button>
                 </div>
-                <input type="text" class="form-control item-name-input" placeholder="作業代行費 / 消耗品費" oninput="window.updateDocPreview()" value="${name}" style="width: 100%; box-sizing: border-box; margin: 30px 0 12px 0 !important; padding: 16px; font-size: 16px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); position: relative; z-index: 1;">
-                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
-                    <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="0" oninput="window.updateDocPreview()" value="${price}" style=" margin: 0; padding: 16px; font-size: 18px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: right; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-                    <span style="font-size: 16px; font-weight: 700; color: #475569; margin: 0; padding: 0;">円</span>
-                </div>
+                <input type="text" class="form-control item-name-input" placeholder="内容" oninput="window.updateDocPreview()" value="${name}" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a; position: relative; z-index: 1;">
+                <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="1" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
+                <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="単価" oninput="window.updateDocPreview()" value="${price}" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #fff; color: #0f172a;">
+                <span style="font-size: 14px; font-weight: 700; color: #475569; margin: 0; padding: 0;">円</span>
             </div>`;
     };
 
@@ -1390,7 +1391,7 @@ window.addEventListener('load', async () => {
         container.insertAdjacentHTML('beforeend', window.generateDocLineHTML('', 0, false));
         
         // Auto focus the new text input
-        const rows = container.querySelectorAll('.doc-line-item-row');
+        const rows = container.querySelectorAll('.line-item');
         if (rows.length > 0) {
             const newInputs = rows[rows.length - 1].querySelectorAll('input');
             if(newInputs.length > 0) newInputs[0].focus();
@@ -1455,12 +1456,11 @@ window.addEventListener('load', async () => {
                 if (pendingTxs.length > 0) {
                     // 1. Instantly show a skeleton loading state
                     container.innerHTML = `
-                        <div class="doc-line-item-row" style="margin-bottom: 24px; width: 100%; position: relative; opacity: 0.6; pointer-events: none;">
-                            <input type="text" class="form-control item-name-input" value="AIが実費・人工を集計中..." disabled style="width: 100%; box-sizing: border-box; margin: 0 0 12px 0; padding: 16px; font-size: 16px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #f8fafc; color: #64748b;">
-                            <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
-                                <input type="number" class="form-control item-price-input" value="0" disabled style=" margin: 0; padding: 16px; font-size: 18px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: right; background: #f8fafc; color: #64748b;">
-                                <span style="font-size: 16px; font-weight: 700; color: #94a3b8; margin: 0; padding: 0;">円</span>
-                            </div>
+                        <div class="line-item" style="opacity: 0.6; pointer-events: none;">
+                            <input type="text" class="form-control item-name-input" value="AIが実費・人工を集計中..." disabled style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #f8fafc; color: #64748b;">
+                            <input type="number" class="form-control item-qty-input" value="1" disabled style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #f8fafc; color: #64748b;">
+                            <input type="number" class="form-control item-price-input" value="0" disabled style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #f8fafc; color: #64748b;">
+                            <span style="font-size: 14px; font-weight: 700; color: #94a3b8; margin: 0; padding: 0;">円</span>
                         </div>
                     `;
                     window.updateDocPreview();
@@ -1501,7 +1501,7 @@ window.addEventListener('load', async () => {
                             console.error('[Document AI] Parsing failed', err);
                             // Loud Error UI (No silent fallback per CEO orders)
                             container.innerHTML = `
-                                <div class="doc-line-item-row" style="margin-bottom: 24px; width: 100%; position: relative;">
+                                <div class="line-item" style="grid-template-columns: 1fr; margin-bottom: 24px;">
                                     <div style="background: #fef2f2; border: 2px solid #ef4444; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(239,68,68,0.15);">
                                         <h4 style="color: #ef4444; font-weight: 800; font-size: 18px; margin: 0 0 8px 0; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
                                             🚨 API Key Error

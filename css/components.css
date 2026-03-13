@@ -1507,3 +1507,13 @@ button:active {
     border-radius: 2px;
     margin: 0 auto var(--spacing-sm) auto;
 }
+/* Document Line Item Grid Structure */
+.line-item {
+  display: grid;
+  /* 内容(3fr), 数量(1fr), 金額(1.5fr) などの比率 */
+  grid-template-columns: 3fr 1fr 1.5fr auto; 
+  gap: 12px;
+  align-items: center;
+  position: relative; /* 削除ボタンの基準 */
+  margin-bottom: 20px;
+}
