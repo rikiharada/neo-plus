@@ -158,8 +158,10 @@ body {
     max-width: 480px;
     background-color: var(--bg-color);
     border-top: 1.2px solid var(--btn-primary-border);
-    display: grid; grid-auto-flow: column;
-    justify-content: space-around;
+    display: block;
+    text-align: center;
+    white-space: nowrap;
+    height: 60px;
     padding-bottom: env(safe-area-inset-bottom);
     z-index: 100;
     backdrop-filter: blur(10px);
@@ -174,11 +176,12 @@ body {
 /* PC block removed */
 
 .nav-item {
-    
-    display: grid; grid-auto-flow: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--spacing-lg) 0;
+    display: inline-block !important; /* Forces override of strict class definitions */
+    vertical-align: middle;
+    width: 20%;
+    height: 60px;
+    position: relative;
+    padding: 0;
     /* Taller touch targets */
     color: var(--text-muted);
     transition: color 0.2s ease, opacity 0.2s ease;
@@ -190,8 +193,12 @@ body {
 }
 
 .nav-item .lucide {
-    width: 26px;
-    height: 26px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
     stroke: currentColor;
     stroke-width: 1.5;
     transition: all 0.2s ease;
