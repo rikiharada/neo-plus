@@ -5577,8 +5577,11 @@ window.addEventListener('load', async () => {
         messagesContainer.appendChild(userRow);
         if(window.lucide) window.lucide.createIcons({root: userRow});
 
-        // Auto-scroll to bottom
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Robust auto-scroll to bottom after user message
+        setTimeout(() => {
+            userRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 50);
 
         // 2. Create AI (Neo) Placeholder Bubble (Left-aligned, Blue)
         const neoRow = document.createElement('div');
@@ -5597,7 +5600,10 @@ window.addEventListener('load', async () => {
             </div>
         `;
         messagesContainer.appendChild(neoRow);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        setTimeout(() => {
+            neoRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 50);
 
         const neoBubbleText = neoRow.querySelector('.chat-bubble');
 
@@ -5613,14 +5619,25 @@ window.addEventListener('load', async () => {
             const streamInterval = setInterval(() => {
                 // Ignore HTML tags for the raw streaming effect, handle cleanly later if needed
                 neoBubbleText.textContent += fullResponse.charAt(i);
+                
+                // Keep viewport glued to the bottom during rapid streaming
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
                 i++;
                 if (i >= fullResponse.length) {
                     clearInterval(streamInterval);
                     // After streaming finishes, replace straight text with interpreted HTML for styling
                     neoBubbleText.innerHTML = fullResponse.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    
+                    // Final scroll after HTML rendering
+                    setTimeout(() => updateScroll(), 50);
                 }
             }, 10); // 10ms speed
+
+            function updateScroll() {
+                neoRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
 
         } catch (error) {
             neoBubbleText.innerHTML = `<span style="color: #f87171;">エラーが発生しました。接続を確認してください。</span>`;
