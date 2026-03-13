@@ -1,0 +1,291 @@
+/* App Container Constraint (Mobile by default, wide on PC) */
+#app-container {
+    width: 100%;
+    max-width: 480px;
+    height: 100vh;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: hidden; /* Prevent body scroll, handle internally */
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+}
+
+/* PC block removed */
+
+/* Views */
+.view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: calc(60px + var(--spacing-lg)) var(--spacing-lg) calc(100px + var(--spacing-lg)) var(--spacing-lg);
+    gap: var(--spacing-lg);
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: opacity 0.3s ease;
+}
+
+/* PC block removed */
+
+/* Header areas */
+.header-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    height: 60px; /* Reduced from default to enforce tight bounds */
+    padding: 0 var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--header-bg);
+    z-index: 40;
+    border-bottom: 0.5px solid rgba(150, 150, 150, 0.15); /* bare minimum subtle line */
+    pointer-events: none;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* Ensure header content remains clickable */
+.header-area > * {
+    pointer-events: auto;
+}
+
+/* PC block removed */
+
+/* Absolute position for the theme toggle to keep title centered */
+.header-actions {
+    position: absolute;
+    right: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.theme-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle .lucide {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    /* Extremely thin */
+}
+
+/* Force stroke color on toggle icons just to be absolutely sure */
+[data-theme="light"] .theme-toggle .lucide {
+    stroke: #000000 !important;
+}
+
+[data-theme="dark"] .theme-toggle .lucide {
+    stroke: #FFFFFF !important;
+}
+
+.theme-toggle:hover {
+    color: var(--text-main);
+    transform: scale(1.05);
+    /* subtle bump */
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: var(--line-height-base);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    letter-spacing: var(--letter-spacing-base);
+    transition: background-color 0.4s ease, color 0.4s ease;
+    overflow-x: hidden;
+}
+
+.title {
+    font-family: 'Inter', 'Helvetica', sans-serif;
+    font-size: var(--text-large);
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: normal;
+    display: flex;
+    align-items: flex-start;
+}
+
+.title-tm {
+    font-size: 0.4em;
+    font-weight: 400;
+    line-height: 1;
+    margin-left: 2px;
+    margin-top: 4px;
+}
+
+/* Content blocks */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+/* Actions */
+.action-area {
+    margin-top: auto;
+    padding-top: var(--spacing-md);
+    padding-bottom: calc(var(--spacing-xl) + env(safe-area-inset-bottom));
+    position: relative;
+    z-index: 999999 !important;
+    pointer-events: auto !important;
+}
+
+/* Bottom Navigation - Icon Only */
+.bottom-nav {
+    position: fixed !important;
+    bottom: 70px !important;
+    left: 10px !important;
+    right: 10px !important;
+    border-radius: 20px !important;
+    height: 80px !important;
+    z-index: 2147483647 !important;
+    background-color: white !important;
+    border: 1px solid rgba(150, 150, 150, 0.15); /* Replaced border-top with full border for floating shape */
+    display: flex;
+    justify-content: space-around;
+    padding-bottom: 0; /* Clear safe-area-inset because we're 40px floating */
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); /* Drop shadow to emphasize floating */
+}
+
+/* FORCE CHILD VISIBILITY FOR DEBUGGING */
+#bottom-nav * {
+    z-index: 999999 !important;
+    opacity: 1 !important;
+    color: black !important; /* Force black in case of white-on-white */
+}
+
+/* Sidebar styling for desktop */
+.desktop-sidebar {
+    display: none; /* Hidden on mobile */
+}
+
+/* PC block removed */
+
+.nav-item {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg) 0;
+    /* Taller touch targets */
+    color: var(--text-muted);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15), color 0.1s ease, opacity 0.2s ease;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    opacity: 0.6;
+    /* Unselected state */
+}
+
+.nav-item:active {
+    transform: scale(0.92);
+}
+
+.nav-item.active {
+    opacity: 1;
+    color: var(--accent-neo-blue);
+    /* Electric blue active state */
+    filter: drop-shadow(0 0 4px rgba(29, 155, 240, 0.4));
+}
+
+.nav-item.active .lucide {
+    stroke-width: 2.0;
+    /* Slightly bolder on active */
+}
+
+/* Removed lucide specific rules entirely */
+
+/* Explicit size enforcement for Minimalist Cockpit Icons */
+#btn-camera svg,
+#btn-voice svg,
+#btn-attach-image svg,
+#main-mic-btn svg {
+    width: 28px !important;
+    height: 28px !important;
+}
+
+#btn-send svg,
+#btn-send-instruction svg {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* N+ Bottom Nav Button */
+.nav-item-nplus {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0F62FE, #1D9BF0);
+    color: white;
+    font-size: 24px;
+    font-weight: 800;
+    font-family: 'Inter', sans-serif;
+    border: none;
+    cursor: pointer;
+    box-shadow: none; /* Removed heavy shadow */
+    transform: translateY(-20px);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+    z-index: 101;
+    text-shadow: none;
+}
+
+.nav-item-nplus:active,
+.nav-item-nplus.active {
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.2);
+    transform: translateY(-20px) scale(0.92);
+}
+
+/* N+ Chat Bubbles */
+.chat-bubble-neo {
+    align-self: flex-start;
+    background: linear-gradient(135deg, rgba(29, 155, 240, 0.1), rgba(15, 98, 254, 0.15));
+    border: none;
+    color: var(--text-main);
+    padding: 14px 18px;
+    border-radius: 20px 20px 20px 4px;
+    max-width: 85%;
+    font-size: 15px;
+    line-height: 1.5;
+    box-shadow: none;
+}
+
+.chat-bubble-user {
+    align-self: flex-end;
+    background: var(--btn-secondary-bg);
+    border: none;
+    color: var(--text-main);
+    padding: 14px 18px;
+    border-radius: 20px 20px 4px 20px;
+    max-width: 85%;
+    font-size: 15px;
+    line-height: 1.5;
+    box-shadow: none;
+}
