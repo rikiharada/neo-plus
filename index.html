@@ -6,15 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Neo+</title>
 
-    <!-- PWA & Mobile Meta Tags -->
-    <!-- PWA & Mobile Meta Tags -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0F111A">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,17 +14,17 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=neo-19">
-    <link rel="stylesheet" href="css/layout_final_v3.css?v=neo-19">
-    <link rel="stylesheet" href="css/components.css?v=neo-19">
+    <link rel="stylesheet" href="css/index.css?v=neo-20">
+    <link rel="stylesheet" href="css/layout.css?v=neo-20">
+    <link rel="stylesheet" href="css/components.css?v=neo-20">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js?v=neo-19"></script>
+    <script src="js/supabase-config.js?v=neo-20"></script>
 
     <!-- Industry Lexicons -->
-    <script src="js/StaticLexicon.js?v=neo-19"></script>
-    <script src="js/industries.js?v=neo-19"></script>
+    <script src="js/StaticLexicon.js?v=neo-20"></script>
+    <script src="js/industries.js?v=neo-20"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Global Error Debugger for Mobile Vercel -->
@@ -59,74 +50,14 @@
             alert('Unhandled Promise Rejection: ' + event.reason);
         };
     </script>
-
-    <style id="ceo-final-css">
-        #bottom-nav {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            height: 70px !important;
-            background: #000 !important;
-            z-index: 9999 !important;
-            display: flex !important;
-            border-top: 1px solid #333 !important;
-        }
-        .nav-item, .nav-item-nplus {
-            flex: 1 !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            transform: none !important;
-        }
-    </style>
 </head>
-    <!-- NEO+ Premium Boot Loader & Service Worker Init -->
-    <script>
-        // Register PWA Service Worker for offline capabilities
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(reg => {
-                    console.log('Neo+ ServiceWorker registered:', reg.scope);
-                }).catch(err => {
-                    console.log('Neo+ ServiceWorker registration failed:', err);
-                });
-            });
-        }
 
-        // Remove Boot Loader smoothly
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const loader = document.getElementById('neo-boot-loader');
-                if(loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 800);
-                }
-            }, 1200); // Minimum display time for premium feel
-        });
-    </script>
-
-    <div id="neo-boot-loader" style="position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease-out;">
-        <div style="font-size: 32px; font-weight: 800; font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0F62FE, #1D9BF0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; letter-spacing: 0.1em; filter: drop-shadow(0 0 10px rgba(29, 155, 240, 0.4));">NEO<sup style="font-size: 18px;">+</sup></div>
-        <div style="font-size: 11px; color: var(--text-muted); letter-spacing: 0.2em; font-family: monospace;">SYSTEM INITIALIZING...</div>
-        <div style="width: 120px; height: 1px; background: rgba(29, 155, 240, 0.2); margin-top: 16px; position: relative; overflow: hidden;">
-            <div style="position: absolute; top:0; left:-100%; width: 50%; height: 100%; background: var(--accent-neo-blue); animation: loadLine 1.5s infinite ease-in-out;"></div>
-        </div>
-    </div>
-    <style>
-        @keyframes loadLine {
-            0% { left: -100%; }
-            50% { left: 100%; }
-            100% { left: 100%; }
-        }
-    </style>
+<body>
 
     <div id="app-container">
 
         <!-- Main Content Area Container (for the views) -->
-        <main style="position: relative; overflow: visible !important; padding-bottom: 80px;">
+        <main style="flex: 1; position: relative; display: flex; flex-direction: column; height: 100vh; overflow: hidden;">
 
         <!-- SETUP VIEW (GATEKEEPER V2) -->
         <div id="view-setup" class="view hidden" style="overflow-y: auto; padding-bottom: 120px; background-color: var(--bg-color);">
@@ -198,7 +129,7 @@
 
 
         <!-- DASHBOARD VIEW (INTERACTIVE COCKPIT) -->
-        <div id="view-dash" class="view hidden" style="background-color: var(--bg-color);">
+        <div id="view-dash" class="view hidden" style="background-color: var(--bg-color); display: flex; flex-direction: column; height: 100%; min-height: 100vh;">
             <div class="header-area">
                 <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
                 <div class="header-actions">
@@ -605,27 +536,8 @@
                             レシート全件ダウンロード
                         </button>
                     </div>
-                <!-- Neo Brain Ingestion Progress UI -->
-                <div class="list-card" style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background: linear-gradient(135deg, rgba(15, 98, 254, 0.05), rgba(29, 155, 240, 0.05)); border: none; position: relative; overflow: hidden;">
-                    <!-- Subtle glow behind the bar -->
-                    <div style="position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(29, 155, 240, 0.1) 0%, transparent 70%); z-index: 0; pointer-events: none;"></div>
-                    
-                    <div style="position: relative; z-index: 1;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <span style="font-size: 11px; font-weight: 700; color: var(--accent-neo-blue); letter-spacing: 0.1em; display: flex; align-items: center; gap: 6px;">
-                                <i data-lucide="brain-circuit" style="width: 14px; height: 14px;"></i> NEO BRAIN SYNC
-                            </span>
-                            <span id="neo-brain-percentage" style="font-size: 14px; font-weight: 700; color: var(--text-main); font-family: monospace;">0%</span>
-                        </div>
-                        <div class="health-indicator-bar-container" style="height: 6px; background: var(--btn-secondary-border); border-radius: 4px; overflow: hidden;">
-                            <div id="neo-brain-progress-bar" class="health-indicator-bar" style="width: 0%; background: linear-gradient(90deg, #0F62FE, #1D9BF0); box-shadow: 0 0 10px rgba(29, 155, 240, 0.4); transition: width 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.15);"></div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                            <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Laws & Precedents: <span id="sync-laws-count" style="color: var(--text-main);">12,402</span> docs</span>
-                            <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Drive Receipts: <span id="sync-receipts-count" style="color: var(--accent-neo-blue);">Active Sync</span></span>
-                        </div>
-                    </div>
                 </div>
+
             </div>
         </div>
 
@@ -1306,7 +1218,7 @@
                             </button>
                         </div>
                     </div>
-
+    <!-- Scripts cleanly pushed to EOF -->
         <!-- New Project Modal -->
         <div id="modal-new-project" class="modal-overlay"
             style="backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(0,0,0,0.6);">
@@ -1477,9 +1389,6 @@
                 onclick="window.switchView('view-sites'); return false;" style="display: flex !important;">
                 <i data-lucide="folder"></i>
             </button>
-            <button class="nav-item-nplus" id="btn-nplus-nav" data-target="view-chat" aria-label="Neo AI Support" onclick="window.switchView('view-chat'); return false;">
-                N<sup class="title-plus">+</sup>
-            </button>
             <button class="nav-item" data-target="view-wallet" aria-label="Wallet">
                 <i data-lucide="wallet"></i>
             </button>
@@ -1488,28 +1397,6 @@
             </button>
         </div>
 
-    </div>
-
-    <!-- AI Chat Room View (N+) -->
-    <div id="view-chat" class="view hidden" style="background-color: var(--bg-color); display: none; overflow-y: auto; box-sizing: border-box; z-index: 9000;">
-        <div class="header-area" style="position: relative; z-index: 20;">
-            <button class="icon-btn" onclick="window.switchView('view-dash')" style="background:none; border:none; color:var(--text-main); cursor:pointer;"><i data-lucide="arrow-left"></i></button>
-            <h1 class="title" style="margin-left: 12px;">Neo<sup class="title-plus">+</sup> <span style="font-size: 14px; font-weight: normal; margin-left:8px; color: var(--text-muted); padding-top:4px;">AI Core</span></h1>
-            <div class="header-actions">
-               <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun" class="icon-sun"></i><i data-lucide="moon" class="icon-moon" style="display: none;"></i></button>
-            </div>
-        </div>
-        
-        <div class="content-area" id="nplus-chat-container" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 120px;">
-            <!-- Messages injected here via app.js -->
-        </div>
-
-        <div class="chat-input-area" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background-color: var(--bg-color); padding: 12px 20px; z-index: 10; border-top: 1.2px solid var(--btn-secondary-border); border-bottom: 1.2px solid rgba(150, 150, 150, 0.15); display: flex; align-items: center; gap: 8px; box-shadow: 0 -4px 12px rgba(0,0,0,0.02);">
-            <input type="text" id="nplus-chat-input" class="chat-input" placeholder="Neoに指示を出す..." style="flex: 1; border-radius: 24px; border: 1.5px solid rgba(29, 155, 240, 0.4); background: rgba(29, 155, 240, 0.05); color: var(--text-main); padding: 12px 16px; outline: none; font-size: 15px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-            <button id="btn-nplus-send" style="background: var(--accent-neo-blue); color: white; border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; box-shadow: 0 4px 12px rgba(29, 155, 240, 0.3); transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.9)';" onmouseup="this.style.transform='scale(1)';">
-                <i data-lucide="send" style="width: 20px; height: 20px;"></i>
-            </button>
-        </div>
     </div>
 
 
@@ -1840,13 +1727,14 @@
     </div>
 
     <!-- Core App Scripts -->
-    <script src="js/i18n.js?v=neo-19"></script>
-    <script src="js/neo.js?v=neo-19"></script>
-    <script src="js/gemini.js?v=neo-19"></script>
-    <script src="js/app.js?v=neo-19"></script>
+    <script src="js/i18n.js?v=neo-20"></script>
+    <script src="js/neo.js?v=neo-20"></script>
+    <script src="js/gemini.js?v=neo-20"></script>
+    <script src="js/app.js?v=neo-20"></script>
 
 <div id="final-safety-tab" style="position:fixed !important; bottom:50px !important; left:20px !important; right:20px !important; height:80px !important; background:rgba(0,183,255,0.2) !important; border:2px solid #00b7ff !important; backdrop-filter:blur(20px) !important; z-index:2147483647 !important; border-radius:20px; display:flex !important; align-items:center; justify-content:center;">
   <span style="color:#00b7ff; font-weight:bold; font-size:20px;">N+ ACTIVATE</span>
 </div>
 </body>
+
 </html>
