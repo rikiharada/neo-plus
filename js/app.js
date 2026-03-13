@@ -976,7 +976,12 @@ window.addEventListener('load', async () => {
             // Render Activity Reference Data (Contextual Data Bridge)
             const actSec = document.getElementById('activity-reference-section');
             const actList = document.getElementById('activity-reference-list');
-            if (actSec && actList && window.currentOpenProjectId) {
+            const actToggleBtn = document.getElementById('import-activity-btn');
+            
+            // Always hide section by default when opening
+            if (actSec) actSec.style.display = 'none';
+
+            if (actList && actToggleBtn && window.currentOpenProjectId) {
                 // Fetch recent expenses/labor for this project
                 const recentActs = window.mockDB.transactions.filter(t => 
                     t.projectId === window.currentOpenProjectId && 
@@ -985,7 +990,7 @@ window.addEventListener('load', async () => {
                 ).sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10); // Top 10
 
                 if (recentActs.length > 0) {
-                    actSec.style.display = 'block';
+                    actToggleBtn.style.display = 'block'; // Show the toggle button
                     actList.innerHTML = recentActs.map(act => {
                         const icon = act.type === 'labor' || act.type === 'work' ? 'hammer' : 'receipt';
                         const color = act.type === 'labor' || act.type === 'work' ? '#8b5cf6' : '#f59e0b';
@@ -1002,11 +1007,11 @@ window.addEventListener('load', async () => {
                     }).join('');
                     if (window.lucide) window.lucide.createIcons();
                 } else {
-                    actSec.style.display = 'none';
+                    actToggleBtn.style.display = 'none';
                     actList.innerHTML = '';
                 }
-            } else if (actSec) {
-                actSec.style.display = 'none';
+            } else if (actToggleBtn) {
+                actToggleBtn.style.display = 'none';
             }
 
             window.updateDocPreview();

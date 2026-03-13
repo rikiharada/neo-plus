@@ -14,9 +14,9 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=2.6.15">
-    <link rel="stylesheet" href="css/layout.css?v=2.6.15">
-    <link rel="stylesheet" href="css/components.css?v=2.6.15">
+    <link rel="stylesheet" href="css/index.css?v=2.6.16">
+    <link rel="stylesheet" href="css/layout.css?v=2.6.16">
+    <link rel="stylesheet" href="css/components.css?v=2.6.16">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -997,21 +997,21 @@
                             <input type="file" id="doc-ai-upload" accept="image/*" style="display: none;" onchange="window.handleAIDocUpload(event)">
                         </div>
 
+                        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div class="section-label" style="font-weight: bold; color: #333; margin-bottom: 0;">明細（金額）</div>
+                            <button id="import-activity-btn" style="font-size: 11px; padding: 6px 10px; border-radius: 6px; border: 1.5px solid #cbd5e1; background: #fff; color: #475569; font-weight: 600; cursor: pointer; display: none; transition: 0.2s;" onclick="const sec = document.getElementById('activity-reference-section'); sec.style.display = sec.style.display === 'none' ? 'block' : 'none';">
+                                ＋ プロジェクト記録から引用
+                            </button>
+                        </div>
+
                         <!-- NEW: AI / Activity Reference Section -->
-                        <div id="activity-reference-section" style="display: none; width: 100%; margin: 0 0 24px 0; padding: 0;">
-                            <label style="font-size: 13px; font-weight: 700; color: var(--accent-neo-blue); margin: 0 0 8px 0; padding: 0; display: flex; align-items: center; gap: 6px;">
-                                <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>プロジェクト記録から引用
-                            </label>
+                        <div id="activity-reference-section" style="display: none; width: 100%; margin: 0 0 16px 0; padding: 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; box-sizing: border-box;">
                             <div id="activity-reference-list" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: -8px; scrollbar-width: none; -ms-overflow-style: none;">
                                 <!-- Dynamically populated chips -->
                             </div>
                             <style>
                                 #activity-reference-list::-webkit-scrollbar { display: none; }
                             </style>
-                        </div>
-
-                        <div class="section-label" style="margin-bottom: 8px; font-weight: bold; color: #333;">
-                            明細（金額）
                         </div>
                         <div id="doc-line-items-container" class="line-items-container" style="display: block; gap: 0; width: 100%; margin: 0; padding: 0;">
                             <!-- Dynamic Item Row Template -->
