@@ -973,8 +973,95 @@ window.addEventListener('load', async () => {
             nextMonth.setMonth(nextMonth.getMonth() + 1);
             document.getElementById('doc-deadline-date').value = nextMonth.toISOString().split('T')[0];
 
+            // Render Activity Reference Data (Contextual Data Bridge)
+            const actSec = document.getElementById('activity-reference-section');
+            const actList = document.getElementById('activity-reference-list');
+            if (actSec && actList && window.currentOpenProjectId) {
+                // Fetch recent expenses/labor for this project
+                const recentActs = window.mockDB.transactions.filter(t => 
+                    t.projectId === window.currentOpenProjectId && 
+                    !t.is_deleted && 
+                    (t.type === 'expense' || t.type === 'labor' || t.type === 'work')
+                ).sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10); // Top 10
+
+                if (recentActs.length > 0) {
+                    actSec.style.display = 'block';
+                    actList.innerHTML = recentActs.map(act => {
+                        const icon = act.type === 'labor' || act.type === 'work' ? 'hammer' : 'receipt';
+                        const color = act.type === 'labor' || act.type === 'work' ? '#8b5cf6' : '#f59e0b';
+                        const amountText = act.amount ? `¥${act.amount.toLocaleString()}` : (act.unit ? `${act.unit}人工` : '');
+                        const nameEsc = (act.title || '名目なし').replace(/'/g, "\\'");
+                        const amtEsc = act.amount || 0;
+                        return `
+                            <button onclick="window.injectActivityIntoDocLine(this, '${nameEsc}', ${amtEsc})" style="flex-shrink: 0; background: #fff; border: 1.5px solid #cbd5e1; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;">
+                                <i data-lucide="${icon}" style="width: 14px; height: 14px; color: ${color};"></i>
+                                ${act.title || '名目なし'}
+                                <span style="color: #94a3b8; font-size: 11px; margin-left: 4px;">${amountText}</span>
+                            </button>
+                        `;
+                    }).join('');
+                    if (window.lucide) window.lucide.createIcons();
+                } else {
+                    actSec.style.display = 'none';
+                    actList.innerHTML = '';
+                }
+            } else if (actSec) {
+                actSec.style.display = 'none';
+            }
+
             window.updateDocPreview();
         }
+    };
+
+    window.injectActivityIntoDocLine = (btnEl, name, amount) => {
+        // Visual feedback
+        const origBg = btnEl.style.background;
+        const origColor = btnEl.style.color;
+        const origBorder = btnEl.style.borderColor;
+
+        btnEl.style.background = 'var(--accent-neo-blue)';
+        btnEl.style.color = '#fff';
+        btnEl.style.borderColor = 'var(--accent-neo-blue)';
+        
+        // Find icons and change their color temporarily
+        const icons = btnEl.querySelectorAll('svg');
+        const origIconColors = [];
+        icons.forEach(i => {
+            origIconColors.push(i.style.color);
+            i.style.color = '#fff';
+        });
+
+        setTimeout(() => {
+            btnEl.style.background = origBg;
+            btnEl.style.color = origColor;
+            btnEl.style.borderColor = origBorder;
+            icons.forEach((i, idx) => {
+                i.style.color = origIconColors[idx];
+            });
+        }, 300);
+
+        const container = document.getElementById('doc-line-items-container');
+        if (!container) return;
+
+        // Check if the only existing row is completely empty
+        const rows = container.querySelectorAll('.line-item');
+        let injected = false;
+        if (rows.length === 1) {
+            const nameInp = rows[0].querySelector('.item-name-input');
+            const priceInp = rows[0].querySelector('.item-price-input');
+            if (nameInp && priceInp && !nameInp.value && (!priceInp.value || priceInp.value == 0 || priceInp.value === "")) {
+                nameInp.value = name;
+                priceInp.value = amount || 0;
+                injected = true;
+            }
+        }
+
+        if (!injected) {
+            // Append a new row mapped to this activity
+            container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(name, amount || 0, false));
+        }
+
+        window.updateDocPreview();
     };
 
     window.switchDocTab = (type) => {
