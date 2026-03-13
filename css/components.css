@@ -1592,3 +1592,19 @@ button:active {
 .line-item .input-group.price label {
   text-align: right;
 }
+
+.chat-bubble.first-message {
+  display: inline-block;
+  max-width: 80%;       /* 1行が長すぎず、読みやすい幅に制限 */
+  padding: 14px 18px;   /* 窮屈さを消し、余白で高級感を出す */
+  line-height: 1.5;     /* 行間を広げ、視覚的な重なりを防止 */
+  word-break: break-word; /* 長い単語でも枠を突き抜けないように */
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 15px 15px 15px 0;
+  
+  /* アイコンの垂直位置と合わせる */
+  vertical-align: top;
+  margin-top: 4px;
+}

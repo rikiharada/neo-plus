@@ -5633,4 +5633,22 @@ window.addEventListener('load', async () => {
         localStorage.removeItem('fini_setup_complete');
         location.reload();
     };
+
+    // ==========================================
+    // N+ Personalized Initial Greeting
+    // ==========================================
+    const neoGreetings = [
+        "CEO、お疲れ様。会計のことは全部私に投げて。今は何から始める？",
+        "システムチェック完了。複雑な数字の整理、いつでも手伝えるよ。",
+        "今日もいい集中力だね。経費の仕訳、パパッと終わらせちゃおうか。",
+        "書類の準備？それとも相談？Neoがあなたの隣でスキャン中だよ。",
+        "どんな小さな領収書でも見逃さない。さあ、Neoと一緒に片付けよう。"
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const greetingEl = document.getElementById('neo-initial-chat-greeting');
+        if (greetingEl) {
+            greetingEl.textContent = neoGreetings[Math.floor(Math.random() * neoGreetings.length)];
+        }
+    });
 });
