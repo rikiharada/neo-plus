@@ -134,9 +134,7 @@ body {
 
 /* Content blocks */
 .content-area {
-    
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
     gap: var(--spacing-xl);
 }
 

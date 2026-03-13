@@ -149,8 +149,8 @@ button:active {
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
     margin-bottom: var(--spacing-md);
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     gap: var(--spacing-sm);
 }
 
@@ -183,8 +183,8 @@ button:active {
     background-color: var(--bg-color);
     border: 1.2px solid var(--btn-secondary-border);
     border-radius: 16px;
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -227,8 +227,8 @@ button:active {
 
 .project-list-item-info {
     padding: 16px;
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     gap: 8px;
 }
 
@@ -410,8 +410,8 @@ button:active {
 }
 
 .feature-card-content {
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     gap: 2px;
     
 }
@@ -434,8 +434,8 @@ button:active {
 
 /* Chat UI */
 .chat-container {
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     gap: var(--spacing-md);
 }
 
@@ -491,7 +491,8 @@ button:active {
 }
 
 .chat-input-area {
-    display: grid; grid-auto-flow: column;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
     gap: var(--spacing-sm);
     margin-top: auto;
     align-items: center;
@@ -504,9 +505,7 @@ button:active {
     color: var(--text-muted);
     cursor: pointer;
     padding: 0 var(--spacing-sm);
-    display: grid; grid-auto-flow: column;
-    align-items: center;
-    justify-content: center;
+    display: grid; place-items: center;
     transition: color 0.2s;
 }
 
@@ -522,7 +521,8 @@ button:active {
 }
 
 .chat-input {
-    
+    width: 100%;
+    box-sizing: border-box;
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
     border: 1.2px solid var(--btn-secondary-border);
@@ -539,8 +539,8 @@ button:active {
     right: 20px;
     z-index: 9999 !important;
     /* Adjusted safely to stay above everything (CEO request) */
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     align-items: end;
     gap: var(--spacing-sm);
     pointer-events: none;
@@ -716,8 +716,8 @@ button:active {
     border: 1px solid rgba(29, 155, 240, 0.1);
     border-radius: 16px;
     padding: 12px;
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     gap: 4px;
 }
 
@@ -750,8 +750,8 @@ button:active {
 
 /* Cash Flow Wave */
 .cf-bar-group {
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     align-items: center;
     justify-content: end;
     height: 100%;
@@ -821,8 +821,8 @@ button:active {
     border: 1.2px solid var(--btn-primary-border);
     border-radius: var(--radius-xl);
     /* Rounded pill shape */
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     /* Horizontal flex */
     gap: 4px;
     padding: 6px;
@@ -971,8 +971,8 @@ button:active {
     /* Reduced from xl to give more horizontal breathing room */
     transform: translateY(20px);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     gap: var(--spacing-md);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     border: 1.2px solid var(--btn-primary-border);
@@ -997,8 +997,8 @@ button:active {
 }
 
 .form-group {
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     gap: 4px;
 }
 
@@ -1139,8 +1139,8 @@ button:active {
 }
 
 .smart-selector-options {
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     gap: 8px;
 }
 
@@ -1285,8 +1285,8 @@ button:active {
     
     min-width: 0;
     /* for ellipsis */
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     gap: 2px;
 }
 
@@ -1342,8 +1342,8 @@ button:active {
 }
 
 .neo-agent-center {
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     align-items: center;
     width: 100%;
     margin-top: -10vh;
@@ -1457,8 +1457,8 @@ button:active {
     padding: var(--spacing-lg) var(--spacing-lg) 100px var(--spacing-lg) !important;
     transform: translateY(100%);
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1);
-    display: grid; grid-auto-flow: column;
-    
+    display: grid;
+
     gap: var(--spacing-md);
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
     max-height: 75vh;
