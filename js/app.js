@@ -580,7 +580,8 @@ window.addEventListener('load', async () => {
         document.getElementById('view-expense'),
         document.getElementById('view-wallet'),
         document.getElementById('view-settings'),
-        document.getElementById('view-project-detail')
+        document.getElementById('view-project-detail'),
+        document.getElementById('view-chat')
     ];
     const bottomNav = document.getElementById('bottom-nav');
     const navItems = document.querySelectorAll('.nav-item');
@@ -687,23 +688,19 @@ window.addEventListener('load', async () => {
 
         // Setup N+ AI Core Chat
         if (targetId === 'view-chat') {
-            const chatContainer = document.getElementById('nplus-chat-container');
-            if (chatContainer && chatContainer.children.length === 0) {
-                // First time opening, add greeting
-                const ceoName = localStorage.getItem('userMeta_name') || 'CEO Riki';
-                const greetingHtml = `
-                    <div class="chat-bubble-neo" style="margin-bottom: 8px;">
-                        ${ceoName}、おかえりなさい。今日のマネーマネジメントを始めましょう。<br><br>
-                        何かお手伝いできることはありますか？
-                    </div>
-                `;
-                chatContainer.innerHTML = greetingHtml;
-            }
+            if (bottomNav) bottomNav.style.display = 'none';
+            const chatContainer = document.getElementById('chat-messages');
+            
             setTimeout(() => {
-                const inputEl = document.getElementById('nplus-chat-input');
+                const inputEl = document.getElementById('chat-input-field');
                 if (inputEl) inputEl.focus();
                 if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
             }, 100);
+        } else if (targetId !== 'view-invoice' && targetId !== 'view-setup') {
+            if (bottomNav) {
+                bottomNav.classList.remove('hidden');
+                bottomNav.style.display = 'flex';
+            }
         }
 
         // Ensure Lucide icons are rendered for newly displayed elements across views
