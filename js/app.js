@@ -5560,15 +5560,17 @@ window.addEventListener('load', async () => {
         // 1. Create User (CEO) Message Bubble (Right-aligned, Dark gray)
         const userRow = document.createElement('div');
         userRow.className = 'chat-message-row user-message-row';
-        userRow.style.display = 'block';
-        userRow.style.overflow = 'hidden'; // Clearfix
+        userRow.style.display = 'flex';
+        userRow.style.flexDirection = 'row-reverse';
+        userRow.style.gap = '12px';
+        userRow.style.alignItems = 'flex-end';
         userRow.style.marginBottom = '12px';
 
         userRow.innerHTML = `
-            <div style="float: right; width: 32px; height: 32px; border-radius: 50%; background: #333; display: grid; place-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+            <div style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: #333; display: grid; place-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
                 <i data-lucide="user" style="color: white; width: 16px; height: 16px;"></i>
             </div>
-            <div class="chat-bubble right-bubble" style="float: right; margin-right: 12px; margin-top: 2px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px 20px 4px 20px; padding: 14px 18px; max-width: calc(80% - 44px); color: white; font-size: 15px; line-height: 1.5; font-family: system-ui, -apple-system, sans-serif; word-break: break-word;">
+            <div class="chat-bubble right-bubble" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px 20px 4px 20px; padding: 14px 18px; max-width: 80%; color: var(--text-main); font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
                 ${text}
             </div>
         `;
@@ -5581,15 +5583,16 @@ window.addEventListener('load', async () => {
         // 2. Create AI (Neo) Placeholder Bubble (Left-aligned, Blue)
         const neoRow = document.createElement('div');
         neoRow.className = 'chat-message-row neo-message-row';
-        neoRow.style.display = 'block';
-        neoRow.style.overflow = 'hidden'; // Clearfix
+        neoRow.style.display = 'flex';
+        neoRow.style.gap = '12px';
+        neoRow.style.alignItems = 'flex-end';
         neoRow.style.marginBottom = '12px';
 
         neoRow.innerHTML = `
-            <div style="float: left; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #1D9BF0, #0F62FE); display: grid; place-items: center; box-shadow: 0 2px 10px rgba(29, 155, 240, 0.3);">
-                <span style="color: white; font-size: 12px; font-weight: 800; font-family: system-ui, -apple-system, sans-serif; display: inline-block; transform: translateY(-1px);">N<span style="font-size: 10px; vertical-align: top;">+</span></span>
+            <div style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-neo-blue), #0F62FE); display: grid; place-items: center; box-shadow: 0 2px 10px rgba(29, 155, 240, 0.3);">
+                <span style="color: white; font-size: 12px; font-weight: 800; font-family: var(--font-sans); display: inline-block; transform: translateY(-1px);">N<span style="font-size: 10px; vertical-align: top;">+</span></span>
             </div>
-            <div class="chat-bubble left-bubble" style="float: left; margin-left: 12px; margin-top: 2px; background: rgba(29, 155, 240, 0.1); border: 1px solid rgba(29, 155, 240, 0.2); border-radius: 20px 20px 20px 4px; padding: 14px 18px; max-width: calc(80% - 44px); color: white; font-size: 15px; line-height: 1.5; font-family: system-ui, -apple-system, sans-serif; word-break: break-word;">
+            <div class="chat-bubble left-bubble" style="background: rgba(29, 155, 240, 0.1); border: 1px solid rgba(29, 155, 240, 0.2); border-radius: 20px 20px 20px 4px; padding: 14px 18px; max-width: 80%; color: var(--text-main); font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
                 <span class="typing-indicator" style="animation: pulse 1.5s infinite opacity;">解析中...</span>
             </div>
         `;
