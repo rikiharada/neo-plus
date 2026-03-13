@@ -14,17 +14,17 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=neo-99-RECOVERY13">
-    <link rel="stylesheet" href="css/layout.css?v=neo-99-RECOVERY13">
-    <link rel="stylesheet" href="css/components.css?v=neo-99-RECOVERY13">
+    <link rel="stylesheet" href="css/index.css?v=neo-99-RECOVERY14">
+    <link rel="stylesheet" href="css/layout.css?v=neo-99-RECOVERY14">
+    <link rel="stylesheet" href="css/components.css?v=neo-99-RECOVERY14">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js?v=neo-99-RECOVERY13"></script>
+    <script src="js/supabase-config.js?v=neo-99-RECOVERY14"></script>
 
     <!-- Industry Lexicons -->
-    <script src="js/StaticLexicon.js?v=neo-99-RECOVERY13"></script>
-    <script src="js/industries.js?v=neo-99-RECOVERY13"></script>
+    <script src="js/StaticLexicon.js?v=neo-99-RECOVERY14"></script>
+    <script src="js/industries.js?v=neo-99-RECOVERY14"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Global Error Debugger for Mobile Vercel -->
@@ -242,7 +242,7 @@
                         </div>
 
                         <div id="cockpit-tools"
-                            style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center; padding: 0 16px 16px 16px; width: 100%; transition: all 0.3s ease;">
+                            style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; padding: 0 16px 16px 16px; width: 100%; transition: all 0.3s ease;">
 
                             <!-- Hidden OCR Input -->
                             <input type="file" id="ocr-upload" accept="image/*" style="display: none;">
@@ -285,7 +285,7 @@
         <div id="view-chat" class="view hidden" style="background-color: #000000; display: block; min-height: 100vh; height: 100%; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; overflow-y: auto !important;">
             
             <!-- Sticky Header -->
-            <div style="position: sticky; top: 0; z-index: 100; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 16px 20px; padding-top: calc(env(safe-area-inset-top) + 16px); display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center;">
+            <div style="position: sticky; top: 0; z-index: 100; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 16px 20px; padding-top: calc(env(safe-area-inset-top) + 16px); display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center;">
                 <span style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif; font-size: 24px; font-weight: 800; color: white; letter-spacing: -1px;">N<span style="color: #1D9BF0;">+</span></span>
                 <button onclick="window.switchView('view-dash')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;">
                     <i data-lucide="chevron-down" style="width: 28px; height: 28px;"></i>
@@ -354,7 +354,7 @@
                     </div>
 
                     <!-- Row 2: Thumb Zone Controls (+ Button & Filters) -->
-                    <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center;">
                         <!-- + New Project Button (44x44 Circular, Thumb zone) -->
                         <button id="btn-create-project"
                             style="background: var(--accent-neo-blue); border: none; color: white; cursor: pointer; display: block; position: relative; width: 44px; height: 44px; border-radius: 50%; box-shadow: 0 4px 12px rgba(29, 155, 240, 0.3); transition: transform 0.2s, box-shadow 0.2s; "
@@ -806,7 +806,7 @@
 
             <!-- Main Content Area (Data Dashboard) -->
             <div class="passbook-content"
-                style=" background: var(--bg-color); padding: var(--spacing-lg); display: block; gap: var(--spacing-md); padding-bottom: 120px;">
+                style=" background: var(--bg-color); padding: var(--spacing-lg); display: block; gap: var(--spacing-md); padding-bottom: 120px; margin-top: 40px;">
 
                 <div class="dashboard-grid"
                     style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
@@ -864,7 +864,7 @@
                     <div class="dash-card"
                         style="grid-column: 1 / -1; padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
                         <div
-                            style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center; margin-bottom: 16px;">
+                            style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                             <h3
                                 style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 0; letter-spacing: 0.05em;">
                                 収支明細・アクティビティ</h3>
@@ -925,7 +925,7 @@
             
             <!-- TOP SECTION: HEADER & TABS -->
             <div style=" background: #fff; border-bottom: 1px solid #cbd5e1; z-index: 10; padding-top: calc(env(safe-area-inset-top) + 16px);">
-                <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center; padding: 0 20px; margin-bottom: 16px; width: 100%; box-sizing: border-box;">
+                <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 16px; width: 100%; box-sizing: border-box;">
                     <div style="font-weight: 800; font-size: 20px; margin: 0; padding: 0; color: #0f172a; letter-spacing: -0.02em;">書類作成</div>
                     <button onclick="window.closeDocGenModal()" style="background: rgba(15, 23, 42, 0.05); border: none; width: 32px; height: 32px; border-radius: 16px; display: grid; place-items: center; color: #0f172a; margin: 0; padding: 0; transition: background 0.2s;">
                         <i data-lucide="x" style="width: 18px; height: 18px;"></i>
@@ -1027,7 +1027,7 @@
 
                         <!-- ADVANCED SETTINGS TOGGLES -->
                         <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0; display: block; gap: 16px;">
-                            <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center;">
+                            <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center;">
                                 <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
                                     <i data-lucide="qr-code" style="width: 18px; height: 18px; color: #475569;"></i>
                                     <span style="font-size: 14px; font-weight: 700; color: #0f172a;">QRコード</span>
@@ -1038,7 +1038,7 @@
                                     <span id="doc-toggle-qr-knob" style="position: absolute; height: 20px; width: 20px; left: 22px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
                                 </label>
                             </div>
-                            <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center;">
+                            <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-top: 20px;">
                                 <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
                                     <i data-lucide="printer" style="width: 18px; height: 18px; color: #475569;"></i>
                                     <span style="font-size: 14px; font-weight: 700; color: #0f172a;">用紙サイズ</span>
@@ -1048,7 +1048,7 @@
                                     <option value="B5">B5 (小型)</option>
                                 </select>
                             </div>
-                            <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center; margin-top: 16px;">
+                            <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-top: 16px;">
                                 <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
                                     <i data-lucide="percent" style="width: 18px; height: 18px; color: #475569;"></i>
                                     <span style="font-size: 14px; font-weight: 700; color: #0f172a;">消費税率</span>
@@ -1191,7 +1191,7 @@
                     </div>
 
                     <!-- Digital Bridge QR Code -->
-                    <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
                         <div style="font-size: 12px; color: #64748b; line-height: 1.5;">
                             このQRコードをカメラで読み取ると、詳細データをデジタル保存できます。<br>
                             <span style="font-weight: 700; color: #0f172a;">Neo+ Digital Document Bridge</span>
@@ -1420,12 +1420,12 @@
 
         <!-- BOTTOM NAV BAR (Visible after setup) -->
         <!-- Bottom Navigation -->
-        <div id="bottom-nav" class="bottom-nav hidden" style="text-align: center; white-space: nowrap; height: 60px;">
-            <button class="nav-item" data-target="view-dash" aria-label="ホーム">
+        <div id="bottom-nav" class="bottom-nav hidden" style="text-align: center; white-space: nowrap; height: 60px; font-size: 0;">
+            <button class="nav-item" data-target="view-dash" aria-label="ホーム" style="display: inline-block !important; width: 20%; opacity: 1 !important; visibility: visible !important;">
                 <i data-lucide="home"></i>
             </button>
             <button class="nav-item" data-target="view-sites" aria-label="プロジェクト"
-                onclick="window.switchView('view-sites'); return false;" style="display: inline-block !important;">
+                onclick="window.switchView('view-sites'); return false;" style="display: inline-block !important; width: 20%; opacity: 1 !important; visibility: visible !important;">
                 <i data-lucide="folder"></i>
             </button>
             
@@ -1433,13 +1433,13 @@
             <div style="display: inline-block; vertical-align: middle; width: 20%; height: 60px; position: relative;">
                 <button class="nav-item-nplus" onclick="window.switchView('view-chat')" aria-label="N+ AI Chat"
                     style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #1D9BF0, #0F62FE); color: white; display: block; box-shadow: 0 4px 15px rgba(29, 155, 240, 0.4); border: 2px solid rgba(255,255,255,0.1); z-index: 999999; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); margin: 0; padding: 0; cursor: pointer;">
-                    <span style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro', 'Helvetica Neue', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: block; text-align: center; width: 100%;">N<span style="font-size: 16px; font-weight: 800; vertical-align: top; display: inline-block; transform: translateY(-1px);">+</span></span>
+                    <span style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro', 'Helvetica Neue', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.5px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: block; text-align: center; width: 100%; color: white;">N<span style="font-size: 16px; font-weight: 800; vertical-align: top; display: inline-block; transform: translateY(-1px);">+</span></span>
                 </button>
             </div>
-            <button class="nav-item" data-target="view-wallet" aria-label="Wallet">
+            <button class="nav-item" data-target="view-wallet" aria-label="Wallet" style="display: inline-block !important; width: 20%; opacity: 1 !important; visibility: visible !important;">
                 <i data-lucide="wallet"></i>
             </button>
-            <button class="nav-item" data-target="view-settings" aria-label="Profile">
+            <button class="nav-item" data-target="view-settings" aria-label="Profile" style="display: inline-block !important; width: 20%; opacity: 1 !important; visibility: visible !important;">
                 <i data-lucide="user"></i>
             </button>
         </div>
@@ -1774,10 +1774,10 @@
     </div>
 
     <!-- Core App Scripts -->
-    <script src="js/i18n.js?v=neo-99-RECOVERY13"></script>
-    <script src="js/neo.js?v=neo-99-RECOVERY13"></script>
-    <script src="js/gemini.js?v=neo-99-RECOVERY13"></script>
-    <script src="js/app.js?v=neo-99-RECOVERY13"></script>
+    <script src="js/i18n.js?v=neo-99-RECOVERY14"></script>
+    <script src="js/neo.js?v=neo-99-RECOVERY14"></script>
+    <script src="js/gemini.js?v=neo-99-RECOVERY14"></script>
+    <script src="js/app.js?v=neo-99-RECOVERY14"></script>
 
 <div id="final-safety-tab" style="position:fixed !important; bottom:50px !important; left:20px !important; right:20px !important; height:80px !important; background:rgba(0,183,255,0.2) !important; border:2px solid #00b7ff !important; backdrop-filter:blur(20px) !important; z-index:2147483647 !important; border-radius:20px; display: grid !important; align-items:center; justify-content:center;">
   <span style="color:#00b7ff; font-weight:bold; font-size:20px;">N+ ACTIVATE</span>
