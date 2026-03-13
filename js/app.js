@@ -948,7 +948,29 @@ window.addEventListener('load', async () => {
     window.currentDocType = 'estimate'; // default
     window.docDbStorage = {}; // Temporary cross-tab storage
 
-    window.openDocGenModal = () => {
+    window.projectActivities = []; // Global cache for the current modal session
+
+    window.loadActivities = async (projectId) => {
+        try {
+            // OS共通の相対パスを使用
+            const response = await fetch(`./data/projects/${projectId}/activities.json`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            return await response.json();
+        } catch (error) {
+            console.error("Activity fetch error (fallback to mockDB):", error);
+            // エラー時はフォールバックとしてローカルモックから返して後続の処理を止めない
+            if (window.mockDB && window.mockDB.transactions) {
+                return window.mockDB.transactions.filter(t => 
+                    t.projectId === projectId && 
+                    !t.is_deleted && 
+                    (t.type === 'expense' || t.type === 'labor' || t.type === 'work')
+                );
+            }
+            return [];
+        }
+    };
+
+    window.openDocGenModal = async () => {
         const modal = document.getElementById('modal-doc-gen');
         if (modal) {
             // Lock body scroll
@@ -983,25 +1005,20 @@ window.addEventListener('load', async () => {
 
             if (actList && actToggleBtn && window.currentOpenProjectId) {
                 // Fetch recent expenses/labor for this project
-                const recentActs = window.mockDB.transactions.filter(t => 
-                    t.projectId === window.currentOpenProjectId && 
-                    !t.is_deleted && 
-                    (t.type === 'expense' || t.type === 'labor' || t.type === 'work')
-                ).sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10); // Top 10
+                const acts = await window.loadActivities(window.currentOpenProjectId);
+                const recentActs = acts.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10); // Top 10
+                window.projectActivities = recentActs; // Cache globally
 
                 if (recentActs.length > 0) {
                     actToggleBtn.style.display = 'block'; // Show the toggle button
                     actList.innerHTML = recentActs.map(act => {
                         const icon = act.type === 'labor' || act.type === 'work' ? 'hammer' : 'receipt';
                         const color = act.type === 'labor' || act.type === 'work' ? '#8b5cf6' : '#f59e0b';
-                        const amountText = act.amount ? `¥${act.amount.toLocaleString()}` : (act.unit ? `${act.unit}人工` : '');
-                        const nameEsc = (act.title || '名目なし').replace(/'/g, "\\'");
-                        const amtEsc = act.amount || 0;
-                        const unitEsc = act.unit || 1;
+                        const amountText = act.amount ? `¥${act.amount.toLocaleString()}` : (act.unit ? `${act.unit}人工` : (act.cost ? `¥${act.cost.toLocaleString()}` : ''));
                         return `
-                            <button onclick="window.injectActivityIntoDocLine(this, '${nameEsc}', ${amtEsc}, ${unitEsc})" style="flex-shrink: 0; background: #fff; border: 1.5px solid #cbd5e1; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;">
+                            <button onclick="window.importFromActivity(this, '${act.id}')" style="flex-shrink: 0; background: #fff; border: 1.5px solid #cbd5e1; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;">
                                 <i data-lucide="${icon}" style="width: 14px; height: 14px; color: ${color};"></i>
-                                ${act.title || '名目なし'}
+                                ${act.title || act.content || '名目なし'}
                                 <span style="color: #94a3b8; font-size: 11px; margin-left: 4px;">${amountText}</span>
                             </button>
                         `;
@@ -1019,7 +1036,10 @@ window.addEventListener('load', async () => {
         }
     };
 
-    window.injectActivityIntoDocLine = (btnEl, name, amount, unit = 1) => {
+    window.importFromActivity = (btnEl, activityId) => {
+        const selectedData = window.projectActivities.find(a => a.id === activityId);
+        if (!selectedData) return;
+
         // Visual feedback
         const origBg = btnEl.style.background;
         const origColor = btnEl.style.color;
@@ -1048,6 +1068,10 @@ window.addEventListener('load', async () => {
 
         const container = document.getElementById('doc-line-items-container');
         if (!container) return;
+
+        const name = selectedData.title || selectedData.content || '名目なし';
+        const amount = selectedData.amount || selectedData.cost || selectedData.price || 0;
+        const unit = selectedData.unit || selectedData.quantity || 1;
 
         // Check if the only existing row is completely empty
         const rows = container.querySelectorAll('.line-item');
