@@ -14,17 +14,17 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=neo-99-RECOVERY10">
-    <link rel="stylesheet" href="css/layout.css?v=neo-99-RECOVERY10">
-    <link rel="stylesheet" href="css/components.css?v=neo-99-RECOVERY10">
+    <link rel="stylesheet" href="css/index.css?v=neo-99-RECOVERY11">
+    <link rel="stylesheet" href="css/layout.css?v=neo-99-RECOVERY11">
+    <link rel="stylesheet" href="css/components.css?v=neo-99-RECOVERY11">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js?v=neo-99-RECOVERY10"></script>
+    <script src="js/supabase-config.js?v=neo-99-RECOVERY11"></script>
 
     <!-- Industry Lexicons -->
-    <script src="js/StaticLexicon.js?v=neo-99-RECOVERY10"></script>
-    <script src="js/industries.js?v=neo-99-RECOVERY10"></script>
+    <script src="js/StaticLexicon.js?v=neo-99-RECOVERY11"></script>
+    <script src="js/industries.js?v=neo-99-RECOVERY11"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Global Error Debugger for Mobile Vercel -->
@@ -735,31 +735,27 @@
             <div class="passbook-header"
                 style="position: relative; width: 100%; background: var(--bg-color); padding: calc(env(safe-area-inset-top) + 20px) var(--spacing-lg) var(--spacing-xl) var(--spacing-lg); color: var(--text-main); border-bottom: 1.2px solid var(--btn-secondary-border);">
 
-                <!-- Navbar Area (3-Column GridBox to prevent overlap) -->
-                <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; margin-bottom: var(--spacing-xl); width: 100%; position: relative; z-index: 2;">
+                <!-- Navbar Area (Float/Absolute for perfect center) -->
+                <div style="display: block; overflow: hidden; margin-bottom: var(--spacing-xl); width: 100%; position: relative; z-index: 2; height: 40px;">
                     
                     <!-- Left: Back Button -->
-                    <div style="width: calc(40px + 12px); display: grid; grid-auto-flow: column; justify-content: start;">
-                        <button class="nav-item passbook-back" data-target="view-sites" aria-label="戻る"
-                            style="background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); display: grid; place-items: center; border-radius: 50%; cursor: pointer; width: 40px; height: 40px; padding: 0; z-index: 10;">
-                            <i data-lucide="chevron-left" style="width: 24px; height: 24px;"></i>
-                        </button>
-                    </div>
+                    <button class="nav-item passbook-back" data-target="view-sites" aria-label="戻る"
+                        style="float: left; background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); display: grid; place-items: center; border-radius: 50%; cursor: pointer; width: 40px; height: 40px; padding: 0; z-index: 10;">
+                        <i data-lucide="chevron-left" style="width: 24px; height: 24px;"></i>
+                    </button>
 
-                    <!-- Center: Truncated Title -->
-                    <div style="width: 100%; min-width: 0; display: grid; grid-auto-flow: column; justify-content: center; padding: 0 8px;">
+                    <!-- Center: Truncated Title (Absolute Center) -->
+                    <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 60%; text-align: center; pointer-events: none; z-index: 5;">
                         <h1 id="detail-project-name"
-                            style="font-size: 16px; font-weight: 700; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; color: var(--text-main); max-width: 100%;">
+                            style="font-size: 16px; font-weight: 700; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main);">
                             プロジェクト名</h1>
                     </div>
 
                     <!-- Right: Menu Button -->
-                    <div style="width: calc(40px + 12px); display: grid; grid-auto-flow: column; justify-content: end;">
-                        <button id="btn-project-menu-toggle" aria-label="設定"
-                            style="background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); border-radius: 50%; cursor: pointer; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; z-index: 10;">
-                            <i data-lucide="more-horizontal" style="width: 24px; height: 24px;"></i>
-                        </button>
-                    </div>
+                    <button id="btn-project-menu-toggle" aria-label="設定"
+                        style="float: right; background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); border-radius: 50%; cursor: pointer; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; z-index: 10;">
+                        <i data-lucide="more-horizontal" style="width: 24px; height: 24px;"></i>
+                    </button>
                 </div>
 
                 <!-- Profit Display & Formula -->
@@ -779,25 +775,31 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons: Dual Tracking -->
+                    <!-- Action Buttons: Triple Tracking (Float Row) -->
                 <div
-                    style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm); position: relative; z-index: 50; pointer-events: auto; margin-top: var(--spacing-xl);">
+                    style="display: block; overflow: hidden; position: relative; z-index: 50; pointer-events: auto; margin-top: var(--spacing-xl); width: 100%;">
+                    
+                    <!-- Add Income -->
                     <button onclick="console.log('Add Income Clicked!'); window.openIncomeModal();"
-                        style=" background: var(--bg-color); border: 1.5px solid #3b82f6; color: #3b82f6; padding: 12px; border-radius: 16px; font-weight: 600; font-size: 13px; display: block; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: transform 0.1s;"
+                        style="float: left; width: calc(33.333% - 6px); margin-right: 9px;  background: var(--bg-color); border: 1.5px solid #3b82f6; color: #3b82f6; padding: 12px 4px; border-radius: 12px; font-weight: 600; font-size: 12px; display: block; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: transform 0.1s; display: grid; place-items: center;"
                         onmousedown="this.style.transform='scale(0.96)';" onmouseup="this.style.transform='scale(1)';">
-                        <i data-lucide="plus-circle" style="width: 22px; height: 22px;"></i> 売上/請求追加
+                        <i data-lucide="plus-circle" style="width: 20px; height: 20px; margin-bottom: 4px;"></i> 売上/請求
                     </button>
                     
                     <input type="file" id="hidden-receipt-upload" accept="image/*" capture="environment" style="display: none;" onchange="window.handleReceiptUpload(event)">
+                    
+                    <!-- Add Expense -->
                     <button onclick="console.log('Add Expense Clicked!'); window.openAddExpenseModal();"
-                        style=" background: var(--bg-color); border: 1.5px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 16px; font-weight: 600; font-size: 13px; display: block; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: transform 0.1s;"
+                        style="float: left; width: calc(33.333% - 6px); margin-right: 9px;  background: var(--bg-color); border: 1.5px solid #ef4444; color: #ef4444; padding: 12px 4px; border-radius: 12px; font-weight: 600; font-size: 12px; display: block; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: transform 0.1s; display: grid; place-items: center;"
                         onmousedown="this.style.transform='scale(0.96)';" onmouseup="this.style.transform='scale(1)';">
-                        <i data-lucide="minus-circle" style="width: 22px; height: 22px;"></i> 経費追加
+                        <i data-lucide="minus-circle" style="width: 20px; height: 20px; margin-bottom: 4px;"></i> 経費追加
                     </button>
+
+                    <!-- Generate Doc -->
                     <button id="btn-open-doc-gen" onclick="window.openDocGenModal()"
-                        style="position: relative; z-index: 99999 !important; pointer-events: auto !important;  background: #3b82f6; color: #fff; border: none; padding: 12px; border-radius: 16px; font-weight: 700; font-size: 13px; display: block; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(59,130,246,0.2); transition: transform 0.1s;"
+                        style="float: left; width: calc(33.333% - 6px); margin-right: 0; position: relative; z-index: 99999 !important; pointer-events: auto !important;  background: #3b82f6; color: #fff; border: none; padding: 12px 4px; border-radius: 12px; font-weight: 700; font-size: 12px; display: block; text-align: center; box-shadow: 0 4px 15px rgba(59,130,246,0.2); transition: transform 0.1s; display: grid; place-items: center;"
                         onmousedown="this.style.transform='scale(0.96)';" onmouseup="this.style.transform='scale(1)';">
-                        <i data-lucide="file-check-2" style="width: 22px; height: 22px;"></i> 書類作成
+                        <i data-lucide="file-check-2" style="width: 20px; height: 20px; margin-bottom: 4px;"></i> 書類作成
                     </button>
                 </div>
             </div>
@@ -1772,10 +1774,10 @@
     </div>
 
     <!-- Core App Scripts -->
-    <script src="js/i18n.js?v=neo-99-RECOVERY10"></script>
-    <script src="js/neo.js?v=neo-99-RECOVERY10"></script>
-    <script src="js/gemini.js?v=neo-99-RECOVERY10"></script>
-    <script src="js/app.js?v=neo-99-RECOVERY10"></script>
+    <script src="js/i18n.js?v=neo-99-RECOVERY11"></script>
+    <script src="js/neo.js?v=neo-99-RECOVERY11"></script>
+    <script src="js/gemini.js?v=neo-99-RECOVERY11"></script>
+    <script src="js/app.js?v=neo-99-RECOVERY11"></script>
 
 <div id="final-safety-tab" style="position:fixed !important; bottom:50px !important; left:20px !important; right:20px !important; height:80px !important; background:rgba(0,183,255,0.2) !important; border:2px solid #00b7ff !important; backdrop-filter:blur(20px) !important; z-index:2147483647 !important; border-radius:20px; display: grid !important; align-items:center; justify-content:center;">
   <span style="color:#00b7ff; font-weight:bold; font-size:20px;">N+ ACTIVATE</span>
