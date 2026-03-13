@@ -1517,3 +1517,21 @@ button:active {
   position: relative; /* 削除ボタンの基準 */
   margin-bottom: 20px;
 }
+
+/* レシート読取ボタン */
+.receipt-scan-wrapper {
+  display: flex;
+  justify-content: center; /* 中央配置 */
+  margin: 15px 0;
+}
+
+/* 削除ボタンのオフセット */
+.delete-button {
+  position: absolute;
+  top: -10px; /* 入力ボックスの上枠線より少し上へ */
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 10;
+  padding: 2px 8px;
+  font-size: 12px;
+}

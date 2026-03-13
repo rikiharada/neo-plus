@@ -1373,9 +1373,7 @@ window.addEventListener('load', async () => {
         return `
             <div class="line-item">
                 ${aiBadge}
-                <div style="position: absolute; top: -14px; right: -10px; background: #fff; padding: 4px; border-radius: 8px; z-index: 3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    <button type="button" onclick="this.closest('.line-item').remove(); window.updateDocPreview();" style="background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 700; padding: 4px 8px; margin: 0; cursor: pointer;">&times; 削除</button>
-                </div>
+                <button type="button" class="delete-button" onclick="this.closest('.line-item').remove(); window.updateDocPreview();" style="background: #fff; border: none; color: #ef4444; font-weight: 700; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer;">&times; 削除</button>
                 <input type="text" class="form-control item-name-input" placeholder="内容" oninput="window.updateDocPreview()" value="${name}" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a; position: relative; z-index: 1;">
                 <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="1" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
                 <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="単価" oninput="window.updateDocPreview()" value="${price}" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #fff; color: #0f172a;">
