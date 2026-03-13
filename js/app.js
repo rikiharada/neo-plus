@@ -3052,7 +3052,7 @@ window.addEventListener('load', async () => {
         let totalAgencyProfit = 0;
 
         if (projectsToRender.length === 0) {
-            container.innerHTML = '<p style="padding: var(--spacing-lg); color: var(--text-muted); text-align: center;">アカウントがありません</p>';
+            container.innerHTML = '<p style="padding: var(--spacing-lg); color: var(--text-muted); text-align: center;">プロジェクトはありません</p>';
             const totalWealthEl = document.getElementById('total-wealth-balance');
             if (totalWealthEl) totalWealthEl.textContent = '¥0';
             return;

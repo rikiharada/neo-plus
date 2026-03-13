@@ -16,6 +16,7 @@ button {
     /* Added for consistency with original btn-huge, will be overridden by btn-huge specific padding */
     width: auto;
     /* Added for consistency, will be overridden by btn-huge specific width */
+    margin: 0 auto;
 }
 
 button:hover {
@@ -968,20 +969,20 @@ button:active {
     max-width: 400px;
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg) var(--spacing-lg) 100px var(--spacing-lg) !important;
-    /* Reduced from xl to give more horizontal breathing room */
-    transform: translateY(20px);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, calc(-50% + 20px));
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: grid;
-
     gap: var(--spacing-md);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     border: 1.2px solid var(--btn-primary-border);
     z-index: 10000 !important;
-    position: relative;
 }
 
 .modal-overlay.show .modal-content {
-    transform: translateY(0);
+    transform: translate(-50%, -50%);
 }
 
 .modal-title {
