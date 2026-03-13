@@ -156,7 +156,7 @@ body {
 /* Bottom Navigation - Icon Only */
 .bottom-nav {
     position: fixed !important;
-    bottom: 40px !important;
+    bottom: 70px !important;
     left: 10px !important;
     right: 10px !important;
     border-radius: 20px !important;
