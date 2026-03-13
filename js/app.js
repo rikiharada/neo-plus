@@ -5589,9 +5589,7 @@ window.addEventListener('load', async () => {
         neoRow.style.marginBottom = '12px';
 
         neoRow.innerHTML = `
-            <div style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-neo-blue), #0F62FE); display: grid; place-items: center; box-shadow: 0 2px 10px rgba(29, 155, 240, 0.3);">
-                <span style="color: white; font-size: 12px; font-weight: 800; font-family: var(--font-sans); display: inline-block; transform: translateY(-1px);">N<span style="font-size: 10px; vertical-align: top;">+</span></span>
-            </div>
+            <img src="img/neo_avatar.jpg" class="avatar-circle" alt="Neo">
             <div class="chat-bubble neo" style="max-width: 80%; font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
                 <span class="typing-indicator" style="animation: pulse 1.5s infinite opacity;">解析中...</span>
             </div>
