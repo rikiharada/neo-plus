@@ -617,6 +617,16 @@ button:active {
 }
 
 /* Marquee Ticker CSS */
+.telop-container {
+    display: flex;
+    align-items: center; /* 垂直方向の中央揃えを保証 */
+    height: 32px; /* 高さを明示的に固定して安定させる */
+    background: #000;
+    overflow: hidden;
+    border-top: 1px solid #333; /* 上下の境界をシャープに */
+    border-bottom: 1px solid #333;
+}
+
 .neo-marquee-track {
     display: inline-block;
     white-space: nowrap;
@@ -624,13 +634,15 @@ button:active {
     padding-left: 100vw; /* Start offscreen from the right edge */
 }
 
-.neo-marquee-text {
-    font-family: var(--font-mono);
+/* 流れるテキストの修正 */
+.telop-text {
+    font-family: 'Courier New', Courier, monospace; /* サイバー感を出すフォント */
     font-size: 11px;
-    font-weight: 600;
-    color: var(--accent-neo-blue);
-    letter-spacing: 0.05em;
-    padding-right: 50vw; /* Buffer before loop restarts */
+    letter-spacing: 0.1em;
+    color: #00ff00; /* ネオングリーン（または electric blue） */
+    white-space: nowrap;
+    line-height: 1; /* 行間の干干渉を排除 */
+    padding: 0 50vw 0 20px; /* 前後の余白 + ループバッファ */
 }
 
 @keyframes marquee {
