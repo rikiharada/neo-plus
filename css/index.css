@@ -102,6 +102,7 @@ body {
 
 .hidden {
   display: none !important;
+  pointer-events: none !important;
 }
 
 /* --- Neo-Sync v2.0 Animations --- */
@@ -293,4 +294,26 @@ input[type="number"] {
 
 .chat-message-row {
   animation: chatFadeIn 0.2s cubic-bezier(0.1, 0.82, 0.25, 1) forwards;
+}
+
+/* ==========================================================================
+   Mobile Tap Responsiveness & FastClick Optimization (Phase 7)
+   ========================================================================== */
+a, button, input, select, textarea, .btn-primary, .btn-secondary, .btn-electric, .btn-huge, .nav-item, .nav-item-nplus, .action-chip, .filter-option, .quick-replies button {
+    touch-action: manipulation !important; /* Disables 300ms tap delay on iOS */
+    position: relative; 
+    z-index: 50; /* Elevate interactive elements above background decorations */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevents rogue user-select blocking the view canvas */
+html, body, .view, #app-container {
+    -webkit-user-select: auto;
+    user-select: auto;
+}
+
+/* But prevent text selection on buttons to avoid accidental highlighting on rapid tapping */
+button, .nav-item, .nav-item-nplus, .chat-action-btn, .theme-toggle {
+    -webkit-user-select: none;
+    user-select: none;
 }
