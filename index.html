@@ -14,9 +14,9 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=2.6.10">
-    <link rel="stylesheet" href="css/layout.css?v=2.6.10">
-    <link rel="stylesheet" href="css/components.css?v=2.6.10">
+    <link rel="stylesheet" href="css/index.css?v=2.6.11">
+    <link rel="stylesheet" href="css/layout.css?v=2.6.11">
+    <link rel="stylesheet" href="css/components.css?v=2.6.11">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -999,7 +999,7 @@
                                 <input type="file" id="doc-ai-upload" accept="image/*" style="display: none;" onchange="window.handleAIDocUpload(event)">
                             </div>
                             <div class="receipt-scan-wrapper">
-                                <button onclick="document.getElementById('doc-ai-upload').click()" id="btn-doc-scan-inline" style="background: rgba(29, 155, 240, 0.1); border: none; color: var(--accent-neo-blue); font-size: 14px; font-weight: 700; padding: 10px 18px; border-radius: 8px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 6px; transition: background 0.2s;">
+                                <button onclick="document.getElementById('doc-ai-upload').click()" id="btn-doc-scan-inline" class="scan-btn" style="background: rgba(29, 155, 240, 0.1); border: none; color: var(--accent-neo-blue); font-size: 14px; font-weight: 700; padding: 10px 18px; border-radius: 8px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 6px; transition: background 0.2s;">
                                     <i data-lucide="scan" style="width:16px;height:16px;"></i> レシート読取 (AI)
                                 </button>
                             </div>
@@ -1007,9 +1007,13 @@
                         <div id="doc-line-items-container" class="line-items-container" style="display: block; gap: 0; width: 100%; margin: 0; padding: 0;">
                             <!-- Dynamic Item Row Template -->
                             <div class="line-item">
-                                <input type="text" class="form-control item-name-input" placeholder="内容" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a;">
-                                <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="1" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
-                                <div style="position: relative; width: 100%;">
+                                <div class="input-group">
+                                    <input type="text" class="form-control item-name-input" placeholder="内容" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a;">
+                                </div>
+                                <div class="input-group qty">
+                                    <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="1" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
+                                </div>
+                                <div class="input-group price" style="position: relative; width: 100%;">
                                     <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="単価" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 24px 12px 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #fff; color: #0f172a;">
                                     <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #94a3b8; pointer-events: none;">円</span>
                                 </div>
