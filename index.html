@@ -23,17 +23,17 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=neo-8">
-    <link rel="stylesheet" href="css/layout_final_v2.css?v=neo-8">
-    <link rel="stylesheet" href="css/components.css?v=neo-8">
+    <link rel="stylesheet" href="css/index.css?v=neo-9">
+    <link rel="stylesheet" href="css/layout_final_v2.css?v=neo-9">
+    <link rel="stylesheet" href="css/components.css?v=neo-9">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js?v=neo-8"></script>
+    <script src="js/supabase-config.js?v=neo-9"></script>
 
     <!-- Industry Lexicons -->
-    <script src="js/StaticLexicon.js?v=neo-8"></script>
-    <script src="js/industries.js?v=neo-8"></script>
+    <script src="js/StaticLexicon.js?v=neo-9"></script>
+    <script src="js/industries.js?v=neo-9"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Global Error Debugger for Mobile Vercel -->
@@ -59,6 +59,23 @@
             alert('Unhandled Promise Rejection: ' + event.reason);
         };
     </script>
+
+    <style id="ceo-final-css">
+        #bottom-nav {
+            position: fixed !important;
+            bottom: 50px !important;
+            left: 0 !important;
+            right: 0 !important;
+            height: 100px !important;
+            background: white !important; /* 絶対に見えるように白 */
+            z-index: 2147483647 !important;
+            display: flex !important;
+        }
+        .nav-item-nplus {
+            transform: none !important;
+            margin-bottom: 20px !important;
+        }
+    </style>
 </head>
     <!-- NEO+ Premium Boot Loader & Service Worker Init -->
     <script>
@@ -1451,7 +1468,7 @@
 
         <!-- BOTTOM NAV BAR (Visible after setup) -->
         <!-- Bottom Navigation -->
-        <div id="bottom-nav" class="bottom-nav hidden" style="position: fixed !important; bottom: 70px !important; left: 10px !important; right: 10px !important; z-index: 2147483647 !important; border-radius: 20px !important; display: flex; background: white !important;">
+        <div id="bottom-nav" class="bottom-nav hidden">
             <button class="nav-item" data-target="view-dash" aria-label="ホーム">
                 <i data-lucide="home"></i>
             </button>
