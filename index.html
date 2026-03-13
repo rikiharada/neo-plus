@@ -23,17 +23,17 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=neo-16">
-    <link rel="stylesheet" href="css/layout_final_v3.css?v=neo-16">
-    <link rel="stylesheet" href="css/components.css?v=neo-16">
+    <link rel="stylesheet" href="css/index.css?v=neo-18">
+    <link rel="stylesheet" href="css/layout_final_v3.css?v=neo-18">
+    <link rel="stylesheet" href="css/components.css?v=neo-18">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js?v=neo-16"></script>
+    <script src="js/supabase-config.js?v=neo-18"></script>
 
     <!-- Industry Lexicons -->
-    <script src="js/StaticLexicon.js?v=neo-16"></script>
-    <script src="js/industries.js?v=neo-16"></script>
+    <script src="js/StaticLexicon.js?v=neo-18"></script>
+    <script src="js/industries.js?v=neo-18"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Global Error Debugger for Mobile Vercel -->
@@ -63,7 +63,7 @@
     <style id="ceo-final-css">
         #bottom-nav {
             position: fixed !important;
-            bottom: 0 !important;
+            bottom: 200px !important;
             left: 0 !important;
             right: 0 !important;
             height: 70px !important;
@@ -126,7 +126,7 @@
     <div id="app-container">
 
         <!-- Main Content Area Container (for the views) -->
-        <main style="flex: 1; position: relative; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; padding-bottom: 80px;">
+        <main style="position: relative; overflow-y: auto; overflow-x: hidden; padding-bottom: 80px;">
 
         <!-- SETUP VIEW (GATEKEEPER V2) -->
         <div id="view-setup" class="view hidden" style="overflow-y: auto; padding-bottom: 120px; background-color: var(--bg-color);">
@@ -198,7 +198,7 @@
 
 
         <!-- DASHBOARD VIEW (INTERACTIVE COCKPIT) -->
-        <div id="view-dash" class="view hidden" style="flex: 1; background-color: var(--bg-color); display: flex; flex-direction: column;">
+        <div id="view-dash" class="view hidden" style="background-color: var(--bg-color);">
             <div class="header-area">
                 <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
                 <div class="header-actions">
@@ -1491,7 +1491,7 @@
     </div>
 
     <!-- AI Chat Room View (N+) -->
-    <div id="view-chat" class="view hidden" style="flex: 1; background-color: var(--bg-color); display: none; flex-direction: column; overflow-y: auto; box-sizing: border-box; z-index: 9000;">
+    <div id="view-chat" class="view hidden" style="background-color: var(--bg-color); display: none; overflow-y: auto; box-sizing: border-box; z-index: 9000;">
         <div class="header-area" style="position: relative; z-index: 20;">
             <button class="icon-btn" onclick="window.switchView('view-dash')" style="background:none; border:none; color:var(--text-main); cursor:pointer;"><i data-lucide="arrow-left"></i></button>
             <h1 class="title" style="margin-left: 12px;">Neo<sup class="title-plus">+</sup> <span style="font-size: 14px; font-weight: normal; margin-left:8px; color: var(--text-muted); padding-top:4px;">AI Core</span></h1>
@@ -1840,10 +1840,10 @@
     </div>
 
     <!-- Core App Scripts -->
-    <script src="js/i18n.js?v=neo-16"></script>
-    <script src="js/neo.js?v=neo-16"></script>
-    <script src="js/gemini.js?v=neo-16"></script>
-    <script src="js/app.js?v=neo-16"></script>
+    <script src="js/i18n.js?v=neo-18"></script>
+    <script src="js/neo.js?v=neo-18"></script>
+    <script src="js/gemini.js?v=neo-18"></script>
+    <script src="js/app.js?v=neo-18"></script>
 
 <div id="final-safety-tab" style="position:fixed !important; bottom:50px !important; left:20px !important; right:20px !important; height:80px !important; background:rgba(0,183,255,0.2) !important; border:2px solid #00b7ff !important; backdrop-filter:blur(20px) !important; z-index:2147483647 !important; border-radius:20px; display:flex !important; align-items:center; justify-content:center;">
   <span style="color:#00b7ff; font-weight:bold; font-size:20px;">N+ ACTIVATE</span>

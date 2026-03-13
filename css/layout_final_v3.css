@@ -8,17 +8,12 @@
     overflow-x: hidden;
     overflow-y: hidden; /* Prevent body scroll, handle internally */
     background-color: var(--bg-color);
-    display: flex;
-    flex-direction: column;
 }
 
 /* PC block removed */
 
 /* Views */
 .view {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
