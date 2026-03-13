@@ -8,23 +8,22 @@
     overflow-x: hidden;
     overflow-y: hidden; /* Prevent body scroll, handle internally */
     background-color: var(--bg-color);
-    display: grid; grid-auto-flow: column;
-    
+    display: block;
 }
 
 /* PC block removed */
 
 /* Views */
 .view {
-    
-    display: grid; grid-auto-flow: column;
-    
+    display: block;
+    min-height: 100vh;
+    height: 100%;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     padding: calc(60px + var(--spacing-lg)) var(--spacing-lg) calc(100px + var(--spacing-lg)) var(--spacing-lg);
     gap: var(--spacing-lg);
-    overflow-y: auto;
+    overflow-y: auto !important;
     overflow-x: hidden;
     transition: opacity 0.3s ease;
 }
