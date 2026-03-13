@@ -344,7 +344,7 @@ window.addEventListener('load', async () => {
 
         if (dashView) {
             dashView.classList.remove('hidden');
-            dashView.style.display = 'flex';
+            dashView.style.display = 'grid';
         }
 
         // Animate neo container coming in
@@ -357,7 +357,7 @@ window.addEventListener('load', async () => {
 
         if (bottomNav) {
             bottomNav.classList.remove('hidden');
-            bottomNav.style.display = 'flex';
+            bottomNav.style.display = 'grid';
         }
 
         applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
@@ -375,7 +375,7 @@ window.addEventListener('load', async () => {
         if (docBtnContainer) {
             docBtnContainer.innerHTML = ''; // クリア
             const createDocBtn = (icon, color, title, desc, docType) => {
-                return `<button class="btn-primary" onclick="window.openDocGenModal()" style="width: 100%; border-radius: 12px; font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 16px;"><i data-lucide="${icon}" style="width: 20px; height: 20px; color: ${color};"></i><div style="text-align: left;"><div style="line-height: 1;">${title}</div><div style="font-size: 10px; color: var(--text-muted); font-weight: 400; margin-top: 4px;">${desc}</div></div></button>`;
+                return `<button class="btn-primary" onclick="window.openDocGenModal()" style="width: 100%; border-radius: 12px; font-weight: 600; font-size: 14px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: start; gap: 12px; padding: 16px;"><i data-lucide="${icon}" style="width: 20px; height: 20px; color: ${color};"></i><div style="text-align: left;"><div style="line-height: 1;">${title}</div><div style="font-size: 10px; color: var(--text-muted); font-weight: 400; margin-top: 4px;">${desc}</div></div></button>`;
             };
 
             const baseButtons = [
@@ -613,7 +613,7 @@ window.addEventListener('load', async () => {
             const listContainer = document.getElementById('project-list-container');
             if (listContainer) {
                 listContainer.classList.remove('hidden');
-                listContainer.style.display = 'flex';
+                listContainer.style.display = 'grid';
                 listContainer.style.visibility = 'visible';
             }
             if (targetViewElement) {
@@ -622,7 +622,7 @@ window.addEventListener('load', async () => {
             }
         } else if (targetViewElement) {
             targetViewElement.classList.remove('hidden');
-            targetViewElement.style.display = (targetId === 'view-dash' || targetId === 'view-chat') ? 'flex' : 'block';
+            targetViewElement.style.display = (targetId === 'view-dash' || targetId === 'view-chat') ? 'grid' : 'block';
         }
 
         if (targetViewElement) {
@@ -699,7 +699,7 @@ window.addEventListener('load', async () => {
         } else if (targetId !== 'view-invoice' && targetId !== 'view-setup') {
             if (bottomNav) {
                 bottomNav.classList.remove('hidden');
-                bottomNav.style.display = 'flex';
+                bottomNav.style.display = 'grid';
             }
         }
 
@@ -822,7 +822,7 @@ window.addEventListener('load', async () => {
 
                     if (parsed.location) {
                         pLoc.textContent = parsed.location;
-                        if (pLocBadge) pLocBadge.style.display = 'inline-flex';
+                        if (pLocBadge) pLocBadge.style.display = 'inline-grid';
                         hasAny = true;
                     } else if (pLocBadge) {
                         pLocBadge.style.display = 'none';
@@ -830,7 +830,7 @@ window.addEventListener('load', async () => {
 
                     if (parsed.date) {
                         pDate.textContent = parsed.date;
-                        if (pDateBadge) pDateBadge.style.display = 'inline-flex';
+                        if (pDateBadge) pDateBadge.style.display = 'inline-grid';
                         hasAny = true;
                     } else if (pDateBadge) {
                         pDateBadge.style.display = 'none';
@@ -1276,7 +1276,7 @@ window.addEventListener('load', async () => {
                     const shareUrl = `${window.location.origin}${window.location.pathname}?share=${payload}`;
                     qrEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=0&data=${encodeURIComponent(shareUrl)}`;
                     qrEl.style.display = 'block';
-                    qrContainer.style.display = 'flex';
+                    qrContainer.style.display = 'grid';
                 } catch (e) {
                     console.error("QR gen failed", e);
                     qrContainer.style.display = 'none';
@@ -1375,8 +1375,8 @@ window.addEventListener('load', async () => {
                     <button type="button" onclick="this.closest('.doc-line-item-row').remove(); window.updateDocPreview();" style="background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 700; padding: 4px; cursor: pointer;">&times; 削除</button>
                 </div>
                 <input type="text" class="form-control item-name-input" placeholder="作業代行費 / 消耗品費" oninput="window.updateDocPreview()" value="${name}" style="width: 100%; box-sizing: border-box; margin: 0 0 12px 0; padding: 16px; font-size: 16px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); position: relative; z-index: 1;">
-                <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
-                    <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="0" oninput="window.updateDocPreview()" value="${price}" style="flex: 1; margin: 0; padding: 16px; font-size: 18px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: right; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
+                    <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="0" oninput="window.updateDocPreview()" value="${price}" style=" margin: 0; padding: 16px; font-size: 18px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: right; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
                     <span style="font-size: 16px; font-weight: 700; color: #475569; margin: 0; padding: 0;">円</span>
                 </div>
             </div>`;
@@ -1457,8 +1457,8 @@ window.addEventListener('load', async () => {
                     container.innerHTML = `
                         <div class="doc-line-item-row" style="margin-bottom: 24px; width: 100%; position: relative; opacity: 0.6; pointer-events: none;">
                             <input type="text" class="form-control item-name-input" value="AIが実費・人工を集計中..." disabled style="width: 100%; box-sizing: border-box; margin: 0 0 12px 0; padding: 16px; font-size: 16px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #f8fafc; color: #64748b;">
-                            <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
-                                <input type="number" class="form-control item-price-input" value="0" disabled style="flex: 1; margin: 0; padding: 16px; font-size: 18px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: right; background: #f8fafc; color: #64748b;">
+                            <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
+                                <input type="number" class="form-control item-price-input" value="0" disabled style=" margin: 0; padding: 16px; font-size: 18px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: right; background: #f8fafc; color: #64748b;">
                                 <span style="font-size: 16px; font-weight: 700; color: #94a3b8; margin: 0; padding: 0;">円</span>
                             </div>
                         </div>
@@ -1503,7 +1503,7 @@ window.addEventListener('load', async () => {
                             container.innerHTML = `
                                 <div class="doc-line-item-row" style="margin-bottom: 24px; width: 100%; position: relative;">
                                     <div style="background: #fef2f2; border: 2px solid #ef4444; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(239,68,68,0.15);">
-                                        <h4 style="color: #ef4444; font-weight: 800; font-size: 18px; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;">
+                                        <h4 style="color: #ef4444; font-weight: 800; font-size: 18px; margin: 0 0 8px 0; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
                                             🚨 API Key Error
                                         </h4>
                                         <p style="color: #7f1d1d; font-size: 14px; margin: 0; line-height: 1.5; font-weight: 600;">
@@ -1808,7 +1808,7 @@ window.addEventListener('load', async () => {
             const modal = document.getElementById('modal-account-suspended');
             if (modal) {
                 modal.classList.remove('hidden');
-                modal.style.display = 'flex'; // Ensure flex override
+                modal.style.display = 'grid'; // Ensure flex override
             }
         } else {
             // Warning Bubble
@@ -2442,7 +2442,7 @@ window.addEventListener('load', async () => {
                         if (neoBubble) {
                             let displayText = intent.tax_comment;
                             if (intent.citation && intent.citation !== "Neo+ Memory") {
-                                displayText += `<div style="margin-top: 8px; font-size: 10px; color: var(--accent-neo-blue); background: rgba(15, 98, 254, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="book-open" style="width: 12px; height: 12px;"></i> 法的根拠: ${intent.citation}</div>`;
+                                displayText += `<div style="margin-top: 8px; font-size: 10px; color: var(--accent-neo-blue); background: rgba(15, 98, 254, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block; align-items: center; gap: 4px;"><i data-lucide="book-open" style="width: 12px; height: 12px;"></i> 法的根拠: ${intent.citation}</div>`;
                             }
                             neoBubble.innerHTML = displayText;
                             if (window.lucide) window.lucide.createIcons();
@@ -2641,7 +2641,7 @@ window.addEventListener('load', async () => {
                         if (neoBubble) {
                             let bubbleHTML = `<span>${answerText}</span>`;
                             if (citation && citation !== "Neo+ Memory") {
-                                bubbleHTML += `<div style="margin-top: 8px; font-size: 10px; color: var(--accent-neo-blue); background: rgba(15, 98, 254, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><i data-lucide="book-open" style="width: 12px; height: 12px;"></i> 法的根拠: ${citation}</div>`;
+                                bubbleHTML += `<div style="margin-top: 8px; font-size: 10px; color: var(--accent-neo-blue); background: rgba(15, 98, 254, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block; align-items: center; gap: 4px;"><i data-lucide="book-open" style="width: 12px; height: 12px;"></i> 法的根拠: ${citation}</div>`;
                             }
                             neoBubble.innerHTML = bubbleHTML;
                             if (window.lucide) window.lucide.createIcons();
@@ -3086,7 +3086,7 @@ window.addEventListener('load', async () => {
             const item = document.createElement('div');
             item.className = 'project-list-item';
             item.style.position = 'relative';
-            item.style.display = 'flex';
+            item.style.display = 'grid';
             item.style.alignItems = 'stretch';
             item.style.overflow = 'hidden';
 
@@ -3132,24 +3132,24 @@ window.addEventListener('load', async () => {
 
             item.innerHTML = `
                 <div style="position: absolute; top: 0; bottom: 0; left: 0; width: 4px; border-radius: 16px 0 0 16px; background-color: ${cColor}; box-shadow: 2px 0 8px rgba(0,0,0,0.1);"></div>
-                <div class="project-list-item-cover" style="background-color: var(--btn-secondary-border); border-radius: 12px; margin-left: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 10px;">
+                <div class="project-list-item-cover" style="background-color: var(--btn-secondary-border); border-radius: 12px; margin-left: 8px; display: grid; place-items: center; color: var(--text-muted); font-size: 10px;">
                     <div class="project-list-item-balance" style="font-size: 11px; padding: 4px 8px; font-weight: 500; background: rgba(0,0,0,0.6); color: #fff; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
                         ${displayCost}
                     </div>
                 </div>
                 <div class="project-list-item-info" style="margin-left: 8px;">
                     <h3 class="project-list-item-title" style="margin-bottom: 6px;">${proj.name}</h3>
-                    <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: var(--text-color);">
-                        <span style="display: flex; align-items: center; gap: 4px;">
+                    <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 10px; color: var(--text-color);">
+                        <span style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px;">
                             <i data-lucide="map-pin" style="width: 15px; height: 15px; color: #f87171;"></i> ${proj.location !== '-' && proj.location ? proj.location : '場所設定なし'}
                         </span>
-                        <span style="display: flex; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; font-weight: 500;">
+                        <span style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; font-weight: 500;">
                             <i data-lucide="calendar" style="width: 13px; height: 13px;"></i>${deadlineLabel}: ${proj.deadline || proj.startDate || '未設定'}
                         </span>
                     </div>
-                    <div class="project-list-item-meta" style="display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 8px;">
+                    <div class="project-list-item-meta" style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: start;  gap: 8px;">
                         <span class="project-list-item-badge">${statusText}</span>
-                        <span class="project-list-item-docs" style="display: flex; align-items: center; background: rgba(241, 245, 249, 0.8); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; color: #475569;">
+                        <span class="project-list-item-docs" style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; background: rgba(241, 245, 249, 0.8); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; color: #475569;">
                             <i data-lucide="file-text" style="width: 13px; height: 13px; margin-right: 4px;"></i>書類 x ${docCount}${notificationDot}
                         </span>
                         <span class="project-list-item-badge" style="background: rgba(15, 23, 42, 0.05); color: var(--text-muted); opacity: 0.9;">
@@ -3170,7 +3170,7 @@ window.addEventListener('load', async () => {
         if (paginationContainer && totalPages > 1) {
             const btnPrev = document.createElement('button');
             btnPrev.innerHTML = '<i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i> 前へ';
-            btnPrev.style.cssText = `background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 4px; opacity: ${currentProjectPage === 1 ? '0.3' : '1'}; pointer-events: ${currentProjectPage === 1 ? 'none' : 'auto'}; transition: transform 0.1s;`;
+            btnPrev.style.cssText = `background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px; opacity: ${currentProjectPage === 1 ? '0.3' : '1'}; pointer-events: ${currentProjectPage === 1 ? 'none' : 'auto'}; transition: transform 0.1s;`;
             btnPrev.onmousedown = () => btnPrev.style.transform = 'scale(0.95)';
             btnPrev.onmouseup = () => btnPrev.style.transform = 'scale(1)';
             btnPrev.onmouseleave = () => btnPrev.style.transform = 'scale(1)';
@@ -3188,7 +3188,7 @@ window.addEventListener('load', async () => {
 
             const btnNext = document.createElement('button');
             btnNext.innerHTML = '次へ <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>';
-            btnNext.style.cssText = `background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 4px; opacity: ${currentProjectPage === totalPages ? '0.3' : '1'}; pointer-events: ${currentProjectPage === totalPages ? 'none' : 'auto'}; transition: transform 0.1s;`;
+            btnNext.style.cssText = `background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px; opacity: ${currentProjectPage === totalPages ? '0.3' : '1'}; pointer-events: ${currentProjectPage === totalPages ? 'none' : 'auto'}; transition: transform 0.1s;`;
             btnNext.onmousedown = () => btnNext.style.transform = 'scale(0.95)';
             btnNext.onmouseup = () => btnNext.style.transform = 'scale(1)';
             btnNext.onmouseleave = () => btnNext.style.transform = 'scale(1)';
@@ -3307,8 +3307,8 @@ window.addEventListener('load', async () => {
             const accuracyColor = accuracy >= 95 ? '#10b981' : (accuracy >= 80 ? '#f59e0b' : '#ef4444');
             
             cfContainer.insertAdjacentHTML('beforebegin', `
-                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 16px; margin-bottom: 24px; padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 16px; margin-bottom: 24px; padding: 12px 16px; border-radius: 12px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
                         <i data-lucide="brain-circuit" style="width: 20px; height: 20px; color: ${accuracyColor};"></i>
                         <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">AI 学習仕訳精度 (IQ)</span>
                     </div>
@@ -3474,7 +3474,7 @@ window.addEventListener('load', async () => {
                         const el = document.createElement('div');
                         el.className = 'activity-list-item';
                         // Inline styling for the passbook item
-                        el.style.display = 'flex';
+                        el.style.display = 'grid';
                         el.style.alignItems = 'center';
                         el.style.padding = '12px 0';
                         el.style.borderBottom = '1px solid var(--btn-secondary-border)';
@@ -3493,31 +3493,31 @@ window.addEventListener('load', async () => {
                             const badgeColor = item.is_user_corrected ? '#10b981' : 'var(--text-muted)';
                             const badgeIcon = item.is_user_corrected ? `<i data-lucide="check-circle" style="width:10px; height:10px; margin-right:2px; display:inline-block;"></i>` : '';
                             
-                            categoryBadgeHtml = `<span onclick="window.openEditExpenseModal('${item.id}')" style="cursor: pointer; display: inline-flex; align-items: center; background: ${badgeBg}; color: ${badgeColor}; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 6px; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">${badgeIcon}${item.category}</span>`;
+                            categoryBadgeHtml = `<span onclick="window.openEditExpenseModal('${item.id}')" style="cursor: pointer; display: inline-block; align-items: center; background: ${badgeBg}; color: ${badgeColor}; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 6px; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">${badgeIcon}${item.category}</span>`;
                         }
 
                         if (item.type === 'invoice' || item.type === 'income') {
                             // Plus icon for deposits/income/invoice
-                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; color: #60a5fa;"><i data-lucide="plus" style="width: 18px; height: 18px; stroke-width: 2.5px;"></i></div>`;
+                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); display: grid; place-items: center; color: #60a5fa;"><i data-lucide="plus" style="width: 18px; height: 18px; stroke-width: 2.5px;"></i></div>`;
                             amountColor = '#60a5fa'; /* Blue */
                             amountStr = `+${amountStr}`;
                         } else if (item.type === 'expense' || item.type === 'receipt' || item.type === 'labor') {
                             // Minus icon for expense
-                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; color: #f87171;"><i data-lucide="minus" style="width: 18px; height: 18px; stroke-width: 2.5px;"></i></div>`;
+                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); display: grid; place-items: center; color: #f87171;"><i data-lucide="minus" style="width: 18px; height: 18px; stroke-width: 2.5px;"></i></div>`;
                             amountColor = '#f87171'; /* Red */
                             amountStr = `-${amountStr}`;
                             // Example of a warning status for some expenses
                             if (item.amount > 50000) statusHtml = '<span style="color: #f59e0b; font-weight: 300;">確認待ち</span>';
                         } else {
                             // Square icon for generic documents
-                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); display: flex; align-items: center; justify-content: center; color: #8b5cf6;"><i data-lucide="file-text" style="width: 16px; height: 16px; stroke-width: 1.5px;"></i></div>`;
+                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); display: grid; place-items: center; color: #8b5cf6;"><i data-lucide="file-text" style="width: 16px; height: 16px; stroke-width: 1.5px;"></i></div>`;
                         }
 
                         el.innerHTML = `
                             ${iconHtml}
-                            <div style="flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; gap: 2px; cursor: pointer;" onclick="if(event.target.tagName !== 'SPAN') window.openEditExpenseModal('${item.id}')">
+                            <div style=" min-width: 0; overflow: hidden; display: block; gap: 2px; cursor: pointer;" onclick="if(event.target.tagName !== 'SPAN') window.openEditExpenseModal('${item.id}')">
                                 <div style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.01em;">${title}${categoryBadgeHtml}</div>
-                                <div style="font-size: 11px; color: var(--text-muted); display: flex; gap: 6px; align-items: center;">
+                                <div style="font-size: 11px; color: var(--text-muted); display: grid; grid-auto-flow: column; gap: 6px; align-items: center;">
                                     <span>${item.date}</span>
                                     <span>•</span>
                                     ${statusHtml}
@@ -3541,7 +3541,7 @@ window.addEventListener('load', async () => {
                     const items = tlContainer.querySelectorAll('.activity-list-item');
                     items.forEach(item => {
                         const text = item.textContent.toLowerCase();
-                        item.style.display = text.includes(term) ? 'flex' : 'none';
+                        item.style.display = text.includes(term) ? 'grid' : 'none';
                     });
                 };
             }
@@ -3778,22 +3778,22 @@ window.addEventListener('load', async () => {
 
                 // Hint 1: Based on margin
                 if (margin > 30) {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: #10b981; flex-shrink: 0; margin-top: 2px;"></i><span>大変優秀な利益率（${margin}％）です。この人員配置パターンを別の現場でも横展開しましょう。</span></li>`);
+                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: #10b981;  margin-top: 2px;"></i><span>大変優秀な利益率（${margin}％）です。この人員配置パターンを別の現場でも横展開しましょう。</span></li>`);
                 } else if (margin > 0) {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="trending-up" style="width: 16px; height: 16px; color: var(--accent-neo-blue); flex-shrink: 0; margin-top: 2px;"></i><span>資材（経費）の仕入れ先を1社にまとめると、あと3%〜5%の利益改善が見込めます。</span></li>`);
+                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="trending-up" style="width: 16px; height: 16px; color: var(--accent-neo-blue);  margin-top: 2px;"></i><span>資材（経費）の仕入れ先を1社にまとめると、あと3%〜5%の利益改善が見込めます。</span></li>`);
                 } else {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; color: #f59e0b; flex-shrink: 0; margin-top: 2px;"></i><span>現在赤字ペースです。追加請求の交渉か、直近の人工（稼働）の削減を推奨します。</span></li>`);
+                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; color: #f59e0b;  margin-top: 2px;"></i><span>現在赤字ペースです。追加請求の交渉か、直近の人工（稼働）の削減を推奨します。</span></li>`);
                 }
 
                 // Hint 2: Unpaid check
                 if (proj.hasUnpaid) {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="clock" style="width: 16px; height: 16px; color: #f43f5e; flex-shrink: 0; margin-top: 2px;"></i><span>未入金の請求書が1件あります。キャッシュフロー悪化を防ぐため、本日中にリマインド連絡を。</span></li>`);
+                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="clock" style="width: 16px; height: 16px; color: #f43f5e;  margin-top: 2px;"></i><span>未入金の請求書が1件あります。キャッシュフロー悪化を防ぐため、本日中にリマインド連絡を。</span></li>`);
                 } else {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="shield-check" style="width: 16px; height: 16px; color: var(--accent-neo-blue); flex-shrink: 0; margin-top: 2px;"></i><span>過去の請求はすべて入金済みです（iCloudデータ同期確認済）。健全な資金繰りです。</span></li>`);
+                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="shield-check" style="width: 16px; height: 16px; color: var(--accent-neo-blue);  margin-top: 2px;"></i><span>過去の請求はすべて入金済みです（iCloudデータ同期確認済）。健全な資金繰りです。</span></li>`);
                 }
 
                 // Hint 3: Generic AI insight
-                hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="lightbulb" style="width: 16px; height: 16px; color: #f59e0b; flex-shrink: 0; margin-top: 2px;"></i><span>類似規模の過去プロジェクトと比較して、発注書の作成タイミングが平均2日遅れています。</span></li>`);
+                hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="lightbulb" style="width: 16px; height: 16px; color: #f59e0b;  margin-top: 2px;"></i><span>類似規模の過去プロジェクトと比較して、発注書の作成タイミングが平均2日遅れています。</span></li>`);
 
                 aiHintsContainer.innerHTML = hints.join('');
             }
@@ -3942,10 +3942,10 @@ window.addEventListener('load', async () => {
                 // Inject the 3 options
                 smartSelectorOptions.innerHTML = currentMapping.map((item, index) => `
                     <div class="smart-option" data-tax="${item.taxTerm}" style="animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.05}s both;">
-                        <div class="icon-wrapper" style="font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+                        <div class="icon-wrapper" style="font-size: 14px; display: grid; place-items: center; color: var(--text-muted);">
                             ${item.icon}
                         </div>
-                        <div style="flex: 1;">
+                        <div style="">
                             <div style="font-weight: 600;">${item.ceoTerm}</div>
                             <div style="font-size: 11px; color: var(--text-muted);">（税務: ${item.taxTerm}）として記録</div>
                         </div>
@@ -4797,20 +4797,20 @@ window.addEventListener('load', async () => {
                 block.style.border = '1px solid #e5e7eb';
                 block.style.borderRadius = '8px';
                 block.style.padding = '16px';
-                block.style.display = 'flex';
-                block.style.flexDirection = 'column';
+                block.style.display = 'grid';
+                block;
                 block.style.gap = '8px';
                 block.style.backgroundColor = '#f9fafb';
 
                 block.innerHTML = `
-                    <div style="font-size: 11px; color: #6b7280; display: flex; justify-content: space-between;">
+                    <div style="font-size: 11px; color: #6b7280; display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center;">
                         <span>Project: ${projName}</span>
                         <span>Date: ${exp.date}</span>
                     </div>
-                    <div style="flex: 1; min-height: 120px; border: 2px dashed #d1d5db; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 12px; background: white;">
+                    <div style=" min-height: 120px; border: 2px dashed #d1d5db; border-radius: 4px; display: grid; place-items: center; color: #9ca3af; font-size: 12px; background: white;">
                         [ AI Extracted Receipt Scan ]
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: end;">
                         <span style="font-size: 12px; font-weight: 600;">${exp.title}</span>
                         <span style="font-size: 14px; font-weight: 700; color: #10b981;">¥${exp.amount.toLocaleString()}</span>
                     </div>
@@ -4878,8 +4878,8 @@ window.addEventListener('load', async () => {
                     itemsContainer.innerHTML += `
                         <div class="doc-line-item-row" style="margin-bottom: 24px; width: 100%; position: relative;">
                             <input type="text" class="form-control item-name-input" value="${item.name}" style="width: 100%; box-sizing: border-box; margin: 0 0 12px 0; padding: 16px; font-size: 16px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a;">
-                            <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
-                                <input type="number" inputmode="decimal" class="form-control item-price-input" value="${item.price}" style="flex: 1; margin: 0; padding: 16px; font-size: 18px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: right; background: #fff; color: #0f172a;">
+                            <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; width: 100%; margin: 0; padding: 0;">
+                                <input type="number" inputmode="decimal" class="form-control item-price-input" value="${item.price}" style=" margin: 0; padding: 16px; font-size: 18px; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 12px; text-align: right; background: #fff; color: #0f172a;">
                                 <span style="font-size: 16px; font-weight: 700; color: #475569;">円</span>
                             </div>
                         </div>`;
@@ -4961,8 +4961,8 @@ window.addEventListener('load', async () => {
                 modalPreview.style.overflow = 'hidden';
                 modalPreview.style.height = '100dvh';
             }
-            if (stickyFooter) stickyFooter.style.display = 'flex';
-            if (previewHeader) previewHeader.style.display = 'flex';
+            if (stickyFooter) stickyFooter.style.display = 'grid';
+            if (previewHeader) previewHeader.style.display = 'grid';
         }, 300);
     };
 
@@ -4999,8 +4999,8 @@ window.addEventListener('load', async () => {
                 modalPreview.style.overflow = 'hidden';
                 modalPreview.style.height = '100dvh';
             }
-            if (stickyFooter) stickyFooter.style.display = 'flex';
-            if (previewHeader) previewHeader.style.display = 'flex';
+            if (stickyFooter) stickyFooter.style.display = 'grid';
+            if (previewHeader) previewHeader.style.display = 'grid';
             
         }, 300);
     };
@@ -5351,13 +5351,13 @@ window.addEventListener('load', async () => {
             let citationsHtml = '';
             if (citations && citations.length > 0) {
             citationsHtml = `
-                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(29, 155, 240, 0.3); display: flex; flex-direction: column; gap: 4px;">
-                <span style="font-size: 11px; font-weight: 600; color: #10b981; letter-spacing: 0.05em; display: flex; align-items: center; gap: 4px;">
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(29, 155, 240, 0.3); display: block; gap: 4px;">
+                <span style="font-size: 11px; font-weight: 600; color: #10b981; letter-spacing: 0.05em; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px;">
                     <i data-lucide="book-check" style="width:12px; height:12px;"></i> AI ACCOUNTANT CITED SOURCES:
                 </span>
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;">
+                <div style="display: grid; grid-auto-flow: column;  gap: 6px; margin-top: 2px;">
                     ${citations.map(c => `
-                    <a href="${c.url}" target="_blank" style="text-decoration: none; display: inline-flex; align-items: center; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 8px; border-radius: 12px; font-size: 11px; transition: background 0.2s;">
+                    <a href="${c.url}" target="_blank" style="text-decoration: none; display: inline-block; align-items: center; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #10b981; padding: 4px 8px; border-radius: 12px; font-size: 11px; transition: background 0.2s;">
                         <i data-lucide="external-link" style="width:10px; height:10px; margin-right: 4px;"></i> ${c.title}
                     </a>
                     `).join('')}
@@ -5408,14 +5408,14 @@ window.addEventListener('load', async () => {
         // 1. Create User (CEO) Message Bubble (Right-aligned, Dark gray)
         const userRow = document.createElement('div');
         userRow.className = 'chat-message-row user-message-row';
-        userRow.style.display = 'flex';
-        userRow.style.flexDirection = 'row-reverse';
-        userRow.style.alignItems = 'flex-end';
+        userRow.style.display = 'grid';
+        userRow;
+        userRow.style.alignItems = 'end';
         userRow.style.gap = '12px';
         userRow.style.marginBottom = '8px';
 
         userRow.innerHTML = `
-            <div style="width: 32px; height: 32px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #333; display: grid; place-items: center;  box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
                 <i data-lucide="user" style="color: white; width: 16px; height: 16px;"></i>
             </div>
             <div class="chat-bubble right-bubble" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px 20px 4px 20px; padding: 14px 18px; max-width: 80%; color: white; font-size: 15px; line-height: 1.5; font-family: system-ui, -apple-system, sans-serif;">
@@ -5431,14 +5431,14 @@ window.addEventListener('load', async () => {
         // 2. Create AI (Neo) Placeholder Bubble (Left-aligned, Blue)
         const neoRow = document.createElement('div');
         neoRow.className = 'chat-message-row neo-message-row';
-        neoRow.style.display = 'flex';
-        neoRow.style.flexDirection = 'row';
-        neoRow.style.alignItems = 'flex-end';
+        neoRow.style.display = 'grid';
+        neoRow;
+        neoRow.style.alignItems = 'end';
         neoRow.style.gap = '12px';
         neoRow.style.marginBottom = '8px';
 
         neoRow.innerHTML = `
-            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #1D9BF0, #0F62FE); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 10px rgba(29, 155, 240, 0.3);">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #1D9BF0, #0F62FE); display: grid; place-items: center;  box-shadow: 0 2px 10px rgba(29, 155, 240, 0.3);">
                 <span style="color: white; font-size: 14px; font-weight: 800; font-family: system-ui, -apple-system, sans-serif;">N+</span>
             </div>
             <div class="chat-bubble left-bubble" style="background: rgba(29, 155, 240, 0.1); border: 1px solid rgba(29, 155, 240, 0.2); border-radius: 20px 20px 20px 4px; padding: 14px 18px; max-width: 80%; color: white; font-size: 15px; line-height: 1.5; font-family: system-ui, -apple-system, sans-serif;">

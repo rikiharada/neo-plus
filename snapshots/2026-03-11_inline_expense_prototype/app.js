@@ -848,25 +848,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                         if (item.type === 'invoice' || item.type === 'income') {
                             // Circular icon for deposit/income/invoice
-                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(29, 155, 240, 0.1); display: flex; align-items: center; justify-content: center; color: var(--accent-neo-blue);"><i data-lucide="arrow-down-left" style="width: 16px; height: 16px; stroke-width: 2px;"></i></div>`;
+                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(29, 155, 240, 0.1); display: grid; place-items: center; color: var(--accent-neo-blue);"><i data-lucide="arrow-down-left" style="width: 16px; height: 16px; stroke-width: 2px;"></i></div>`;
                             amountColor = 'var(--accent-neo-blue)';
                             amountStr = `+${amountStr}`;
                         } else if (item.type === 'expense' || item.type === 'receipt' || item.type === 'labor') {
                             // Triangular icon for expense
-                            iconHtml = `<div style="width: 32px; height: 32px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); background: rgba(245, 158, 11, 0.1); display: flex; align-items: center; justify-content: center; color: #f59e0b; padding-top: 6px;"><i data-lucide="arrow-up-right" style="width: 14px; height: 14px; stroke-width: 2px;"></i></div>`;
+                            iconHtml = `<div style="width: 32px; height: 32px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); background: rgba(245, 158, 11, 0.1); display: grid; place-items: center; color: #f59e0b; padding-top: 6px;"><i data-lucide="arrow-up-right" style="width: 14px; height: 14px; stroke-width: 2px;"></i></div>`;
                             amountStr = `-${amountStr}`;
                             // Example of a warning status for some expenses
                             if (item.amount > 50000) statusHtml = '<span style="color: #f59e0b; font-weight: 300;">Warning: High</span>';
                         } else {
                             // Square icon for generic documents
-                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); display: flex; align-items: center; justify-content: center; color: #8b5cf6;"><i data-lucide="file-text" style="width: 16px; height: 16px; stroke-width: 1.5px;"></i></div>`;
+                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); display: grid; place-items: center; color: #8b5cf6;"><i data-lucide="file-text" style="width: 16px; height: 16px; stroke-width: 1.5px;"></i></div>`;
                         }
 
                         el.innerHTML = `
                             ${iconHtml}
-                            <div style="flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; gap: 2px;">
+                            <div style=" min-width: 0; overflow: hidden; display: block; gap: 2px;">
                                 <div style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.01em;">${title}</div>
-                                <div style="font-size: 11px; color: var(--text-muted); display: flex; gap: 6px; align-items: center;">
+                                <div style="font-size: 11px; color: var(--text-muted); display: grid; grid-auto-flow: column; gap: 6px; align-items: center;">
                                     <span>${item.date}</span>
                                     <span>•</span>
                                     ${statusHtml}
@@ -903,22 +903,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 // Hint 1: Based on margin
                 if (margin > 30) {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: #10b981; flex-shrink: 0; margin-top: 2px;"></i><span>大変優秀な利益率（${margin}％）です。この人員配置パターンを別の現場でも横展開しましょう。</span></li>`);
+                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: #10b981;  margin-top: 2px;"></i><span>大変優秀な利益率（${margin}％）です。この人員配置パターンを別の現場でも横展開しましょう。</span></li>`);
                 } else if (margin > 0) {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="trending-up" style="width: 16px; height: 16px; color: var(--accent-neo-blue); flex-shrink: 0; margin-top: 2px;"></i><span>資材（経費）の仕入れ先を1社にまとめると、あと3%〜5%の利益改善が見込めます。</span></li>`);
+                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="trending-up" style="width: 16px; height: 16px; color: var(--accent-neo-blue);  margin-top: 2px;"></i><span>資材（経費）の仕入れ先を1社にまとめると、あと3%〜5%の利益改善が見込めます。</span></li>`);
                 } else {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; color: #f59e0b; flex-shrink: 0; margin-top: 2px;"></i><span>現在赤字ペースです。追加請求の交渉か、直近の人工（稼働）の削減を推奨します。</span></li>`);
+                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; color: #f59e0b;  margin-top: 2px;"></i><span>現在赤字ペースです。追加請求の交渉か、直近の人工（稼働）の削減を推奨します。</span></li>`);
                 }
 
                 // Hint 2: Unpaid check
                 if (proj.hasUnpaid) {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="clock" style="width: 16px; height: 16px; color: #f43f5e; flex-shrink: 0; margin-top: 2px;"></i><span>未入金の請求書が1件あります。キャッシュフロー悪化を防ぐため、本日中にリマインド連絡を。</span></li>`);
+                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="clock" style="width: 16px; height: 16px; color: #f43f5e;  margin-top: 2px;"></i><span>未入金の請求書が1件あります。キャッシュフロー悪化を防ぐため、本日中にリマインド連絡を。</span></li>`);
                 } else {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="shield-check" style="width: 16px; height: 16px; color: var(--accent-neo-blue); flex-shrink: 0; margin-top: 2px;"></i><span>過去の請求はすべて入金済みです（iCloudデータ同期確認済）。健全な資金繰りです。</span></li>`);
+                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="shield-check" style="width: 16px; height: 16px; color: var(--accent-neo-blue);  margin-top: 2px;"></i><span>過去の請求はすべて入金済みです（iCloudデータ同期確認済）。健全な資金繰りです。</span></li>`);
                 }
 
                 // Hint 3: Generic AI insight
-                hints.push(`<li style="font-size: 13px; color: var(--text-main); display: flex; align-items: flex-start; gap: 8px;"><i data-lucide="lightbulb" style="width: 16px; height: 16px; color: #f59e0b; flex-shrink: 0; margin-top: 2px;"></i><span>類似規模の過去プロジェクトと比較して、発注書の作成タイミングが平均2日遅れています。</span></li>`);
+                hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="lightbulb" style="width: 16px; height: 16px; color: #f59e0b;  margin-top: 2px;"></i><span>類似規模の過去プロジェクトと比較して、発注書の作成タイミングが平均2日遅れています。</span></li>`);
 
                 aiHintsContainer.innerHTML = hints.join('');
             }
@@ -1087,10 +1087,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Inject the 3 options
                 smartSelectorOptions.innerHTML = currentMapping.map((item, index) => `
                     <div class="smart-option" data-tax="${item.taxTerm}" style="animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.05}s both;">
-                        <div class="icon-wrapper" style="font-size: 14px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">
+                        <div class="icon-wrapper" style="font-size: 14px; display: grid; place-items: center; color: var(--text-muted);">
                             ${item.icon}
                         </div>
-                        <div style="flex: 1;">
+                        <div style="">
                             <div style="font-weight: 600;">${item.ceoTerm}</div>
                             <div style="font-size: 11px; color: var(--text-muted);">（税務: ${item.taxTerm}）として記録</div>
                         </div>
@@ -1748,14 +1748,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 block.style.backgroundColor = '#f9fafb';
 
                 block.innerHTML = `
-                    <div style="font-size: 11px; color: #6b7280; display: flex; justify-content: space-between;">
+                    <div style="font-size: 11px; color: #6b7280; display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center;">
                         <span>Project: ${projName}</span>
                         <span>Date: ${exp.date}</span>
                     </div>
-                    <div style="flex: 1; min-height: 120px; border: 2px dashed #d1d5db; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 12px; background: white;">
+                    <div style=" min-height: 120px; border: 2px dashed #d1d5db; border-radius: 4px; display: grid; place-items: center; color: #9ca3af; font-size: 12px; background: white;">
                         [ AI Extracted Receipt Scan ]
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: end;">
                         <span style="font-size: 12px; font-weight: 600;">${exp.title}</span>
                         <span style="font-size: 14px; font-weight: 700; color: #10b981;">¥${exp.amount.toLocaleString()}</span>
                     </div>

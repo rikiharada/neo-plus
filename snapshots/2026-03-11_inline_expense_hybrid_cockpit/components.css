@@ -4,7 +4,7 @@ button {
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     gap: var(--spacing-sm);
@@ -71,7 +71,7 @@ button:active {
     /* The following properties were already in btn-huge and are now covered by the general button style:
     cursor: pointer;
     transition: all 0.2s ease;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     gap: var(--spacing-md); // Changed to --spacing-sm in general button, keeping original for huge
@@ -87,7 +87,7 @@ button:active {
 }
 
 .neo-avatar-row {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-md);
 }
@@ -98,7 +98,7 @@ button:active {
     border-radius: 50%;
     background: linear-gradient(135deg, silver, var(--accent-neo-blue));
     border: 2px solid var(--accent-neo-yellow);
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     font-weight: bold;
@@ -148,13 +148,13 @@ button:active {
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
     margin-bottom: var(--spacing-md);
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     gap: var(--spacing-sm);
 }
 
 .list-card-header {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     justify-content: space-between;
     align-items: center;
     font-weight: bold;
@@ -163,7 +163,7 @@ button:active {
 }
 
 .list-card-body {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     gap: var(--spacing-md);
     color: var(--text-muted);
 }
@@ -182,8 +182,8 @@ button:active {
     background-color: var(--bg-color);
     border: 1.2px solid var(--btn-secondary-border);
     border-radius: 16px;
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -226,8 +226,8 @@ button:active {
 
 .project-list-item-info {
     padding: 16px;
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     gap: 8px;
 }
 
@@ -243,7 +243,7 @@ button:active {
 }
 
 .project-list-item-meta {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     justify-content: space-between;
     align-items: center;
 }
@@ -261,7 +261,7 @@ button:active {
     font-size: 12px;
     color: var(--text-muted);
     font-weight: 400;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     gap: 4px;
 }
@@ -283,7 +283,7 @@ button:active {
 }
 
 .alert-banner {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     gap: 8px;
     background: rgba(29, 155, 240, 0.1);
@@ -300,14 +300,14 @@ button:active {
 
 
 .project-list-item-body {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-lg);
     color: var(--text-muted);
 }
 
 .project-list-item-metric {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     gap: 6px;
     font-size: var(--text-small);
@@ -322,7 +322,7 @@ button:active {
 }
 
 .project-list-item-note {
-    flex: 1;
+    
     min-width: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -365,7 +365,7 @@ button:active {
     border: none;
     border-bottom: 1.2px solid var(--btn-primary-border);
     padding: var(--spacing-md) 0;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-md);
     /* Gap between icon and text */
@@ -393,7 +393,7 @@ button:active {
 
 /* Thin Monotone Icons */
 .feature-card-icon {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     color: var(--text-main);
@@ -409,10 +409,10 @@ button:active {
 }
 
 .feature-card-content {
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     gap: 2px;
-    flex: 1;
+    
 }
 
 .feature-card-title {
@@ -433,8 +433,8 @@ button:active {
 
 /* Chat UI */
 .chat-container {
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     gap: var(--spacing-md);
 }
 
@@ -447,7 +447,7 @@ button:active {
 }
 
 .chat-bubble.user {
-    align-self: flex-end;
+    align-self: end;
     background-color: var(--btn-primary-bg);
     border: 1.2px solid var(--btn-primary-border);
     color: var(--text-main);
@@ -455,7 +455,7 @@ button:active {
 }
 
 .chat-bubble.neo {
-    align-self: flex-start;
+    align-self: start;
     background-color: var(--btn-primary-bg);
     border: 1.2px solid var(--btn-primary-border);
     border-left: 3px solid var(--accent-neo-yellow);
@@ -465,9 +465,9 @@ button:active {
 
 /* Quick Replies */
 .quick-replies {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     gap: var(--spacing-sm);
-    flex-wrap: wrap;
+    
     margin-top: var(--spacing-sm);
 }
 
@@ -488,7 +488,7 @@ button:active {
 }
 
 .chat-input-area {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     gap: var(--spacing-sm);
     margin-top: auto;
     align-items: center;
@@ -501,7 +501,7 @@ button:active {
     color: var(--text-muted);
     cursor: pointer;
     padding: 0 var(--spacing-sm);
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     transition: color 0.2s;
@@ -519,7 +519,7 @@ button:active {
 }
 
 .chat-input {
-    flex: 1;
+    
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
     border: 1.2px solid var(--btn-secondary-border);
@@ -536,9 +536,9 @@ button:active {
     right: 20px;
     z-index: 9999 !important;
     /* CRITICAL: Neo must ALWAYS be on top of everything else */
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    display: grid; grid-auto-flow: column;
+    
+    align-items: end;
     gap: var(--spacing-sm);
     pointer-events: none;
     /* Let clicks pass through empty space */
@@ -578,7 +578,7 @@ button:active {
     border: 2px solid var(--accent-neo-blue);
     /* Electric blue border */
     cursor: pointer;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     padding: 0;
@@ -669,13 +669,13 @@ button:active {
 
 /* 3 Indicators */
 .health-indicator-card {
-    flex: 1;
+    
     background: rgba(29, 155, 240, 0.03);
     border: 1px solid rgba(29, 155, 240, 0.1);
     border-radius: 16px;
     padding: 12px;
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     gap: 4px;
 }
 
@@ -708,10 +708,10 @@ button:active {
 
 /* Cash Flow Wave */
 .cf-bar-group {
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     align-items: center;
-    justify-content: flex-end;
+    justify-content: end;
     height: 100%;
     width: 32px;
     gap: 6px;
@@ -779,8 +779,8 @@ button:active {
     border: 1.2px solid var(--btn-primary-border);
     border-radius: var(--radius-xl);
     /* Rounded pill shape */
-    display: flex;
-    flex-direction: row;
+    display: grid; grid-auto-flow: column;
+    
     /* Horizontal flex */
     gap: 4px;
     padding: 6px;
@@ -795,7 +795,7 @@ button:active {
 }
 
 .filter-dropdown.hidden {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     /* Override utility display:none to allow transition */
     opacity: 0;
     pointer-events: none;
@@ -850,7 +850,7 @@ button:active {
     font-weight: 500;
     /* Modest weight */
     font-size: var(--text-base);
-    display: flex;
+    display: grid; grid-auto-flow: column;
     justify-content: center;
     align-items: center;
     transition: background-color 0.2s ease;
@@ -872,7 +872,7 @@ button:active {
     cursor: pointer;
     color: var(--text-muted);
     padding: 4px;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     transition: color 0.2s ease;
@@ -900,7 +900,7 @@ button:active {
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     z-index: 2000;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     opacity: 0;
@@ -924,8 +924,8 @@ button:active {
     /* Reduced from xl to give more horizontal breathing room */
     transform: translateY(20px);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     gap: var(--spacing-md);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     border: 1.2px solid var(--btn-primary-border);
@@ -948,8 +948,8 @@ button:active {
 }
 
 .form-group {
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     gap: 4px;
 }
 
@@ -1020,8 +1020,8 @@ button:active {
     line-height: 1.5;
     width: max-content;
     max-width: 260px;
-    display: flex;
-    align-items: flex-start;
+    display: grid; grid-auto-flow: column;
+    align-items: start;
     gap: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     opacity: 0;
@@ -1048,7 +1048,7 @@ button:active {
     border-radius: 50%;
     object-fit: cover;
     border: 1.2px solid var(--accent-neo-yellow);
-    flex-shrink: 0;
+    
 }
 
 .neo-tooltip-trigger:hover .neo-tooltip {
@@ -1083,21 +1083,21 @@ button:active {
 }
 
 .smart-selector-header {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--spacing-sm);
 }
 
 .smart-selector-options {
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     gap: 8px;
 }
 
 /* Shared Layout Feeling Animated Cards */
 .smart-option {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
@@ -1114,7 +1114,7 @@ button:active {
 }
 
 .smart-option .icon-wrapper {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     justify-content: center;
     align-items: center;
     width: 32px;
@@ -1170,7 +1170,7 @@ button:active {
     font-weight: bold;
     cursor: pointer;
     transition: opacity 0.2s ease;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     justify-content: center;
     align-items: center;
 }
@@ -1181,7 +1181,7 @@ button:active {
 
 /* Color Picker */
 .color-picker-container {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     gap: 12px;
     align-items: center;
     justify-content: center;
@@ -1210,7 +1210,7 @@ button:active {
 
 /* Business Cockpit */
 .timeline-list-item {
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-md);
     padding: var(--spacing-sm) 0;
@@ -1225,7 +1225,7 @@ button:active {
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     background-color: var(--bg-hover);
@@ -1233,11 +1233,11 @@ button:active {
 }
 
 .timeline-info {
-    flex: 1;
+    
     min-width: 0;
     /* for ellipsis */
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     gap: 2px;
 }
 
@@ -1277,7 +1277,7 @@ button:active {
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: var(--text-tiny);
     font-weight: 600;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     gap: 8px;
     margin-bottom: var(--spacing-md);
@@ -1285,16 +1285,16 @@ button:active {
 
 /* Intelligent Cockpit (Neo+ Final Build) */
 .dashboard-cockpit {
-    flex: 1;
-    display: flex;
+    
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     padding: var(--spacing-xl) 0;
 }
 
 .neo-agent-center {
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     align-items: center;
     width: 100%;
     margin-top: -10vh;
@@ -1318,7 +1318,7 @@ button:active {
     width: 90%;
     max-width: 400px;
     position: relative;
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
 }
 
@@ -1351,7 +1351,7 @@ button:active {
     background: transparent;
     border: none;
     color: var(--text-muted);
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -1378,8 +1378,8 @@ button:active {
     bottom: 0;
     background: rgba(0, 0, 0, 0.4);
     z-index: 2000;
-    display: flex;
-    align-items: flex-end;
+    display: grid; grid-auto-flow: column;
+    align-items: end;
     justify-content: center;
     opacity: 0;
     pointer-events: none;
@@ -1403,8 +1403,8 @@ button:active {
     padding: var(--spacing-lg) var(--spacing-lg) calc(var(--spacing-xl) + env(safe-area-inset-bottom));
     transform: translateY(100%);
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1);
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
     gap: var(--spacing-md);
     box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
 }

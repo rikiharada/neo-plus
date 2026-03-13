@@ -8,15 +8,15 @@
     overflow-x: hidden;
     overflow-y: auto;
     background-color: var(--bg-color);
-    display: flex;
-    flex-direction: column;
+    display: grid; grid-auto-flow: column;
+    
 }
 
 /* Views */
 .view {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+    
+    display: grid; grid-auto-flow: column;
+    
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -34,7 +34,7 @@
     right: 0;
     height: 60px;
     padding: 0 var(--spacing-lg);
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     /* Center the title */
@@ -47,7 +47,7 @@
 .header-actions {
     position: absolute;
     right: var(--spacing-lg);
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     gap: var(--spacing-sm);
 }
@@ -58,7 +58,7 @@
     color: var(--text-main);
     cursor: pointer;
     padding: var(--spacing-sm);
-    display: flex;
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     transition: color 0.2s ease, transform 0.2s ease;
@@ -106,8 +106,8 @@ body {
     font-weight: 700;
     color: var(--text-main);
     letter-spacing: normal;
-    display: flex;
-    align-items: flex-start;
+    display: grid; grid-auto-flow: column;
+    align-items: start;
 }
 
 .title-tm {
@@ -120,9 +120,9 @@ body {
 
 /* Content blocks */
 .content-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+    
+    display: grid; grid-auto-flow: column;
+    
     gap: var(--spacing-xl);
 }
 
@@ -143,7 +143,7 @@ body {
     /* Solid background */
     border-top: 1.2px solid var(--btn-primary-border);
     /* Ultra-thin outline aesthetic */
-    display: flex;
+    display: grid; grid-auto-flow: column;
     justify-content: space-around;
     padding-bottom: env(safe-area-inset-bottom);
     z-index: 100;
@@ -152,8 +152,8 @@ body {
 }
 
 .nav-item {
-    flex: 1;
-    display: flex;
+    
+    display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: center;
     padding: var(--spacing-lg) 0;

@@ -83,7 +83,7 @@ body {
   letter-spacing: -0.01em;
   /* Tighter letter spacing */
   -webkit-font-smoothing: antialiased;
-  display: flex;
+  display: grid; grid-auto-flow: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;

@@ -68,11 +68,11 @@
 
         <!-- DASHBOARD VIEW (INTERACTIVE COCKPIT) -->
         <div id="view-dash" class="view hidden"
-            style="background-color: var(--bg-color); display: flex; flex-direction: column; height: 100vh;">
+            style="background-color: var(--bg-color); display: block; height: 100vh;">
             <div class="header-area">
                 <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
                 <div class="header-actions">
-                    <div style="display: flex; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
                         <div style="position: relative;">
                             <i data-lucide="cloud-check"
                                 style="width: 18px; height: 18px; stroke-width: 1.2px; color: #10b981;"
@@ -88,10 +88,10 @@
 
             <!-- Cockpit Area -->
             <div
-                style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--spacing-xl); padding-bottom: 120px;">
+                style=" display: block; align-items: center; justify-content: center; padding: var(--spacing-xl); padding-bottom: 120px;">
                 <!-- Floating Neo Avatar -->
                 <div
-                    style="margin-bottom: var(--spacing-lg); display: flex; flex-direction: column; align-items: center; gap: 12px; animation: float 6s ease-in-out infinite;">
+                    style="margin-bottom: var(--spacing-lg); display: block; align-items: center; gap: 12px; animation: float 6s ease-in-out infinite;">
                     <img src="img/neo_avatar.jpg" alt="Neo"
                         onerror="this.src=''; this.alt='NEO'; this.style.fontSize='var(--text-small)'; this.style.color='var(--bg-color)';"
                         style="width: 64px; height: 64px; border-radius: 50%; box-shadow: 0 8px 32px rgba(29, 155, 240, 0.4); border: 2px solid rgba(255,255,255,0.1);">
@@ -102,20 +102,20 @@
                 <!-- Premium Multi-Modal Message Box -->
                 <div style="width: 100%; max-width: 600px; position: relative;">
                     <div
-                        style="position: relative; border-radius: 24px; border: 1.2px solid var(--btn-secondary-border); background: var(--bg-color); box-shadow: 0 4px 20px rgba(0,0,0,0.02); overflow: hidden; display: flex; flex-direction: column;">
+                        style="position: relative; border-radius: 24px; border: 1.2px solid var(--btn-secondary-border); background: var(--bg-color); box-shadow: 0 4px 20px rgba(0,0,0,0.02); overflow: hidden; display: block;">
                         <textarea id="main-instruction-input" class="form-control" placeholder="CEO、今日はどのプロジェクトを進めますか？"
                             style="width: 100%; border: none; padding: 20px 24px; background: transparent; color: var(--text-main); font-size: 16px; resize: none; min-height: 120px; line-height: 1.6; outline: none;"></textarea>
 
                         <div
-                            style="display: flex; justify-content: space-between; align-items: center; padding: 0 16px 16px 16px;">
+                            style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center; padding: 0 16px 16px 16px;">
                             <button id="btn-attach-image"
-                                style="background: rgba(29, 155, 240, 0.05); color: var(--accent-neo-blue); border: 1px dashed rgba(29, 155, 240, 0.4); border-radius: 12px; padding: 8px 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;">
+                                style="background: rgba(29, 155, 240, 0.05); color: var(--accent-neo-blue); border: 1px dashed rgba(29, 155, 240, 0.4); border-radius: 12px; padding: 8px 12px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;">
                                 <i data-lucide="camera" style="width: 18px; height: 18px;"></i>
                                 <span style="font-size: 12px; font-weight: 600;">レシート読取</span>
                             </button>
 
                             <button id="main-mic-btn"
-                                style="background: var(--text-main); color: var(--bg-color); border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                style="background: var(--text-main); color: var(--bg-color); border: none; border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                                 <i data-lucide="arrow-up" style="width: 20px; height: 20px; stroke-width: 2.5px;"></i>
                             </button>
                         </div>
@@ -130,10 +130,10 @@
             <div
                 style="background: linear-gradient(135deg, #0a192f, #0d274a); color: #fff; padding: calc(env(safe-area-inset-top) + 20px) var(--spacing-lg) var(--spacing-lg) var(--spacing-lg); border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; z-index: 10;">
                 <div
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl);">
+                    style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center; margin-bottom: var(--spacing-xl);">
                     <h1 style="font-size: 20px; font-weight: 700; margin: 0; letter-spacing: 0.05em;">Neo<sup
                             style="font-size: 10px; color: var(--accent-neo-blue); margin-left: 2px;">+</sup></h1>
-                    <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--spacing-sm);">
                         <div style="position: relative;">
                             <i data-lucide="cloud-check"
                                 style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;"
@@ -163,15 +163,15 @@
 
             <!-- Content Area -->
             <div class="content-area"
-                style="padding: var(--spacing-lg); gap: var(--spacing-md); display: flex; flex-direction: column;">
+                style="padding: var(--spacing-lg); gap: var(--spacing-md); display: block;">
 
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center;">
                     <h2
                         style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin: 0; letter-spacing: 0.05em;">
                         アカウント (プロジェクト)</h2>
-                    <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="display: grid; grid-auto-flow: column; gap: 8px; align-items: center;">
                         <button id="btn-create-project"
-                            style="background: none; border: none; color: var(--accent-neo-blue); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 8px;">
+                            style="background: none; border: none; color: var(--accent-neo-blue); font-size: 13px; font-weight: 600; cursor: pointer; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px; padding: 4px 8px;">
                             <i data-lucide="plus" style="width: 16px; height: 16px;"></i> 新規プロジェクト
                         </button>
                         <div style="position: relative;">
@@ -191,7 +191,7 @@
 
                 <!-- Dynamic Project List Container -->
                 <div id="project-list-container"
-                    style="display: flex; flex-direction: column; gap: 0; visibility: visible !important;">
+                    style="display: block; gap: 0; visibility: visible !important;">
                     <!-- Injected via JS -->
                 </div>
             </div>
@@ -247,7 +247,7 @@
             <div class="header-area">
                 <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
                 <div class="header-actions">
-                    <div style="display: flex; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
                         <div style="position: relative;">
                             <i data-lucide="cloud-check"
                                 style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;"
@@ -262,11 +262,11 @@
             </div>
 
             <div class="content-area dashboard-health"
-                style="padding: 0 var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-xl); background-color: var(--bg-color); padding-bottom: 120px;">
+                style="padding: 0 var(--spacing-lg); display: block; gap: var(--spacing-xl); background-color: var(--bg-color); padding-bottom: 120px;">
 
                 <!-- Center Profit Ring -->
                 <div
-                    style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: var(--spacing-md); position: relative;">
+                    style="display: block; align-items: center; justify-content: center; margin-top: var(--spacing-md); position: relative;">
                     <svg width="240" height="240" viewBox="0 0 240 240" style="transform: rotate(-90deg);">
                         <circle cx="120" cy="120" r="100" fill="none" stroke="rgba(29, 155, 240, 0.05)"
                             stroke-width="8">
@@ -297,7 +297,7 @@
                 </div>
 
                 <!-- 3 Indicators (Tax, Fixed Costs, Investment) -->
-                <div style="display: flex; justify-content: space-between; gap: var(--spacing-sm);">
+                <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; gap: var(--spacing-sm);">
                     <div class="health-indicator-card">
                         <div class="health-indicator-label">納税準備</div>
                         <div class="health-indicator-value" id="wallet-tax-prep">¥0</div>
@@ -326,7 +326,7 @@
 
                 <!-- Cash Flow Wave (Bar Chart) -->
                 <div style="margin-top: 10px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                         <h3
                             style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin: 0; letter-spacing: 0.05em;">
                             キャッシュフロー残高（3ヶ月先予測）</h3>
@@ -334,7 +334,7 @@
                             Forecast</span>
                     </div>
                     <div id="wallet-cf-container"
-                        style="display: flex; align-items: flex-end; justify-content: space-between; height: 120px; padding: 0 8px;">
+                        style="display: grid; grid-auto-flow: column; align-items: end; justify-content: space-between; height: 120px; padding: 0 8px;">
                         <!-- JS Injected Bars -->
                     </div>
                     <div style="height: 1px; background: var(--btn-secondary-border); margin-top: 8px;"></div>
@@ -344,7 +344,7 @@
                 <div
                     style="margin-top: var(--spacing-lg); padding: var(--spacing-lg); background: rgba(29, 155, 240, 0.03); border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
                     <h3
-                        style="font-size: 14px; font-weight: 600; color: var(--accent-neo-blue); margin: 0 0 12px 0; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;">
+                        style="font-size: 14px; font-weight: 600; color: var(--accent-neo-blue); margin: 0 0 12px 0; letter-spacing: 0.05em; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
                         <i data-lucide="landmark" style="width: 16px; height: 16px;"></i>
                         確定申告・税理士連携
                     </h3>
@@ -355,19 +355,19 @@
                         予測される申告所得は <strong>¥0</strong> となります。連携用のCSV・PDF出力が可能です。
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: block; gap: 8px;">
                         <button id="btn-export-csv" class="btn-primary"
-                            style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: grid; place-items: center; gap: 8px;">
                             <i data-lucide="file-down" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
                             CSV / PDF 書き出し
                         </button>
                         <button class="btn-primary"
-                            style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: grid; place-items: center; gap: 8px;">
                             <i data-lucide="send" style="width: 16px; height: 16px; color: var(--accent-neo-blue);"></i>
                             税理士へデータ送信
                         </button>
                         <button id="btn-export-pdf-grid" class="btn-primary"
-                            style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: grid; place-items: center; gap: 8px;">
                             <i data-lucide="receipt" style="width: 16px; height: 16px; color: #10b981;"></i>
                             レシート全件ダウンロード
                         </button>
@@ -382,7 +382,7 @@
             <div class="header-area">
                 <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
                 <div class="header-actions">
-                    <div style="display: flex; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
                         <div style="position: relative;">
                             <i data-lucide="cloud-check"
                                 style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;"
@@ -409,8 +409,8 @@
                     </div>
 
                     <label
-                        style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                        style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
+                        <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
                             <i data-lucide="cloud" style="width: 20px; height: 20px; color: #007AFF;"></i>
                             <span style="font-size: 14px; font-weight: 500;">Apple iCloud</span>
                         </div>
@@ -418,8 +418,8 @@
                             style="accent-color: var(--accent-neo-blue);">
                     </label>
                     <label
-                        style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                        style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
+                        <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
                             <i data-lucide="triangle" style="width: 20px; height: 20px; color: #34A853;"></i>
                             <span style="font-size: 14px; font-weight: 500;">Google Drive</span>
                         </div>
@@ -427,8 +427,8 @@
                             style="accent-color: var(--accent-neo-blue);">
                     </label>
                     <label
-                        style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                        style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
+                        <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
                             <i data-lucide="box" style="width: 20px; height: 20px; color: #0061FF;"></i>
                             <span style="font-size: 14px; font-weight: 500;">Dropbox</span>
                         </div>
@@ -466,9 +466,9 @@
 
                 <!-- Navbar Area -->
                 <div
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-xl); position: relative; z-index: 2;">
+                    style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center; margin-bottom: var(--spacing-xl); position: relative; z-index: 2;">
                     <button class="nav-item passbook-back" data-target="view-sites" aria-label="戻る"
-                        style="background: none; border: none; padding: 8px; color: #fff; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.1); backdrop-filter: blur(4px);">
+                        style="background: none; border: none; padding: 8px; color: #fff; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,0.1); backdrop-filter: blur(4px);">
                         <i data-lucide="chevron-left" style="width: 24px; height: 24px;"></i>
                     </button>
                     <!-- Small title -->
@@ -482,7 +482,7 @@
 
                     <!-- Action Menu Dropdown (Re-used) -->
                     <div id="project-action-menu" class="hidden"
-                        style="position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg-color); border: 1px solid var(--btn-primary-border); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 140px; z-index: 200; display: flex; flex-direction: column; overflow: hidden;">
+                        style="position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg-color); border: 1px solid var(--btn-primary-border); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 140px; z-index: 200; display: block; overflow: hidden;">
                         <button id="btn-project-edit"
                             style="width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; border-bottom: 1px solid var(--btn-primary-border); font-size: 14px; font-weight: 500; color: var(--text-main); cursor: pointer; transition: background 0.2s;">
                             編集
@@ -506,13 +506,13 @@
 
                 <!-- Action Buttons -->
                 <div
-                    style="display: flex; gap: var(--spacing-md); position: relative; z-index: 2; margin-top: var(--spacing-xl);">
+                    style="display: grid; grid-auto-flow: column; gap: var(--spacing-md); position: relative; z-index: 2; margin-top: var(--spacing-xl);">
                     <button onclick="window.openExpenseScannerModal()"
-                        style="flex: 1; background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 12px; border-radius: 16px; font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                        style=" background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 12px; border-radius: 16px; font-weight: 600; font-size: 14px; display: grid; place-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                         <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i> 経費追加
                     </button>
                     <button onclick="window.openDocGenModal()"
-                        style="flex: 1; background: #fff; color: #1D9BF0; border: none; padding: 12px; border-radius: 16px; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
+                        style=" background: #fff; color: #1D9BF0; border: none; padding: 12px; border-radius: 16px; font-weight: 700; font-size: 14px; display: grid; place-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
                         ⚡️ 書類作成
                     </button>
                 </div>
@@ -520,7 +520,7 @@
 
             <!-- Main Content Area (Data Dashboard) -->
             <div class="passbook-content"
-                style="flex: 1; background: var(--bg-color); padding: var(--spacing-lg); display: flex; flex-direction: column; gap: var(--spacing-md); padding-bottom: 120px;">
+                style=" background: var(--bg-color); padding: var(--spacing-lg); display: block; gap: var(--spacing-md); padding-bottom: 120px;">
 
                 <div class="dashboard-grid"
                     style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
@@ -528,7 +528,7 @@
                     <!-- 1. Notes (Full Width) -->
                     <div class="dash-card"
                         style="grid-column: 1 / -1; padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px; background: rgba(29, 155, 240, 0.02);">
-                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                        <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 6px; margin-bottom: 8px;">
                             <i data-lucide="sticky-note"
                                 style="width: 14px; height: 14px; color: var(--accent-neo-blue);"></i>
                             <h3
@@ -544,7 +544,7 @@
                     <div class="dash-card"
                         style="padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
                         <div
-                            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: start; margin-bottom: 12px;">
                             <i data-lucide="file-text" style="width: 20px; height: 20px; color: var(--text-muted);"></i>
                             <span
                                 style="font-size: 11px; background: var(--btn-secondary-bg); padding: 2px 6px; border-radius: 4px; color: var(--text-muted); font-weight: 600;">NEW</span>
@@ -567,7 +567,7 @@
                         <h3 style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 8px 0;">
                             現場写真・資料
                         </h3>
-                        <div style="display: flex; gap: 6px; overflow-x: hidden;">
+                        <div style="display: grid; grid-auto-flow: column; gap: 6px; overflow-x: hidden;">
                             <div
                                 style="width: 32px; height: 32px; background: url('images/mock-site1.jpg') center/cover; border-radius: 8px;">
                             </div>
@@ -575,7 +575,7 @@
                                 style="width: 32px; height: 32px; background: url('images/mock-site2.jpg') center/cover; border-radius: 8px;">
                             </div>
                             <div
-                                style="width: 32px; height: 32px; background: var(--btn-secondary-bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); font-weight: 600;">
+                                style="width: 32px; height: 32px; background: var(--btn-secondary-bg); border-radius: 8px; display: grid; place-items: center; font-size: 10px; color: var(--text-muted); font-weight: 600;">
                                 +5</div>
                         </div>
                     </div>
@@ -584,7 +584,7 @@
                     <div class="dash-card"
                         style="grid-column: 1 / -1; padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
                         <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center; margin-bottom: 16px;">
                             <h3
                                 style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 0; letter-spacing: 0.05em;">
                                 収支明細・アクティビティ</h3>
@@ -596,7 +596,7 @@
                             </div>
                         </div>
 
-                        <div id="activity-list-container" style="display: flex; flex-direction: column; gap: 0;">
+                        <div id="activity-list-container" style="display: block; gap: 0;">
                             <!-- Activity items populated by JS -->
                         </div>
                     </div>
@@ -615,7 +615,7 @@
 
         <!-- Document Generation view (tab-docs) -->
         <div id="tab-docs" class="tab-content hidden"
-            style="flex: 1; overflow-y: auto; padding: var(--spacing-lg); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+            style=" overflow-y: auto; padding: var(--spacing-lg); display: block; align-items: center; justify-content: center; text-align: center;">
             <div
                 style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.4)); border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 24px; padding: var(--spacing-xxl) var(--spacing-lg); max-width: 400px; width: 100%; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); backdrop-filter: blur(10px);">
 
@@ -635,9 +635,9 @@
                     AIがプロジェクトの進捗と経費から、<br>最適な請求書や領収書をワンタップで自動生成します。
                 </p>
 
-                <div style="display: flex; flex-direction: column; gap: var(--spacing-md); width: 100%;">
+                <div style="display: block; gap: var(--spacing-md); width: 100%;">
                     <button class="btn-primary"
-                        style="background: #fff; color: var(--text-main); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s;"
+                        style="background: #fff; color: var(--text-main); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; display: grid; place-items: center; gap: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s;"
                         onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'"
                         onmouseleave="this.style.transform='scale(1)'">
                         <i data-lucide="file-check-2"
@@ -645,14 +645,14 @@
                         請求書を作成する
                     </button>
                     <button class="btn-primary"
-                        style="background: #fff; color: var(--text-main); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s;"
+                        style="background: #fff; color: var(--text-main); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; display: grid; place-items: center; gap: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s;"
                         onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'"
                         onmouseleave="this.style.transform='scale(1)'">
                         <i data-lucide="receipt" style="width: 18px; height: 18px; color: #10b981;"></i>
                         領収書を発行する
                     </button>
                     <button class="btn-primary"
-                        style="background: #fff; color: var(--text-main); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s;"
+                        style="background: #fff; color: var(--text-main); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; display: grid; place-items: center; gap: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.02); transition: all 0.2s;"
                         onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'"
                         onmouseleave="this.style.transform='scale(1)'">
                         <i data-lucide="clipboard-list" style="width: 18px; height: 18px; color: #f59e0b;"></i>
@@ -666,7 +666,7 @@
         <div id="modal-new-project" class="modal-overlay">
             <div class="modal-content" style="position: relative; padding: var(--spacing-lg); text-align: center;">
                 <button id="btn-close-modal" class="modal-close-icon" aria-label="閉じる"
-                    style="position: absolute; top: 12px; right: 12px; padding: 12px; display: flex; align-items: center; justify-content: center;">
+                    style="position: absolute; top: 12px; right: 12px; padding: 12px; display: grid; place-items: center;">
                     <i data-lucide="x"
                         style="width: 28px; height: 28px; stroke-width: 1.5px; color: var(--text-muted);"></i>
                 </button>
@@ -705,8 +705,8 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); text-align: left;">
-                    <div class="select-wrapper" style="position: relative; flex: 1;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); text-align: left;">
+                    <div class="select-wrapper" style="position: relative; ">
                         <select id="new-proj-category" class="form-control"
                             style="appearance: none; -webkit-appearance: none; cursor: pointer; padding: 12px 32px 12px 12px; font-size: 14px;">
                             <option value="" disabled selected>業種</option>
@@ -719,12 +719,12 @@
                             style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); width: 16px; height: 16px; stroke-width: 1.5px;"></i>
                     </div>
                     <!-- Native Date Range -->
-                    <div style="display: flex; gap: 4px; flex: 2; align-items: center;">
+                    <div style="display: grid; grid-auto-flow: column; gap: 4px; height: 100%; align-items: center;">
                         <input type="date" id="new-proj-start-date" class="form-control"
-                            style="padding: 10px 8px; flex: 1; font-size: 12px; text-align: center;">
+                            style="padding: 10px 8px;  font-size: 12px; text-align: center;">
                         <span style="color: var(--text-muted); font-size: 12px;">-</span>
                         <input type="date" id="new-proj-end-date" class="form-control"
-                            style="padding: 10px 8px; flex: 1; font-size: 12px; text-align: center;">
+                            style="padding: 10px 8px;  font-size: 12px; text-align: center;">
                     </div>
                 </div>
 
@@ -737,7 +737,7 @@
         <div id="modal-edit-project" class="modal-overlay">
             <div class="modal-content" style="position: relative; padding: var(--spacing-lg); text-align: center;">
                 <button id="btn-close-edit-modal" class="modal-close-icon" aria-label="閉じる"
-                    style="position: absolute; top: 12px; right: 12px; padding: 12px; display: flex; align-items: center; justify-content: center;">
+                    style="position: absolute; top: 12px; right: 12px; padding: 12px; display: grid; place-items: center;">
                     <i data-lucide="x"
                         style="width: 28px; height: 28px; stroke-width: 1.5px; color: var(--text-muted);"></i>
                 </button>
@@ -756,8 +756,8 @@
                         style="padding: 12px 16px;">
                 </div>
 
-                <div style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); text-align: left;">
-                    <div class="select-wrapper" style="position: relative; flex: 1;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); text-align: left;">
+                    <div class="select-wrapper" style="position: relative; ">
                         <select id="edit-proj-category" class="form-control"
                             style="appearance: none; -webkit-appearance: none; cursor: pointer; padding: 12px 32px 12px 12px; font-size: 14px;">
                             <option value="" disabled>業種</option>
@@ -781,7 +781,7 @@
             <div class="modal-content"
                 style="position: relative; padding: var(--spacing-lg); text-align: center; max-width: 320px;">
                 <div
-                    style="width: 48px; height: 48px; border-radius: 50%; background-color: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--spacing-md) auto;">
+                    style="width: 48px; height: 48px; border-radius: 50%; background-color: #fee2e2; color: #ef4444; display: grid; place-items: center; margin: 0 auto var(--spacing-md) auto;">
                     <i data-lucide="alert-triangle" style="width: 24px; height: 24px;"></i>
                 </div>
                 <h3 class="modal-title" style="margin-bottom: var(--spacing-sm); font-size: 1.1rem;">プロジェクトの削除</h3>
@@ -789,11 +789,11 @@
                     style="color: var(--text-muted); font-size: 14px; margin-bottom: var(--spacing-xl); line-height: 1.4;">
                     本当にプロジェクトを削除してよろしいですか？<br>この操作は取り消せません。</p>
 
-                <div style="display: flex; gap: var(--spacing-sm);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm);">
                     <button id="btn-cancel-delete"
-                        style="flex: 1; padding: 12px 0; border-radius: 12px; border: 1px solid #EFF3F4; background: transparent; color: var(--text-main); font-weight: 600;">いいえ</button>
+                        style=" padding: 12px 0; border-radius: 12px; border: 1px solid #EFF3F4; background: transparent; color: var(--text-main); font-weight: 600;">いいえ</button>
                     <button id="btn-confirm-delete"
-                        style="flex: 1; padding: 12px 0; border-radius: 12px; border: none; background: #FF3B30; color: white; font-weight: 600; box-shadow: 0 4px 10px rgba(255,59,48,0.3);">はい（削除）</button>
+                        style=" padding: 12px 0; border-radius: 12px; border: none; background: #FF3B30; color: white; font-weight: 600; box-shadow: 0 4px 10px rgba(255,59,48,0.3);">はい（削除）</button>
                 </div>
             </div>
         </div>
@@ -805,7 +805,7 @@
                 <i data-lucide="home"></i>
             </button>
             <button class="nav-item" data-target="view-sites" aria-label="プロジェクト"
-                onclick="window.switchView('view-sites'); return false;" style="display: flex !important;">
+                onclick="window.switchView('view-sites'); return false;" style="display: block !important;">
                 <i data-lucide="folder"></i>
             </button>
             <button class="nav-item" data-target="view-wallet" aria-label="Wallet">
@@ -823,7 +823,7 @@
         <div class="half-modal-content" id="doc-gen-step-1">
             <div class="half-modal-handle"></div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center;">
                 <h3 style="margin: 0; font-size: 18px; font-weight: 700;">書類作成 <span
                         style="font-size: 14px; font-weight: 400; color: var(--accent-neo-blue);">⚡️ 自動入力</span></h3>
                 <button id="btn-close-doc-modal"
@@ -836,13 +836,13 @@
                 以下のプロジェクト情報をもとに書類を生成します。Neoが自動で入力を補助しています。</p>
 
             <div
-                style="background: rgba(29, 155, 240, 0.05); border: 1px solid rgba(29, 155, 240, 0.2); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
-                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                style="background: rgba(29, 155, 240, 0.05); border: 1px solid rgba(29, 155, 240, 0.2); border-radius: 12px; padding: 12px; display: block; gap: 8px;">
+                <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; font-size: 13px;">
                     <span style="color: var(--text-muted);">対象現場:</span>
                     <strong id="doc-gen-project-name" style="color: var(--text-main);">Project Name</strong>
                 </div>
                 <!-- Adding unbilled amount context as a suggested value -->
-                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; font-size: 13px;">
                     <span style="color: var(--text-muted);">未請求額 (推定):</span>
                     <strong id="doc-gen-unbilled" style="color: var(--accent-neo-blue);">¥---</strong>
                 </div>
@@ -879,7 +879,7 @@
             <div class="half-modal-handle"></div>
 
             <div
-                style="width: 64px; height: 64px; border-radius: 50%; background-color: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                style="width: 64px; height: 64px; border-radius: 50%; background-color: rgba(16, 185, 129, 0.1); color: #10b981; display: grid; place-items: center; margin: 0 auto 16px auto;">
                 <i data-lucide="check-circle" style="width: 32px; height: 32px; stroke-width: 2px;"></i>
             </div>
 
@@ -888,17 +888,17 @@
                 書類データがプロジェクトに保存されました。<br>次のアクションを選択してください。
             </p>
 
-            <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: block; gap: 12px;">
                 <button class="btn-primary doc-action-btn"
-                    style="background: rgba(29, 155, 240, 0.1); color: var(--accent-neo-blue); border: 1px solid rgba(29, 155, 240, 0.2); border-radius: 12px; padding: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    style="background: rgba(29, 155, 240, 0.1); color: var(--accent-neo-blue); border: 1px solid rgba(29, 155, 240, 0.2); border-radius: 12px; padding: 14px; font-weight: 600; display: grid; place-items: center; gap: 8px;">
                     <i data-lucide="mail" style="width: 18px; height: 18px;"></i> メールで転送する
                 </button>
                 <button class="btn-primary doc-action-btn"
-                    style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 14px; font-weight: 600; display: grid; place-items: center; gap: 8px;">
                     <i data-lucide="cloud" style="width: 18px; height: 18px;"></i> クラウドへ保存
                 </button>
                 <button class="btn-primary doc-action-btn"
-                    style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 12px; padding: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 12px; padding: 14px; font-weight: 600; display: grid; place-items: center; gap: 8px;">
                     <i data-lucide="download" style="width: 18px; height: 18px;"></i> 端末にダウンロード
                 </button>
             </div>
@@ -915,7 +915,7 @@
         <div class="half-modal-content">
             <div class="half-modal-handle"></div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: center; margin-bottom: 24px;">
                 <h3 style="margin: 0; font-size: 18px; font-weight: 700;">領収書スキャン <span
                         style="font-size: 14px; font-weight: 400; color: var(--accent-neo-blue);">⚡️ AI自動抽出</span></h3>
                 <button id="btn-close-expense-modal"
@@ -925,7 +925,7 @@
             </div>
 
             <div
-                style="width: 100%; height: 160px; background-color: var(--btn-secondary-bg); border-radius: 16px; border: 1px dashed rgba(29, 155, 240, 0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 16px; position: relative; overflow: hidden;">
+                style="width: 100%; height: 160px; background-color: var(--btn-secondary-bg); border-radius: 16px; border: 1px dashed rgba(29, 155, 240, 0.4); display: block; align-items: center; justify-content: center; margin-bottom: 16px; position: relative; overflow: hidden;">
                 <i data-lucide="camera"
                     style="width: 32px; height: 32px; color: var(--accent-neo-blue); margin-bottom: 8px;"></i>
                 <span style="font-size: 13px; color: var(--text-muted); font-weight: 500;">AIスキャン完了</span>
@@ -961,7 +961,7 @@
         <div id="a4-print-container" class="hidden"
             style="background: white; width: 210mm; min-height: 297mm; padding: 20mm; font-family: 'Noto Sans JP', sans-serif; color: #333; position: absolute; top: -9999px; left: -9999px;">
             <div
-                style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: end;">
                 <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.1em;">領収書画像 原本台帳 (Neo-Sync)
                 </h1>
                 <div style="text-align: right;">
