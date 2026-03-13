@@ -1527,11 +1527,12 @@ button:active {
 
 /* 削除ボタンのオフセット */
 .delete-button {
-  position: absolute;
-  top: -10px; /* 入力ボックスの上枠線より少し上へ */
-  right: 0;
-  transform: translateY(-50%);
-  z-index: 10;
+  position: absolute !important;
+  top: -12px !important;  /* 入力枠の上に配置 */
+  right: 0px !important;
+  transform: translateY(-50%) !important;
+  background: white !important; /* 背景を白にして枠線と重なっても見やすく */
+  z-index: 100 !important;
   padding: 2px 8px;
   font-size: 12px;
 }
