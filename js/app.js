@@ -1373,11 +1373,13 @@ window.addEventListener('load', async () => {
         return `
             <div class="line-item">
                 ${aiBadge}
-                <button type="button" class="delete-button" onclick="this.closest('.line-item').remove(); window.updateDocPreview();" style="background: #fff; border: none; color: #ef4444; font-weight: 700; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer;">&times; 削除</button>
                 <input type="text" class="form-control item-name-input" placeholder="内容" oninput="window.updateDocPreview()" value="${name}" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a; position: relative; z-index: 1;">
                 <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="1" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
-                <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="単価" oninput="window.updateDocPreview()" value="${price}" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #fff; color: #0f172a;">
-                <span style="font-size: 14px; font-weight: 700; color: #475569; margin: 0; padding: 0;">円</span>
+                <div style="position: relative; width: 100%;">
+                    <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="単価" oninput="window.updateDocPreview()" value="${price}" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 24px 12px 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #fff; color: #0f172a;">
+                    <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #94a3b8; pointer-events: none;">円</span>
+                </div>
+                <button type="button" class="delete-button" onclick="this.closest('.line-item').remove(); window.updateDocPreview();">&times;</button>
             </div>`;
     };
 
@@ -1457,8 +1459,11 @@ window.addEventListener('load', async () => {
                         <div class="line-item" style="opacity: 0.6; pointer-events: none;">
                             <input type="text" class="form-control item-name-input" value="AIが実費・人工を集計中..." disabled style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #f8fafc; color: #64748b;">
                             <input type="number" class="form-control item-qty-input" value="1" disabled style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #f8fafc; color: #64748b;">
-                            <input type="number" class="form-control item-price-input" value="0" disabled style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #f8fafc; color: #64748b;">
-                            <span style="font-size: 14px; font-weight: 700; color: #94a3b8; margin: 0; padding: 0;">円</span>
+                            <div style="position: relative; width: 100%;">
+                                <input type="number" class="form-control item-price-input" value="0" disabled style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 24px 12px 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #f8fafc; color: #64748b;">
+                                <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #94a3b8; pointer-events: none;">円</span>
+                            </div>
+                            <button type="button" class="delete-button" disabled>&times;</button>
                         </div>
                     `;
                     window.updateDocPreview();

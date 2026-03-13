@@ -1508,31 +1508,35 @@ button:active {
     margin: 0 auto var(--spacing-sm) auto;
 }
 /* Document Line Item Grid Structure */
-.line-item {
-  display: grid;
-  /* 内容(3fr), 数量(1fr), 金額(1.5fr) などの比率 */
-  grid-template-columns: 3fr 1fr 1.5fr auto; 
-  gap: 12px;
-  align-items: center;
-  position: relative; /* 削除ボタンの基準 */
-  margin-bottom: 20px;
+.line-items-container {
+  margin-top: 20px !important;
 }
 
-/* レシート読取ボタン */
+/* レシート読取ボタンのラッパー（見出しの下に配置） */
 .receipt-scan-wrapper {
-  display: flex;
-  justify-content: center; /* 中央配置 */
-  margin: 15px 0;
+  display: flex !important;
+  justify-content: center !important;
+  margin: 20px 0 30px 0 !important; /* 下側にしっかり余白を作る */
 }
 
-/* 削除ボタンのオフセット */
+/* 明細一行ごとの設定 */
+.line-item {
+  display: grid !important;
+  grid-template-columns: 1fr 60px 100px 30px !important; /* 内容, 数量, 金額, 削除 */
+  gap: 12px !important;
+  align-items: flex-end !important;
+  margin-bottom: 24px !important; /* 行同士の間にゆとりを作る */
+  padding: 10px 0 !important;
+  border-bottom: 1px solid #f0f0f0 !important; /* 境界線を薄く引くと分かりやすい */
+}
+
+/* 削除ボタンを「×」だけでシンプルに、少し離して配置 */
 .delete-button {
-  position: absolute !important;
-  top: -12px !important;  /* 入力枠の上に配置 */
-  right: 0px !important;
-  transform: translateY(-50%) !important;
-  background: white !important; /* 背景を白にして枠線と重なっても見やすく */
-  z-index: 100 !important;
-  padding: 2px 8px;
-  font-size: 12px;
+  position: static !important; /* absoluteをやめて列に収める */
+  color: #ff4d4f !important;
+  background: none !important;
+  border: none !important;
+  font-size: 18px !important;
+  cursor: pointer;
+  padding-bottom: 8px !important; /* 入力欄と高さを合わせる */
 }

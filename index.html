@@ -14,9 +14,9 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=2.6.8">
-    <link rel="stylesheet" href="css/layout.css?v=2.6.8">
-    <link rel="stylesheet" href="css/components.css?v=2.6.8">
+    <link rel="stylesheet" href="css/index.css?v=2.6.9">
+    <link rel="stylesheet" href="css/layout.css?v=2.6.9">
+    <link rel="stylesheet" href="css/components.css?v=2.6.9">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1004,14 +1004,16 @@
                                 </button>
                             </div>
                         </div>
-                        <div id="doc-line-items-container" style="display: block; gap: 0; width: 100%; margin: 0; padding: 0;">
+                        <div id="doc-line-items-container" class="line-items-container" style="display: block; gap: 0; width: 100%; margin: 0; padding: 0;">
                             <!-- Dynamic Item Row Template -->
                             <div class="line-item">
-                                <button type="button" class="delete-button" onclick="this.closest('.line-item').remove(); window.updateDocPreview();" style="background: #fff; border: none; color: #ef4444; font-weight: 700; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer;">&times; 削除</button>
                                 <input type="text" class="form-control item-name-input" placeholder="内容" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a;">
                                 <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="1" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
-                                <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="単価" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #fff; color: #0f172a;">
-                                <span style="font-size: 14px; font-weight: 700; color: #475569; margin: 0; padding: 0;">円</span>
+                                <div style="position: relative; width: 100%;">
+                                    <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="単価" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 24px 12px 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #fff; color: #0f172a;">
+                                    <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #94a3b8; pointer-events: none;">円</span>
+                                </div>
+                                <button type="button" class="delete-button" onclick="this.closest('.line-item').remove(); window.updateDocPreview();">&times;</button>
                             </div>
                         </div>
 
@@ -1470,7 +1472,7 @@
             <div class="invoice-a4"
                 style="background: #fff; width: 100%; max-width: 800px; padding: 40px 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); font-family: 'Noto Sans JP', sans-serif; color: #333;">
                 <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-bottom: 40px;">
-                    <div style="">
+                    <div>
                         <h2 id="invoice-client-name"
                             style="font-size: 20px; font-weight: 700; border-bottom: 1px solid #333; padding-bottom: 4px; display: inline-block;">
                             株式会社〇〇 御中</h2>
