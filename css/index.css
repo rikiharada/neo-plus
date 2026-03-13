@@ -183,10 +183,7 @@ input[type="number"] {
       font-size: 10px !important;
   }
 
-  /* Decrease some massive typography sizes slightly on very small screens */
-  #detail-profit {
-      font-size: 3rem !important;
-  }
+  /* Health Indicators typography handles itself via clamp */
   .view {
       padding-left: var(--spacing-md) !important;
       padding-right: var(--spacing-md) !important;
