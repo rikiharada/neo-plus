@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEO8GANG_EMERGENCY</title>
+    <title>Neo+</title>
 
     <!-- PWA & Mobile Meta Tags -->
     <!-- PWA & Mobile Meta Tags -->
@@ -23,17 +23,17 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=999">
-    <link rel="stylesheet" href="css/layout.css?v=999">
-    <link rel="stylesheet" href="css/components.css?v=999">
+    <link rel="stylesheet" href="css/index.css?v=neo-5">
+    <link rel="stylesheet" href="css/layout.css?v=neo-5">
+    <link rel="stylesheet" href="css/components.css?v=neo-5">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js?v=999"></script>
+    <script src="js/supabase-config.js?v=neo-5"></script>
 
     <!-- Industry Lexicons -->
-    <script src="js/StaticLexicon.js?v=999"></script>
-    <script src="js/industries.js?v=999"></script>
+    <script src="js/StaticLexicon.js?v=neo-5"></script>
+    <script src="js/industries.js?v=neo-5"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Global Error Debugger for Mobile Vercel -->
@@ -60,8 +60,6 @@
         };
     </script>
     <style>
-        * { border: 1px solid red !important; box-sizing: border-box !important; }
-    </style>
 </head>
 
 <body>
@@ -105,10 +103,10 @@
         }
     </style>
 
-    <div id="app-container" style="display: flex; flex-direction: column; height: 100vh; height: 100dvh; width: 100vw; overflow: hidden; position: fixed; top: 0; left: 0;">
+    <div id="app-container">
 
         <!-- Main Content Area Container (for the views) -->
-        <main style="flex: 1; position: relative; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; min-height: 0;">
+        <main style="flex: 1; position: relative; display: flex; flex-direction: column; height: calc(100vh - 120px) !important; max-height: calc(100vh - 120px) !important; overflow-y: auto; overflow-x: hidden;">
 
         <!-- SETUP VIEW (GATEKEEPER V2) -->
         <div id="view-setup" class="view hidden" style="overflow-y: auto; padding-bottom: 120px; background-color: var(--bg-color);">
@@ -1456,7 +1454,7 @@
 
         <!-- BOTTOM NAV BAR (Visible after setup) -->
         <!-- Bottom Navigation -->
-        <div id="bottom-nav" class="bottom-nav hidden" style="height: 80px !important; min-height: 80px !important; flex-shrink: 0; display: flex !important; background: blue !important; color: white !important; position: static !important; width: 100vw !important; align-items: center; justify-content: space-around; z-index: 99999;">
+        <div id="bottom-nav" class="bottom-nav hidden" style="position: fixed; bottom: 40px !important; left: 10px !important; right: 10px !important; z-index: 99999; display: flex;">
             <button class="nav-item" data-target="view-dash" aria-label="ホーム">
                 <i data-lucide="home"></i>
             </button>
