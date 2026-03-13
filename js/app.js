@@ -997,8 +997,9 @@ window.addEventListener('load', async () => {
                         const amountText = act.amount ? `¥${act.amount.toLocaleString()}` : (act.unit ? `${act.unit}人工` : '');
                         const nameEsc = (act.title || '名目なし').replace(/'/g, "\\'");
                         const amtEsc = act.amount || 0;
+                        const unitEsc = act.unit || 1;
                         return `
-                            <button onclick="window.injectActivityIntoDocLine(this, '${nameEsc}', ${amtEsc})" style="flex-shrink: 0; background: #fff; border: 1.5px solid #cbd5e1; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;">
+                            <button onclick="window.injectActivityIntoDocLine(this, '${nameEsc}', ${amtEsc}, ${unitEsc})" style="flex-shrink: 0; background: #fff; border: 1.5px solid #cbd5e1; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;">
                                 <i data-lucide="${icon}" style="width: 14px; height: 14px; color: ${color};"></i>
                                 ${act.title || '名目なし'}
                                 <span style="color: #94a3b8; font-size: 11px; margin-left: 4px;">${amountText}</span>
@@ -1018,7 +1019,7 @@ window.addEventListener('load', async () => {
         }
     };
 
-    window.injectActivityIntoDocLine = (btnEl, name, amount) => {
+    window.injectActivityIntoDocLine = (btnEl, name, amount, unit = 1) => {
         // Visual feedback
         const origBg = btnEl.style.background;
         const origColor = btnEl.style.color;
@@ -1054,16 +1055,18 @@ window.addEventListener('load', async () => {
         if (rows.length === 1) {
             const nameInp = rows[0].querySelector('.item-name-input');
             const priceInp = rows[0].querySelector('.item-price-input');
-            if (nameInp && priceInp && !nameInp.value && (!priceInp.value || priceInp.value == 0 || priceInp.value === "")) {
+            const qtyInp = rows[0].querySelector('.item-qty-input');
+            if (nameInp && priceInp && qtyInp && !nameInp.value && (!priceInp.value || priceInp.value == 0 || priceInp.value === "")) {
                 nameInp.value = name;
                 priceInp.value = amount || 0;
+                qtyInp.value = unit || 1;
                 injected = true;
             }
         }
 
         if (!injected) {
             // Append a new row mapped to this activity
-            container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(name, amount || 0, false));
+            container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(name, amount || 0, unit || 1, false));
         }
 
         window.updateDocPreview();
@@ -1451,7 +1454,7 @@ window.addEventListener('load', async () => {
     };
 
     // HTML template generation for consistency
-    window.generateDocLineHTML = (name = "", price = 0, isAI = false) => {
+    window.generateDocLineHTML = (name = "", price = 0, qty = 1, isAI = false) => {
         const aiBadge = isAI ? `
             <style>
                 @keyframes neoAIFadeIn {
@@ -1471,7 +1474,7 @@ window.addEventListener('load', async () => {
                 </div>
                 <div class="input-group qty">
                     <label>数量</label>
-                    <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="1" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
+                    <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="${qty}" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
                 </div>
                 <div class="input-group price" style="position: relative; width: 100%;">
                     <label>単価</label>
@@ -1487,7 +1490,7 @@ window.addEventListener('load', async () => {
         const container = document.getElementById('doc-line-items-container');
         if (!container) return;
         
-        container.insertAdjacentHTML('beforeend', window.generateDocLineHTML('', 0, false));
+        container.insertAdjacentHTML('beforeend', window.generateDocLineHTML('', 0, 1, false));
         
         // Auto focus the new text input
         const rows = container.querySelectorAll('.line-item');
@@ -1591,7 +1594,7 @@ window.addEventListener('load', async () => {
                                 parsedItems.forEach(item => {
                                     const pName = item.item_name || '未分類項';
                                     const pPrice = parseInt(item.price || '0', 10);
-                                    container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(pName, pPrice, true)); // isAI = true
+                                    container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(pName, pPrice, 1, true)); // isAI = true
                                     
                                     // Extreme DOM Assurance
                                     console.assert(container.lastElementChild.querySelector('input.item-name-input').value === pName, "CRITICAL ERROR: AI injected row failed to persist in DOM.");
@@ -1601,7 +1604,7 @@ window.addEventListener('load', async () => {
                                 pendingTxs.forEach(tx => {
                                     const pName = tx.title || '';
                                     const pPrice = parseInt(tx.amount || '0', 10);
-                                    container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(pName, pPrice));
+                                    container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(pName, pPrice, 1));
                                 });
                             }
                             window.updateDocPreview();
@@ -1631,7 +1634,7 @@ window.addEventListener('load', async () => {
 
                 } else {
                     // Default fallback (No transactions)
-                    container.innerHTML = window.generateDocLineHTML('一式', 0);
+                    container.innerHTML = window.generateDocLineHTML('一式', 0, 1);
                 }
              }
              
