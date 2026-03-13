@@ -5,7 +5,7 @@
 
 const GEMINI_API_KEY_STORAGE = 'neo_plus_gemini_key';
 const GEMINI_MODEL = 'gemini-1.5-flash';
-const TIER_1_KEY = 'AIzaSyCVx0ip95PkVl8WN5AX6X1PCutAzIAwjK4'; // New Paid Tier 1 Active Engine Key
+const TIER_1_KEY = 'AIzaSyDlsYWXwU12EOu9b8ylMwYpIBG_NpdJFq4'; // New Dedicated AI Studio Engine Key
 
 // Retrieve API key
 function getGeminiApiKey() {
