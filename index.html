@@ -14,17 +14,17 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=neo-22">
-    <link rel="stylesheet" href="css/layout.css?v=neo-22">
-    <link rel="stylesheet" href="css/components.css?v=neo-22">
+    <link rel="stylesheet" href="css/index.css?v=neo-23">
+    <link rel="stylesheet" href="css/layout.css?v=neo-23">
+    <link rel="stylesheet" href="css/components.css?v=neo-23">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js?v=neo-22"></script>
+    <script src="js/supabase-config.js?v=neo-23"></script>
 
     <!-- Industry Lexicons -->
-    <script src="js/StaticLexicon.js?v=neo-22"></script>
-    <script src="js/industries.js?v=neo-22"></script>
+    <script src="js/StaticLexicon.js?v=neo-23"></script>
+    <script src="js/industries.js?v=neo-23"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Global Error Debugger for Mobile Vercel -->
@@ -1381,7 +1381,7 @@
 
         <!-- BOTTOM NAV BAR (Visible after setup) -->
         <!-- Bottom Navigation -->
-        <div id="bottom-nav" class="bottom-nav hidden">
+        <div id="bottom-nav" class="bottom-nav hidden" style="align-items: center !important; justify-content: space-evenly !important;">
             <button class="nav-item" data-target="view-dash" aria-label="ホーム">
                 <i data-lucide="home"></i>
             </button>
@@ -1391,10 +1391,12 @@
             </button>
             
             <!-- THE N+ CORE BUTTON (CEO DIRECTIVE) -->
-            <button class="nav-item-nplus" onclick="window.switchView('view-chat')" aria-label="N+ AI Chat"
-                style="width: 60px !important; height: 60px !important; border-radius: 50% !important; background: linear-gradient(135deg, #1D9BF0, #0F62FE) !important; color: white !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 4px 20px rgba(29, 155, 240, 0.4) !important; border: 2px solid rgba(255,255,255,0.1) !important; z-index: 999999 !important; position: relative !important; margin: 0 auto !important; padding: 0 !important;">
-                <span style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro', 'Helvetica Neue', sans-serif !important; font-size: 28px !important; font-weight: 700 !important; letter-spacing: -0.5px !important; line-height: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding-right: 2px !important;">N<span style="font-size: 28px !important; font-weight: 700 !important; margin-left: 2px !important;">+</span></span>
-            </button>
+            <div style="flex: 1 !important; display: flex !important; justify-content: center !important; align-items: center !important;">
+                <button class="nav-item-nplus" onclick="window.switchView('view-chat')" aria-label="N+ AI Chat"
+                    style="width: 48px !important; height: 48px !important; border-radius: 50% !important; background: linear-gradient(135deg, #1D9BF0, #0F62FE) !important; color: white !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 4px 15px rgba(29, 155, 240, 0.4) !important; border: 2px solid rgba(255,255,255,0.1) !important; z-index: 999999 !important; position: relative !important; margin: 0 !important; padding: 0 !important; cursor: pointer !important;">
+                    <span style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro', 'Helvetica Neue', sans-serif !important; font-size: 22px !important; font-weight: 700 !important; letter-spacing: -0.5px !important; line-height: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding-right: 1px !important;">N<span style="font-size: 22px !important; font-weight: 700 !important; margin-left: 1px !important;">+</span></span>
+                </button>
+            </div>
             <button class="nav-item" data-target="view-wallet" aria-label="Wallet">
                 <i data-lucide="wallet"></i>
             </button>
@@ -1733,10 +1735,10 @@
     </div>
 
     <!-- Core App Scripts -->
-    <script src="js/i18n.js?v=neo-22"></script>
-    <script src="js/neo.js?v=neo-22"></script>
-    <script src="js/gemini.js?v=neo-22"></script>
-    <script src="js/app.js?v=neo-22"></script>
+    <script src="js/i18n.js?v=neo-23"></script>
+    <script src="js/neo.js?v=neo-23"></script>
+    <script src="js/gemini.js?v=neo-23"></script>
+    <script src="js/app.js?v=neo-23"></script>
 
 <div id="final-safety-tab" style="position:fixed !important; bottom:50px !important; left:20px !important; right:20px !important; height:80px !important; background:rgba(0,183,255,0.2) !important; border:2px solid #00b7ff !important; backdrop-filter:blur(20px) !important; z-index:2147483647 !important; border-radius:20px; display:flex !important; align-items:center; justify-content:center;">
   <span style="color:#00b7ff; font-weight:bold; font-size:20px;">N+ ACTIVATE</span>
