@@ -1127,13 +1127,13 @@
             </style>
             <!-- PREVIEW HEADER (Grid Box Item) -->
             <div id="preview-floating-header" style=" padding: calc(env(safe-area-inset-top) + 8px) 16px 8px 16px; border-bottom: 1px solid rgba(203, 213, 225, 0.5); background: rgba(248, 250, 252, 0.95); z-index: 50; display: block; pointer-events: auto;">
-                <div style="font-weight: 700; font-size: 15px; color: #0f172a; text-align: center; width: 100%;">最終確認</div>
+                <div style="font-weight: 700; font-size: 15px; color: #0f172a; text-align: center; width: 100%;">プレビュー</div>
             </div>
             
             <!-- A4 PREVIEW RENDER AREA -->
-            <div class="doc-gen-preview-container" style=" overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch; background: #64748b; display: block; align-items: center; justify-content: start; padding: 20px 10px 40px 10px; box-sizing: border-box;">
+            <div class="doc-gen-preview-container" style=" overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: #64748b; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 20px 0 120px 0; box-sizing: border-box; width: 100%; height: 100%; position: relative;">
                 <!-- A4 Paper Container -->
-                <div id="doc-preview-paper" style="width: 210mm; min-height: 297mm; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 20mm; transform-origin: top center; transform: scale(0.35);  will-change: transform; margin: 40px auto;">
+                <div id="doc-preview-paper" style="width: 210mm; min-height: 297mm; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 20mm; transform-origin: top center; transform: scale(0.35);  will-change: transform; margin: 0 auto; position: relative; flex-shrink: 0;">
                     <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 20px; margin-bottom: 20px;">
                         <h1 id="preview-doc-title" style="font-size: 36px; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: 0.1em;">御見積書</h1>
                         <div style="text-align: right; font-size: 14px; color: #64748b; display: block; align-items: end; gap: 8px;">
