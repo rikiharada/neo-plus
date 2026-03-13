@@ -1367,13 +1367,30 @@ button:active {
     margin-bottom: var(--spacing-xl);
 }
 
-.neo-avatar-large {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 1.2px solid var(--accent-neo-blue);
-    box-shadow: 0 0 15px rgba(29, 155, 240, 0.4);
-    object-fit: cover;
+.avatar-circle {
+  width: 44px !important;  /* ホーム画面に合わせたサイズ */
+  height: 44px !important; /* 正方形を維持 */
+  border-radius: 50% !important; /* 完全に丸くする */
+  object-fit: cover !important;  /* 画像を歪ませずに中央を切り取る */
+  
+  /* Neo+のアイデンティティ：エレクトリックブルーの光 */
+  border: 1.5px solid rgba(0, 122, 255, 0.6) !important;
+  box-shadow: 0 0 10px rgba(0, 122, 255, 0.3) !important;
+  
+  /* 位置の微調整（文章との間隔） */
+  margin-right: 12px;
+  flex-shrink: 0; /* 親がFlexboxの場合に画像が潰れるのを防ぐ */
+  background: #000;
+}
+
+/* アイコンを包むコンテナ（もしあれば） */
+.avatar-wrapper {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .instruction-box-container {

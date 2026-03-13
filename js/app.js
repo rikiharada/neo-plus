@@ -5589,7 +5589,9 @@ window.addEventListener('load', async () => {
         neoRow.style.marginBottom = '12px';
 
         neoRow.innerHTML = `
-            <img src="img/neo_avatar.jpg" class="avatar-circle" alt="Neo">
+            <div class="avatar-wrapper">
+                <img src="img/neo_avatar.jpg" class="avatar-circle" alt="Neo">
+            </div>
             <div class="chat-bubble neo" style="max-width: 80%; font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
                 <span class="typing-indicator" style="animation: pulse 1.5s infinite opacity;">解析中...</span>
             </div>
