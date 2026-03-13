@@ -23,17 +23,17 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=neo-18">
-    <link rel="stylesheet" href="css/layout_final_v3.css?v=neo-18">
-    <link rel="stylesheet" href="css/components.css?v=neo-18">
+    <link rel="stylesheet" href="css/index.css?v=neo-19">
+    <link rel="stylesheet" href="css/layout_final_v3.css?v=neo-19">
+    <link rel="stylesheet" href="css/components.css?v=neo-19">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js?v=neo-18"></script>
+    <script src="js/supabase-config.js?v=neo-19"></script>
 
     <!-- Industry Lexicons -->
-    <script src="js/StaticLexicon.js?v=neo-18"></script>
-    <script src="js/industries.js?v=neo-18"></script>
+    <script src="js/StaticLexicon.js?v=neo-19"></script>
+    <script src="js/industries.js?v=neo-19"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Global Error Debugger for Mobile Vercel -->
@@ -63,7 +63,7 @@
     <style id="ceo-final-css">
         #bottom-nav {
             position: fixed !important;
-            bottom: 200px !important;
+            top: 0 !important;
             left: 0 !important;
             right: 0 !important;
             height: 70px !important;
@@ -126,7 +126,7 @@
     <div id="app-container">
 
         <!-- Main Content Area Container (for the views) -->
-        <main style="position: relative; overflow-y: auto; overflow-x: hidden; padding-bottom: 80px;">
+        <main style="position: relative; overflow: visible !important; padding-bottom: 80px;">
 
         <!-- SETUP VIEW (GATEKEEPER V2) -->
         <div id="view-setup" class="view hidden" style="overflow-y: auto; padding-bottom: 120px; background-color: var(--bg-color);">
@@ -1840,10 +1840,10 @@
     </div>
 
     <!-- Core App Scripts -->
-    <script src="js/i18n.js?v=neo-18"></script>
-    <script src="js/neo.js?v=neo-18"></script>
-    <script src="js/gemini.js?v=neo-18"></script>
-    <script src="js/app.js?v=neo-18"></script>
+    <script src="js/i18n.js?v=neo-19"></script>
+    <script src="js/neo.js?v=neo-19"></script>
+    <script src="js/gemini.js?v=neo-19"></script>
+    <script src="js/app.js?v=neo-19"></script>
 
 <div id="final-safety-tab" style="position:fixed !important; bottom:50px !important; left:20px !important; right:20px !important; height:80px !important; background:rgba(0,183,255,0.2) !important; border:2px solid #00b7ff !important; backdrop-filter:blur(20px) !important; z-index:2147483647 !important; border-radius:20px; display:flex !important; align-items:center; justify-content:center;">
   <span style="color:#00b7ff; font-weight:bold; font-size:20px;">N+ ACTIVATE</span>

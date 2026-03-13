@@ -5,8 +5,7 @@
     height: 100vh;
     margin: 0 auto;
     position: relative;
-    overflow-x: hidden;
-    overflow-y: hidden; /* Prevent body scroll, handle internally */
+    overflow: visible !important;
     background-color: var(--bg-color);
 }
 
@@ -19,8 +18,7 @@
     box-sizing: border-box;
     padding: calc(60px + var(--spacing-lg)) var(--spacing-lg) calc(100px + var(--spacing-lg)) var(--spacing-lg);
     gap: var(--spacing-lg);
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible !important;
     transition: opacity 0.3s ease;
 }
 
