@@ -5662,10 +5662,9 @@ window.addEventListener('load', async () => {
         "どんな小さな領収書でも見逃さない。さあ、Neoと一緒に片付けよう。"
     ];
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const greetingEl = document.getElementById('neo-initial-chat-greeting');
-        if (greetingEl) {
-            greetingEl.textContent = neoGreetings[Math.floor(Math.random() * neoGreetings.length)];
-        }
-    });
+    // Trigger immediately upon script load (SPA friendly)
+    const greetingEl = document.getElementById('neo-initial-chat-greeting');
+    if (greetingEl) {
+        greetingEl.textContent = neoGreetings[Math.floor(Math.random() * neoGreetings.length)];
+    }
 });
