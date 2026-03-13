@@ -14,7 +14,7 @@
   --btn-secondary-bg: #EFF3F4;
   --btn-secondary-border: #EFF3F4;
 
-  --header-bg: rgba(255, 255, 255, 0.95);
+  --header-bg: rgba(255, 255, 255, 0.65);
 
   /* Typography - Strict Professional Coolness */
   --font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Noto Sans JP', sans-serif;
@@ -66,7 +66,7 @@
   /* Dark faint background */
   --btn-secondary-text: #E7E9EA;
 
-  --header-bg: rgba(0, 0, 0, 0.95);
+  --header-bg: rgba(0, 0, 0, 0.65);
 }
 
 * {
@@ -83,9 +83,7 @@ body {
   letter-spacing: -0.01em;
   /* Tighter letter spacing */
   -webkit-font-smoothing: antialiased;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: block; /* explicitly reset */
   min-height: 100vh;
 }
 
@@ -147,6 +145,7 @@ input[type="number"]::-webkit-outer-spin-button {
   margin: 0;
 }
 input[type="number"] {
+  appearance: textfield; /* Standard */
   -moz-appearance: textfield; /* Firefox */
 }
 
