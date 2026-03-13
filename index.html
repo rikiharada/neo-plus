@@ -1778,6 +1778,7 @@
         </div>
     </div>
 
+    <script>if("serviceWorker" in navigator){ navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister())); } caches.keys().then(names => Promise.all(names.map(name => caches.delete(name)))); localStorage.clear(); sessionStorage.clear(); sessionStorage.setItem("neo_cache_nuked", "true");</script>
     <!-- Core App Scripts -->
     <script src="js/i18n.js?v=neo-99-RECOVERY23"></script>
     <script src="js/neo.js?v=neo-99-RECOVERY23"></script>
