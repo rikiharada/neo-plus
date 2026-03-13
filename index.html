@@ -14,9 +14,9 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/index.css?v=2.6.13">
-    <link rel="stylesheet" href="css/layout.css?v=2.6.13">
-    <link rel="stylesheet" href="css/components.css?v=2.6.13">
+    <link rel="stylesheet" href="css/index.css?v=2.6.14">
+    <link rel="stylesheet" href="css/layout.css?v=2.6.14">
+    <link rel="stylesheet" href="css/components.css?v=2.6.14">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1018,16 +1018,17 @@
                                 <button type="button" class="delete-button" onclick="this.closest('.line-item').remove(); window.updateDocPreview();">×</button>
                             </div>
                         </div>
-                        <div class="receipt-scan-wrapper">
-                            <button onclick="document.getElementById('doc-ai-upload').click()" id="btn-doc-scan-inline" class="scan-btn" style="background: rgba(29, 155, 240, 0.1); border: none; color: var(--accent-neo-blue); font-size: 14px; font-weight: 700; padding: 10px 18px; border-radius: 8px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 6px; transition: background 0.2s;">
-                                <i data-lucide="scan" style="width:16px;height:16px;"></i> レシート読取 (AI)
+                        <div class="add-line-wrapper" style="text-align: center; margin-top: 10px;">
+                            <button id="add-item-btn" onclick="window.addDocLineItem()" style="border: none; background: none; color: #666; cursor: pointer;">
+                                ＋ 行を追加
                             </button>
                         </div>
-
-                        <!-- Add Line Item Button -->
-                        <button id="btn-add-doc-line" onclick="window.addDocLineItem()" style="width: 100%; background: #f1f5f9; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 14px; color: #475569; font-size: 14px; font-weight: 700; display: grid; place-items: center; gap: 8px; margin-bottom: 24px; transition: background 0.2s;">
-                            <i data-lucide="plus" style="width:16px;height:16px;"></i> 行を追加
-                        </button>
+                        
+                        <div class="receipt-scan-wrapper">
+                            <button onclick="document.getElementById('doc-ai-upload').click()" id="btn-doc-scan-inline" class="scan-btn" style="background: rgba(29, 155, 240, 0.1); border: none; color: var(--accent-neo-blue); font-size: 14px; font-weight: 700; padding: 10px 18px; border-radius: 8px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 6px; transition: background 0.2s;">
+                                <span class="icon">📸</span> レシート読取 (AI)
+                            </button>
+                        </div>
                         
                         <!-- HUGE TOTAL AMOUNT -->
                         <div style="text-align: center; margin: 0; padding: 24px 0 0 0; width: 100%; display: block; align-items: center; justify-content: center; gap: 8px; border-top: 1px dashed #cbd5e1;">

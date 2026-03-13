@@ -1512,12 +1512,17 @@ button:active {
   margin-top: 20px !important;
 }
 
+.add-line-wrapper {
+  margin-bottom: 24px; /* 次のレシート読取ボタンとの間隔 */
+}
+
 /* レシート読取ボタンのラッパー（見出しの下に配置） */
 .receipt-scan-wrapper {
   display: flex !important;
   justify-content: center !important;
   width: 100% !important;
-  margin: 10px 0 !important;
+  padding: 16px 0 !important;
+  border-top: 1px dashed #eee !important; /* 境界線を薄く入れるとAI機能が際立ちます */
 }
 
 /* 明細一行ごとの設定 */
