@@ -199,6 +199,7 @@ Example Query: [{"action": "QUERY_KNOWLEDGE", "answer": "現在稼働中のプ�
 
 
     try {
+        console.log("[Neo Network] Full Request URL:", endpoint);
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -333,6 +334,7 @@ User Input: "${userInput}"
 `;
 
     try {
+        console.log("[Neo Network] Full Request URL:", endpoint);
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -402,6 +404,7 @@ Example Output:
     try {
         console.log("========== [Gemini API] RAW PROMPT ==========\n", promptText, "\n=============================================");
 
+        console.log("[Neo Network] Full Request URL:", endpoint);
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -473,6 +476,7 @@ User Input: "${userInput}"
 `;
 
     try {
+        console.log("[Neo Network] Full Request URL:", endpoint);
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
