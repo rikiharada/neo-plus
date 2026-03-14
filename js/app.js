@@ -5807,9 +5807,30 @@ window.addEventListener('load', async () => {
                 }
             } while (retryCount < maxRetries && apiResult.finishReason === 'MAX_TOKENS');
 
-            // Save final history
+            // Save final history with extreme Token Efficiency Filtering (CFO Mode)
             history.push({role: "model", parts: [{text: fullResponseText}]});
-            if (history.length > 30) history = history.slice(-30);
+            
+            // Context 断捨離 (Trimming fat): 
+            // If history gets long, filter out pure conversational filler (short text < 10 chars that doesn't contain numbers or business keywords)
+            if (history.length > 10) {
+                history = history.filter((msg, idx) => {
+                    // Keep the absolute latest 4 messages for immediate context flow no matter what
+                    if (idx >= history.length - 4) return true;
+                    
+                    const t = msg.parts[0].text;
+                    // Keep long messages (likely containing actual data)
+                    if (t.length > 30) return true;
+                    // Keep messages with numbers (money, dates)
+                    if (/\d/.test(t)) return true;
+                    // Keep messages with core financial keywords
+                    if (/予算|売上|費用|経費|利益|税|申告|期日|月|年/.test(t)) return true;
+                    
+                    // Discard short conversational fluff ("はい", "ああ", "了解" etc.)
+                    return false;
+                });
+            }
+            // Absolute max cap
+            if (history.length > 20) history = history.slice(-20);
             sessionStorage.setItem('neo_chat_history', JSON.stringify(history));
             
             // Clear the placeholder
