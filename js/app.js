@@ -5704,6 +5704,51 @@ window.addEventListener('load', async () => {
                 <i data-lucide="user" style="color: white; width: 16px; height: 16px;"></i>
             </div>
             <div class="chat-bubble right-bubble" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px 20px 4px 20px; padding: 14px 18px; max-width: 80%; color: var(--text-main); font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
+                \${text}
+            </div>
+        `;
+        messagesContainer.appendChild(userRow);
+        if(window.lucide) window.lucide.createIcons({root: userRow});
+
+        // Robust auto-scroll to bottom after user message
+        setTimeout(() => {
+            userRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 50);
+
+        // --- NAME CAPTURE INTERCEPTOR ---
+        const currentUserName = localStorage.getItem('userMeta_name');
+        if (!currentUserName) {
+            // Set the name, then immediately respond locally without hitting the API to save time/tokens.
+            localStorage.setItem('userMeta_name', text);
+            setTimeout(() => {
+                const welcomeRow = document.createElement('div');
+                welcomeRow.className = 'chat-message-row neo-message-row';
+                welcomeRow.style.display = 'flex';
+                welcomeRow.style.gap = '12px';
+                welcomeRow.style.alignItems = 'flex-end';
+                welcomeRow.style.marginBottom = '12px';
+                welcomeRow.innerHTML = `
+                    <div class="avatar-wrapper">
+                        <img src="img/neo_avatar.jpg" class="avatar-circle" alt="Neo">
+                    </div>
+                    <div class="chat-bubble neo" style="max-width: 80%; font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
+                        了解、${text}。これからはそう呼ぶね！早速だけど、私に手伝ってほしい業務や相談はある？
+                    </div>
+                `;
+                messagesContainer.appendChild(welcomeRow);
+                welcomeRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                sessionStorage.setItem('neo_chat_dom', messagesContainer.innerHTML);
+            }, 500);
+            return; // Terminate early so we don't start the Gemini API fetch this turn.
+        }
+        // --- END INTERCEPTOR ---
+
+        userRow.innerHTML = `
+            <div style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: #333; display: grid; place-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+                <i data-lucide="user" style="color: white; width: 16px; height: 16px;"></i>
+            </div>
+            <div class="chat-bubble right-bubble" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px 20px 4px 20px; padding: 14px 18px; max-width: 80%; color: var(--text-main); font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
                 ${text}
             </div>
         `;
@@ -5844,16 +5889,21 @@ window.addEventListener('load', async () => {
     // N+ Personalized Initial Greeting
     // ==========================================
     const neoGreetings = [
-        "CEO、お疲れ様。会計のことは全部私に投げて。今は何から始める？",
+        "お疲れ様。会計のことは全部私に投げて。今は何から始める？",
         "システムチェック完了。複雑な数字の整理、いつでも手伝えるよ。",
         "今日もいい集中力だね。経費の仕訳、パパッと終わらせちゃおうか。",
         "書類の準備？それとも相談？Neoがあなたの隣でスキャン中だよ。",
-        "どんな小さな領収書でも見逃さない。さあ、Neoと一緒に片付けよう。"
+        "どんな小さな領収書でも見逃さない。さあ、一緒に片付けよう。"
     ];
 
     // Trigger immediately upon script load (SPA friendly)
     const greetingEl = document.getElementById('neo-initial-chat-greeting');
     if (greetingEl) {
-        greetingEl.textContent = neoGreetings[Math.floor(Math.random() * neoGreetings.length)];
+        const userName = localStorage.getItem('userMeta_name');
+        if (!userName) {
+            greetingEl.textContent = "システムチェック完了。……ところで、まずはあなたの名前（呼び方）を教えてくれる？";
+        } else {
+            greetingEl.textContent = (userName !== 'CEO Riki' ? userName + "、" : "") + neoGreetings[Math.floor(Math.random() * neoGreetings.length)];
+        }
     }
 });
