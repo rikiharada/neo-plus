@@ -1,4 +1,13 @@
 // --- Neo-Sync v2.0 Global Data Model ---
+// Neo's Pride Validation: Prevents inappropriate user names
+window.validateUserName = function(name) {
+    if (!name || typeof name !== 'string') return false;
+    // Primary blacklist for profanity, slurs, and highly inappropriate terms
+    const blacklist = ["ちんちん", "うんこ", "バカ", "アホ", "死ね", "殺す", "sex", "fuck", "bitch", "shit", "まんこ", "クソ", "カス", "キチガイ", "ガイジ", "ゴミ"];
+    const normalizedName = name.toLowerCase();
+    return !blacklist.some(word => normalizedName.includes(word));
+};
+
 window.mockDB = window.mockDB || {
     userConfig: {
         industry: localStorage.getItem('neo_industry') || "construction",
@@ -287,9 +296,8 @@ window.addEventListener('load', async () => {
             
             // Re-render user info on Dash
             const uiAvatar = document.querySelector('.user-info-avatar-text');
-            const storedName = localStorage.getItem('userMeta_name') || 'Guest';
             if (uiAvatar) {
-                uiAvatar.textContent = storedName.charAt(0).toUpperCase();
+                uiAvatar.textContent = 'A'; // "A" for あなた (You)
             }
 
             // --- 📡 Initialize Neo Trend Alerts ---
@@ -5716,33 +5724,8 @@ window.addEventListener('load', async () => {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }, 50);
 
-        // --- NAME CAPTURE INTERCEPTOR ---
-        const currentUserName = localStorage.getItem('userMeta_name');
-        if (!currentUserName) {
-            // Set the name, then immediately respond locally without hitting the API to save time/tokens.
-            localStorage.setItem('userMeta_name', text);
-            setTimeout(() => {
-                const welcomeRow = document.createElement('div');
-                welcomeRow.className = 'chat-message-row neo-message-row';
-                welcomeRow.style.display = 'flex';
-                welcomeRow.style.gap = '12px';
-                welcomeRow.style.alignItems = 'flex-end';
-                welcomeRow.style.marginBottom = '12px';
-                welcomeRow.innerHTML = `
-                    <div class="avatar-wrapper">
-                        <img src="img/neo_avatar.jpg" class="avatar-circle" alt="Neo">
-                    </div>
-                    <div class="chat-bubble neo" style="max-width: 80%; font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
-                        了解、${text}。これからはそう呼ぶね！早速だけど、私に手伝ってほしい業務や相談はある？
-                    </div>
-                `;
-                messagesContainer.appendChild(welcomeRow);
-                welcomeRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                sessionStorage.setItem('neo_chat_dom', messagesContainer.innerHTML);
-            }, 500);
-            return; // Terminate early so we don't start the Gemini API fetch this turn.
-        }
-        // --- END INTERCEPTOR ---
+        // --- NAME CAPTURE INTERCEPTOR (REMOVED: STRICT PROFESSIONALISM ENFORCED) ---
+        // Neo will now exclusively refer to the user as "あなた" for absolute distance and safety.
 
         userRow.innerHTML = `
             <div style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: #333; display: grid; place-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
@@ -5899,7 +5882,7 @@ window.addEventListener('load', async () => {
     // Trigger immediately upon script load (SPA friendly)
     const greetingEl = document.getElementById('neo-initial-chat-greeting');
     if (greetingEl) {
-        const userName = localStorage.getItem('userMeta_name');
+        const userName = 'あなた';
         if (!userName) {
             greetingEl.textContent = "システムチェック完了。……ところで、まずはあなたの名前（呼び方）を教えてくれる？";
         } else {
