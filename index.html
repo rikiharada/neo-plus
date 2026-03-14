@@ -1212,7 +1212,7 @@
             <!-- A4 PREVIEW RENDER AREA -->
             <div class="doc-gen-preview-container" style=" overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: #64748b; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 16px 120px 16px; box-sizing: border-box; width: 100%; min-height: 100%; position: relative;">
                 <!-- A4 Paper Container -->
-                <div id="doc-preview-paper" style="max-width: 100%; height: auto; aspect-ratio: 1 / 1.414; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 50px 40px; margin: 0 auto; position: relative; flex-shrink: 0; box-sizing: border-box; overflow: hidden; color: #333; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;">
+                <div id="doc-preview-paper" style="max-width: 100%; height: auto; aspect-ratio: 1 / 1.414; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 50px 40px 120px 40px; margin: 0 auto; position: relative; flex-shrink: 0; box-sizing: border-box; overflow: hidden; color: #333; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;">
                     
                     <!-- Top Area (3 Rows) -->
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
@@ -1271,21 +1271,10 @@
                         <div style="border-bottom: 2px solid #333; margin-bottom: 15px;"></div>
                     </div>
 
-                    <!-- Footer Table (QR & Totals) -->
+                    <!-- Footer Table (Totals only, pushed to right) -->
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="width: 50%; vertical-align: bottom; padding-right: 20px;">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                    <tr>
-                                        <td style="width: 60px; vertical-align: bottom;">
-                                            <img id="preview-qr-code" src="" style="width: 50px; height: 50px; display: none;" alt="QR">
-                                        </td>
-                                        <td style="vertical-align: bottom; font-size: 9px; color: #666; padding-bottom: 2px;">
-                                            このQRコードをカメラで読み取ると、<br>本書類をデジタル保存できます。
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
+                            <td style="width: 50%;"></td>
                             <td style="width: 50%; vertical-align: bottom;">
                                 <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                                     <tr>
@@ -1304,6 +1293,14 @@
                             </td>
                         </tr>
                     </table>
+
+                    <!-- Absolute Bottom-Left QR Code -->
+                    <div style="position: absolute; bottom: 30px; left: 30px; margin: 0; padding: 0;">
+                        <img id="preview-qr-code" src="" style="width: 50px; height: 50px; display: none;" alt="QR">
+                        <div style="font-size: 9px; color: #666; padding-bottom: 2px;">
+                            このQRコードをカメラで読み取ると、本書類をデジタル保存できます。
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1887,8 +1884,8 @@
     <!-- Core App Scripts -->
     <script src="js/i18n.js?v=neo-99-RECOVERY23"></script>
     <script src="js/neo.js?v=neo-99-RECOVERY23"></script>
-    <script src="js/gemini.js?v=NEO_SAFE_61_NOCACHE"></script>
-    <script src="js/app.js?v=NEO_SAFE_61_NOCACHE"></script>
+    <script src="js/gemini.js?v=NEO_SAFE_62"></script>
+    <script src="js/app.js?v=NEO_SAFE_62"></script>
 
 </body>
 
