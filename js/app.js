@@ -1282,6 +1282,7 @@ window.addEventListener('load', async () => {
         }
 
         // Item Logic (Dynamic Multi-Row)
+        const fmt = new Intl.NumberFormat('ja-JP');
         const itemRows = document.querySelectorAll('#doc-items-container .line-item, #doc-line-items-container .line-item');
         let linesHTML = '';
         let subTotal = 0;
@@ -1316,8 +1317,6 @@ window.addEventListener('load', async () => {
         if (previewContainer) {
             previewContainer.innerHTML = linesHTML;
         }
-
-        const fmt = new Intl.NumberFormat('ja-JP');
 
         // Calc Defaults
         const tax = Math.floor(subTotal * taxRate);
