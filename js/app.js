@@ -1286,6 +1286,7 @@ window.addEventListener('load', async () => {
         const itemRows = document.querySelectorAll('#doc-items-container .line-item, #doc-line-items-container .line-item');
         let linesHTML = '';
         let subTotal = 0;
+        const items = [];
 
         itemRows.forEach(row => {
             const name = row.querySelector('.item-name-input').value || '作業代行費';
@@ -1294,13 +1295,14 @@ window.addEventListener('load', async () => {
             const qty = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
             const lineTotal = price * qty;
             subTotal += lineTotal;
+            items.push({ name, price, qty });
 
             const isEstimate = window.currentDocType === 'estimate';
             const tdStyle = isEstimate 
-                ? 'padding: 2px 4px; font-size: 11px; color: #333; border-bottom: 1px solid #999;'
+                ? 'padding: 2px 4px; font-size: 11px !important; color: #333; border-bottom: 1px solid #999;'
                 : 'padding: 15px; font-size: 16px; color: #000; border-bottom: 1px solid #ccc;';
             const tdStyleRight = isEstimate
-                ? 'padding: 2px 4px; font-size: 11px; color: #333; text-align: right; border-bottom: 1px solid #999;'
+                ? 'padding: 2px 4px; font-size: 11px !important; color: #333; text-align: right; border-bottom: 1px solid #999;'
                 : 'padding: 15px; font-size: 16px; color: #000; text-align: right; border-bottom: 1px solid #ccc;';
 
             linesHTML += `
@@ -1313,14 +1315,49 @@ window.addEventListener('load', async () => {
             `;
         });
 
+        // Calc Defaults
+        const tax = Math.floor(subTotal * taxRate);
+        const total = subTotal + tax;
+
+        // NEW: Intercept Estimate Rendering Completely
+        const docPaperContainer = document.getElementById('doc-preview-paper');
+        if (docPaperContainer && !window.defaultGenericTemplateHTML) {
+            // Save the generic HTML the very first time (it has all the IDs for other docs)
+            window.defaultGenericTemplateHTML = docPaperContainer.innerHTML;
+        }
+
+        if (window.currentDocType === 'estimate' && typeof window.renderEstimateTemplate === 'function') {
+            const data = {
+                client,
+                dateStr: dateInputStr.replace(/-/g, '/'),
+                docNo: 'EST-' + dateInputStr.replace(/-/g, '') + '-01',
+                subject,
+                items,
+                subTotal,
+                tax,
+                grandTotal: total,
+                receiptMemo,
+                bankInfo
+            };
+            if (docPaperContainer) {
+                docPaperContainer.innerHTML = window.renderEstimateTemplate(data);
+            }
+            // Update tiny UI
+            document.getElementById('doc-tax-calc').textContent = `¥${fmt.format(tax)}`;
+            document.getElementById('doc-total-calc').textContent = `¥${fmt.format(total)}`;
+            return; // EXIT EARLY: Do not run the generic DOM updates because the template is already fully populated
+        } else if (docPaperContainer && window.defaultGenericTemplateHTML) {
+            // Restore generic template structure for Invoice/Delivery/Receipt if we are switching away from Estimate
+            if (docPaperContainer.querySelector('#neo-v3-estimate')) {
+                docPaperContainer.innerHTML = window.defaultGenericTemplateHTML;
+            }
+        }
+
+        // --- Generic Fallback Updates ---
         const previewContainer = document.getElementById('preview-items-container');
         if (previewContainer) {
             previewContainer.innerHTML = linesHTML;
         }
-
-        // Calc Defaults
-        const tax = Math.floor(subTotal * taxRate);
-        const total = subTotal + tax;
 
         // Update tiny UI
         document.getElementById('doc-tax-calc').textContent = `¥${fmt.format(tax)}`;
