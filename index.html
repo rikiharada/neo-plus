@@ -1212,87 +1212,98 @@
             <!-- A4 PREVIEW RENDER AREA -->
             <div class="doc-gen-preview-container" style=" overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: #64748b; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 16px 120px 16px; box-sizing: border-box; width: 100%; min-height: 100%; position: relative;">
                 <!-- A4 Paper Container -->
-                <div id="doc-preview-paper" style="max-width: 100%; height: auto; aspect-ratio: 1 / 1.414; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 50px 40px; margin: 0 auto; position: relative; flex-shrink: 0; box-sizing: border-box; overflow: hidden; color: #333; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;">
+                <div id="doc-preview-paper" style="max-width: 100%; height: auto; aspect-ratio: 1 / 1.414; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 40px; margin: 0 auto; position: relative; flex-shrink: 0; box-sizing: border-box; overflow: hidden; color: #333; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;">
                     
-                    <!-- Title -->
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <span id="preview-doc-title" style="font-size: 24px; font-weight: bold; letter-spacing: 4px;">御見積書</span>
-                    </div>
-
-                    <!-- Date & No (Top Right) -->
-                    <div style="text-align: right; font-size: 11px; margin-bottom: 20px;">
-                        <div id="preview-doc-date">発行日: ----年--月--日</div>
-                        <div id="preview-doc-no">No: --------------</div>
-                        <div id="preview-delivery-stamp" style="display: none;">受領印</div>
-                    </div>
-
-                    <!-- Client (Left) & Us (Right) -->
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-                        <!-- Left: Client & Subject -->
-                        <div style="width: 50%;">
-                            <div id="preview-client-name" style="font-size: 14px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 4px; display: inline-block; min-width: 80%;">株式会社〇〇 御中</div>
-                            <div style="font-size: 11px; margin-bottom: 20px;">下記の通り御見積申し上げます。</div>
-                            
-                            <div style="margin-bottom: 10px;">
-                                <span style="font-size: 11px; margin-right: 10px;">件名:</span>
-                                <span id="preview-subject" style="font-size: 12px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 2px; display: inline-block; min-width: 60%;">〇〇工事一式として</span>
-                            </div>
-                            <div id="preview-receipt-memo" style="display: none; font-size: 11px;">但し書き: <span id="preview-memo-text"></span></div>
-                        </div>
-
-                        <!-- Right: Company Info -->
-                        <div style="width: 45%; text-align: right; font-size: 11px; line-height: 1.6;">
-                            <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px;">あなたの会社名</div>
-                            <div>〒106-0032</div>
-                            <div>東京都港区六本木1-1-1</div>
-                            <div>TEL: 03-1234-5678</div>
-                            <div id="preview-bank-info" style="margin-top: 10px; white-space: pre-line;"></div>
-                        </div>
-                    </div>
+                    <!-- Top Area (3 Rows) -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <!-- Row 1: Title -->
+                        <tr>
+                            <td colspan="2" style="text-align: center; padding-bottom: 30px;">
+                                <span id="preview-doc-title" style="font-size: 20px; font-weight: bold; letter-spacing: 2px;">御見積書</span>
+                            </td>
+                        </tr>
+                        <!-- Row 2: Client & Date -->
+                        <tr>
+                            <td style="width: 60%; vertical-align: top; padding-bottom: 10px;">
+                                <div id="preview-client-name" style="font-size: 14px; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 4px; display: inline-block; min-width: 80%;">株式会社〇〇 御中</div>
+                            </td>
+                            <td style="width: 40%; vertical-align: top; text-align: right; font-size: 11px; padding-bottom: 10px;">
+                                <div id="preview-doc-date">発行日: ----年--月--日</div>
+                                <div id="preview-doc-no">No: --------------</div>
+                                <div id="preview-delivery-stamp" style="display: none;">受領印</div>
+                            </td>
+                        </tr>
+                        <!-- Row 3: Message & Company -->
+                        <tr>
+                            <td style="width: 60%; vertical-align: top;">
+                                <div style="font-size: 11px; margin-bottom: 15px;">下記の通り御見積申し上げます。</div>
+                                <div style="margin-bottom: 5px;">
+                                    <span style="font-size: 11px; margin-right: 10px;">件名:</span>
+                                    <span id="preview-subject" style="font-size: 12px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 2px; display: inline-block; min-width: 60%;">〇〇工事一式として</span>
+                                </div>
+                                <div id="preview-receipt-memo" style="display: none; font-size: 11px;">但し書き: <span id="preview-memo-text"></span></div>
+                            </td>
+                            <td style="width: 40%; vertical-align: top; text-align: right; font-size: 11px; line-height: 1.6;">
+                                <div style="font-size: 12px; font-weight: bold; margin-bottom: 5px;">あなたの会社名</div>
+                                <div>〒106-0032</div>
+                                <div>東京都港区六本木1-1-1</div>
+                                <div>TEL: 03-1234-5678</div>
+                                <div id="preview-bank-info" style="margin-top: 10px; white-space: pre-line;"></div>
+                            </td>
+                        </tr>
+                    </table>
 
                     <!-- Detail Table -->
-                    <div style="margin-bottom: 30px;">
+                    <div style="margin-bottom: 20px;">
                         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
                             <thead>
                                 <tr style="background-color: #f8f9fa; border-top: 2px solid #333; border-bottom: 1px solid #333;">
-                                    <th style="padding: 8px; font-weight: normal;">内容・品名</th>
-                                    <th style="padding: 8px; font-weight: normal; text-align: center; width: 15%;">数量</th>
-                                    <th style="padding: 8px; font-weight: normal; text-align: right; width: 20%;">単価</th>
-                                    <th style="padding: 8px; font-weight: normal; text-align: right; width: 20%;">金額</th>
+                                    <th style="padding: 4px 8px; font-weight: normal;">内容・品名</th>
+                                    <th style="padding: 4px 8px; font-weight: normal; text-align: center; width: 15%;">数量</th>
+                                    <th style="padding: 4px 8px; font-weight: normal; text-align: right; width: 20%;">単価</th>
+                                    <th style="padding: 4px 8px; font-weight: normal; text-align: right; width: 20%;">金額</th>
                                 </tr>
                             </thead>
                             <tbody id="preview-items-container">
                                 <!-- Dynamic JS Injection -->
                             </tbody>
                         </table>
-                        <div style="border-bottom: 2px solid #333;"></div>
-                        
-                        <!-- Totals Table -->
-                        <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-                            <table style="width: 50%; border-collapse: collapse; font-size: 11px;">
-                                <tr>
-                                    <td style="padding: 4px 8px; text-align: right;">小計</td>
-                                    <td id="preview-subtotal" style="padding: 4px 8px; text-align: right; width: 40%;">¥0</td>
-                                </tr>
-                                <tr>
-                                    <td id="preview-tax-label" style="padding: 4px 8px; text-align: right;">消費税 (10%)</td>
-                                    <td id="preview-tax" style="padding: 4px 8px; text-align: right; width: 40%;">¥0</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px; text-align: right; font-weight: bold; border-top: 1px solid #333;">合計金額</td>
-                                    <td id="preview-grand-total" style="padding: 8px; text-align: right; font-weight: bold; border-top: 1px solid #333; font-size: 16px;">¥0</td>
-                                </tr>
-                            </table>
-                        </div>
+                        <div style="border-bottom: 2px solid #333; margin-bottom: 15px;"></div>
                     </div>
 
-                    <!-- QR Code (Bottom Left) -->
-                    <div style="position: absolute; bottom: 40px; left: 40px; right: 40px; display: flex; align-items: flex-end; gap: 10px;">
-                        <img id="preview-qr-code" src="" style="width: 45px; height: 45px; display: none;" alt="QR">
-                        <div style="font-size: 9px; color: #666; margin-bottom: 2px;">
-                            このQRコードをカメラで読み取ると、本書類をデジタル保存できます。
-                        </div>
-                    </div>
+                    <!-- Footer Table (QR & Totals) -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="width: 50%; vertical-align: bottom; padding-right: 20px;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="width: 60px; vertical-align: bottom;">
+                                            <img id="preview-qr-code" src="" style="width: 50px; height: 50px; display: none;" alt="QR">
+                                        </td>
+                                        <td style="vertical-align: bottom; font-size: 9px; color: #666; padding-bottom: 2px;">
+                                            このQRコードをカメラで読み取ると、本書類をデジタル保存できます。
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td style="width: 50%; vertical-align: bottom;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                    <tr>
+                                        <td style="padding: 4px 8px; text-align: right;">小計</td>
+                                        <td id="preview-subtotal" style="padding: 4px 8px; text-align: right; width: 50%;">¥0</td>
+                                    </tr>
+                                    <tr>
+                                        <td id="preview-tax-label" style="padding: 4px 8px; text-align: right;">消費税 (10%)</td>
+                                        <td id="preview-tax" style="padding: 4px 8px; text-align: right; width: 50%;">¥0</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px; text-align: right; font-weight: bold; border-top: 1px solid #333;">合計金額</td>
+                                        <td id="preview-grand-total" style="padding: 8px; text-align: right; font-weight: bold; border-top: 1px solid #333; font-size: 16px;">¥0</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             </div>
 
@@ -1876,8 +1887,8 @@
     <!-- Core App Scripts -->
     <script src="js/i18n.js?v=neo-99-RECOVERY23"></script>
     <script src="js/neo.js?v=neo-99-RECOVERY23"></script>
-    <script src="js/gemini.js?v=NEO_SAFE_53"></script>
-    <script src="js/app.js?v=NEO_SAFE_53"></script>
+    <script src="js/gemini.js?v=NEO_SAFE_54"></script>
+    <script src="js/app.js?v=NEO_SAFE_54"></script>
 
 </body>
 
