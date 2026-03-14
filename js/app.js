@@ -1294,12 +1294,20 @@ window.addEventListener('load', async () => {
             const lineTotal = price * qty;
             subTotal += lineTotal;
 
+            const isEstimate = window.currentDocType === 'estimate';
+            const tdStyle = isEstimate 
+                ? 'padding: 10px 12px; font-size: 13px; color: #0f172a; border-bottom: 1px solid #e2e8f0;'
+                : 'padding: 15px; font-size: 16px; color: #0f172a; border-bottom: 1px solid #e2e8f0;';
+            const tdStyleRight = isEstimate
+                ? 'padding: 10px 12px; font-size: 13px; color: #0f172a; text-align: right; border-bottom: 1px solid #e2e8f0;'
+                : 'padding: 15px; font-size: 16px; color: #0f172a; text-align: right; border-bottom: 1px solid #e2e8f0;';
+
             linesHTML += `
                 <tr>
-                    <td style="padding: 15px; font-size: 16px; color: #0f172a; border-bottom: 1px solid #e2e8f0;">${name}</td>
-                    <td style="padding: 15px; font-size: 16px; color: #0f172a; text-align: right; border-bottom: 1px solid #e2e8f0;">${qty}</td>
-                    <td style="padding: 15px; font-size: 16px; color: #0f172a; text-align: right; border-bottom: 1px solid #e2e8f0;">¥${fmt.format(price)}</td>
-                    <td style="padding: 15px; font-size: 16px; color: #0f172a; text-align: right; border-bottom: 1px solid #e2e8f0;">¥${fmt.format(lineTotal)}</td>
+                    <td style="${tdStyle}">${name}</td>
+                    <td style="${tdStyleRight}">${qty}</td>
+                    <td style="${tdStyleRight}">¥${fmt.format(price)}</td>
+                    <td style="${tdStyleRight}">¥${fmt.format(lineTotal)}</td>
                 </tr>
             `;
         });

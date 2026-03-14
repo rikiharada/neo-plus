@@ -1213,14 +1213,12 @@
             <div class="doc-gen-preview-container" style=" overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: #64748b; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 16px 120px 16px; box-sizing: border-box; width: 100%; min-height: 100%; position: relative;">
                 <!-- A4 Paper Container -->
                 <div id="doc-preview-paper" style="max-width: 100%; height: auto; aspect-ratio: 1 / 1.414; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 5%; margin: 0 auto; position: relative; flex-shrink: 0; box-sizing: border-box; overflow: hidden;">
-                    <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; padding-bottom: 20px; margin-bottom: 20px;">
-                        <h1 id="preview-doc-title" style="font-size: 36px; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: 0.1em;">御見積書</h1>
-                        <div style="text-align: right; font-size: 14px; color: #64748b; display: block; align-items: end; gap: 8px;">
-                            <div>
-                                <div id="preview-doc-date">発行日: 2026年03月12日</div>
-                                <div id="preview-doc-no">No: EST-20260312-01</div>
-                            </div>
-                            <div id="preview-delivery-stamp" style="display: none; border: 1px solid #cbd5e1; width: 60px; height: 60px; text-align: center; color: #94a3b8; font-size: 11px; padding-top: 4px; border-radius: 4px;">受領印</div>
+                    <div style="text-align: center; border-bottom: 2px solid #1e293b; padding-bottom: 20px; margin-bottom: 20px; position: relative;">
+                        <h1 id="preview-doc-title" style="font-size: 36px; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: 0.1em; display: inline-block;">御見積書</h1>
+                        <div style="position: absolute; right: 0; bottom: 20px; text-align: right; font-size: 14px; color: #64748b;">
+                            <div id="preview-doc-date">発行日: 2026年03月12日</div>
+                            <div id="preview-doc-no">No: EST-20260312-01</div>
+                            <div id="preview-delivery-stamp" style="display: none; border: 1px solid #cbd5e1; width: 60px; height: 60px; text-align: center; color: #94a3b8; font-size: 11px; padding-top: 4px; border-radius: 4px; margin-left: auto; margin-top: 8px;">受領印</div>
                         </div>
                     </div>
                     
@@ -1249,10 +1247,10 @@
                         <table style="width: 100%; border-collapse: collapse; text-align: left;">
                             <thead>
                                 <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                                    <th style="padding: 12px 15px; font-size: 14px; color: #475569;">内容・品名</th>
-                                    <th style="padding: 12px 15px; font-size: 14px; color: #475569; text-align: right; width: 15%;">数量</th>
-                                    <th style="padding: 12px 15px; font-size: 14px; color: #475569; text-align: right; width: 20%;">単価</th>
-                                    <th style="padding: 12px 15px; font-size: 14px; color: #475569; text-align: right; width: 20%;">金額</th>
+                                    <th style="padding: 8px 12px; font-size: 12px; color: #475569;">内容・品名</th>
+                                    <th style="padding: 8px 12px; font-size: 12px; color: #475569; text-align: right; width: 15%;">数量</th>
+                                    <th style="padding: 8px 12px; font-size: 12px; color: #475569; text-align: right; width: 20%;">単価</th>
+                                    <th style="padding: 8px 12px; font-size: 12px; color: #475569; text-align: right; width: 20%;">金額</th>
                                 </tr>
                             </thead>
                             <tbody id="preview-items-container">
@@ -1262,16 +1260,16 @@
                         <div style="display: grid; grid-auto-flow: column; justify-content: end; padding: 20px;">
                             <table style="width: 40%;">
                                 <tr>
-                                    <td style="padding: 5px; font-size: 14px; color: #475569;">小計</td>
-                                    <td id="preview-subtotal" style="padding: 5px; font-size: 16px; font-weight: 600; text-align: right;">¥0</td>
+                                    <td style="padding: 5px; font-size: 13px; color: #475569;">小計</td>
+                                    <td id="preview-subtotal" style="padding: 5px; font-size: 14px; font-weight: 600; text-align: right;">¥0</td>
                                 </tr>
                                 <tr>
-                                    <td id="preview-tax-label" style="padding: 5px; font-size: 14px; color: #475569;">消費税 (10%)</td>
-                                    <td id="preview-tax" style="padding: 5px; font-size: 16px; font-weight: 600; text-align: right;">¥0</td>
+                                    <td id="preview-tax-label" style="padding: 5px; font-size: 13px; color: #475569;">消費税 (10%)</td>
+                                    <td id="preview-tax" style="padding: 5px; font-size: 14px; font-weight: 600; text-align: right;">¥0</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 5px; font-size: 16px; font-weight: 800; color: #0f172a; border-top: 2px solid #e2e8f0; padding-top: 10px;">合計金額</td>
-                                    <td id="preview-grand-total" style="padding: 5px; font-size: 24px; font-weight: 800; color: #1D9BF0; text-align: right; border-top: 2px solid #e2e8f0; padding-top: 10px;">¥0</td>
+                                    <td style="padding: 5px; font-size: 14px; font-weight: 800; color: #0f172a; border-top: 2px solid #e2e8f0; padding-top: 10px;">合計金額</td>
+                                    <td id="preview-grand-total" style="padding: 5px; font-size: 20px; font-weight: 800; color: #1D9BF0; text-align: right; border-top: 2px solid #e2e8f0; padding-top: 10px;">¥0</td>
                                 </tr>
                             </table>
                         </div>
@@ -1868,8 +1866,8 @@
     <!-- Core App Scripts -->
     <script src="js/i18n.js?v=neo-99-RECOVERY23"></script>
     <script src="js/neo.js?v=neo-99-RECOVERY23"></script>
-    <script src="js/gemini.js?v=NEO_SAFE_43"></script>
-    <script src="js/app.js?v=NEO_SAFE_43"></script>
+    <script src="js/gemini.js?v=NEO_SAFE_44"></script>
+    <script src="js/app.js?v=NEO_SAFE_44"></script>
 
 </body>
 
