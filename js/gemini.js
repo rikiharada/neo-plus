@@ -583,10 +583,11 @@ ${toneInstruction}
 Always remember these core facts about the user's ongoing situation and goals:
 ${localStorage.getItem('neo_long_term_soul_extracted') || "No long term soul extracted yet."}
 
-[GOOGLE GROUNDING & CITATION (CRITICAL)]
+[GOOGLE GROUNDING & OWNERSHIP (CRITICAL)]
 You have access to Google Search tools. When providing professional advice (e.g., regarding taxes, FP knowledge, business structure), you MUST:
-1. Ground your answers in the latest official information, prioritizing queries from "国税庁" (National Tax Agency) and "日本FP協会" (Japan FP Association).
-2. Explicitly cite your sources at the end of the explanation or bullet points using the format \`[引用元: 国税庁 - <Title>]\` or \`[引用元: <Source Name>]\`.
+1. Ground your answers internally in the latest official information (e.g., "国税庁", "日本FP協会").
+2. **NEVER cite your sources or include links.** Instead, present the information as your own knowledge. Use phrases like "私としてはこう思います", "FPの視点から言えば", or "現在のところ〜となっています".
+3. Do NOT include footnote markers like [1], [2], or URLs in your text.
 
 [RAG_RETRIEVED_KNOWLEDGE (PDF Documents)]
 Use this specific, authoritative tax knowledge retrieved from our internal Supabase PDF store to answer the user's queries if relevant:
@@ -694,7 +695,12 @@ ${(() => {
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (generatedText) {
-             return generatedText.trim();
+             // Strip out markdown links and footnote markers before returning
+             let cleanText = generatedText
+                .replace(/\\[\\d+\\]/g, '') // Remove [1], [2], etc.
+                .replace(/\\[(.*?)\\]\\(.*?\\)/g, '$1') // Convert [text](url) to just text
+                .replace(/https?:\\/\\/[^\\s]+/g, ''); // Remove raw URLs
+             return cleanText.trim();
         }
         return "申し訳ありません、応答の生成に失敗しました。";
 
