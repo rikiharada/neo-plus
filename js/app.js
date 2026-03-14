@@ -206,8 +206,37 @@ setTimeout(() => {
     }
 }, 1000);
 
+// --- Boot-time Brain Defrag ---
+window.neoBrainDefrag = function() {
+    console.log("[Neo Boot] Initiating Brain Defrag...");
+    // 1. Session Storage Lifecycle Check
+    const sessionStart = sessionStorage.getItem('neo_session_start');
+    const now = Date.now();
+    // If no session start time, or if the session is logically stale (e.g. > 24 hours), wipe it.
+    if (!sessionStart || (now - parseInt(sessionStart) > 1000 * 60 * 60 * 24)) { 
+        sessionStorage.clear(); // Pure wipe of all temporary conversational states
+        sessionStorage.setItem('neo_session_start', now.toString());
+        console.log("[Neo Boot] Volatile Session Cleared. Brain is fresh.");
+    }
+    
+    // 2. Strict Memory Segregation Check (localStorage vs sessionStorage)
+    const lsVersion = localStorage.getItem('neo_cache_version');
+    if (lsVersion !== "v2.1") {
+        console.warn("[Neo Boot] Major version change detected. Wiping obsolete cache structures...");
+        localStorage.removeItem('neo_feedback_memory'); // Old obsolete array removed
+        localStorage.setItem('neo_cache_version', "v2.1");
+    }
+};
+window.neoBrainDefrag();
+
 // Make initialization robust for iOS Safari
 window.addEventListener('load', async () => {
+    // Restore session-segregated Chat DOM if exists
+    const savedChatDOM = sessionStorage.getItem('neo_chat_dom');
+    if (savedChatDOM) {
+        const cContainer = document.getElementById('chat-messages');
+        if (cContainer) { cContainer.innerHTML = savedChatDOM; }
+    }
     // Initialize i18n
     await window.i18n.loadLocale('ja'); // Load default 'ja' locale
 
@@ -240,7 +269,10 @@ window.addEventListener('load', async () => {
 
     // Initial state logic
     const checkInitialSetup = () => {
-        // --- Gatekeeper V2: Unified Onboarding Check ---
+        // --- Gatekeeper V2: Temoporarily bypassed to test tap fixes on Dashboard ---
+        // CEO Request: Keep setup page OFF until manually requested to turn back on
+        localStorage.setItem('fini_setup_complete', 'true'); // Force true for testing
+
         const hasSetup = localStorage.getItem('fini_setup_complete');
         // A single source of truth for completion.
         if (!hasSetup) {
@@ -434,7 +466,23 @@ window.addEventListener('load', async () => {
             window.mockDB.userConfig.industry = selectIndustry.value;
             localStorage.setItem('neo_industry', selectIndustry.value);
         }
-        
+
+        const selectUiLang = document.getElementById('select-ui-lang');
+        const selectNeoMode = document.getElementById('select-neo-mode');
+
+        if (selectUiLang) {
+            const chosenLang = selectUiLang.value || 'ja';
+            localStorage.setItem('neo_ui_lang', chosenLang);
+            if(window.i18n) {
+                window.i18n.loadLocale(chosenLang).then(() => {
+                    window.i18n.updateDOM();
+                });
+            }
+        }
+        if (selectNeoMode) {
+            localStorage.setItem('neo_language_mode', selectNeoMode.value || 'ja');
+        }
+
         // Final structural reset & entrance
         document.body.style.overflow = '';
         window.showDash();
@@ -1426,19 +1474,15 @@ window.addEventListener('load', async () => {
         if (paperSizeSel && paperContainer) {
             const size = paperSizeSel.value; // 'A4' or 'B5'
             if (size === 'B5') {
-                paperContainer.style.width = '182mm';
-                paperContainer.style.minHeight = '257mm';
-                paperContainer.style.padding = '15mm';
+                // Keep the responsive aspect ratio but slightly smaller inner paddings if needed visually, 
+                // but for now, rely on CSS aspect-ratio constraint and 5% padding.
+                paperContainer.style.aspectRatio = '1 / 1.414';
             } else { // Default A4
-                paperContainer.style.width = '210mm';
-                paperContainer.style.minHeight = '297mm';
-                paperContainer.style.padding = '20mm';
+                paperContainer.style.aspectRatio = '1 / 1.414';
             }
             
-            // Re-apply perfect fit scale based on new potential width
-            const currentWidth = size === 'B5' ? 687 : 793; // Approx px width at 96dpi
-            const fitScale = Math.min(window.innerWidth / currentWidth, 1.0) * 0.95;
-            paperContainer.style.transform = `scale(${fitScale}) translate(0px, 0px)`;
+            // Remove the legacy transform scaling, rely on Flexbox + aspect ratio
+            paperContainer.style.transform = `none`;
         }
     };
 
@@ -4598,7 +4642,7 @@ window.addEventListener('load', async () => {
         let originalHtml = '';
         if (btnTrigger) {
             originalHtml = btnTrigger.innerHTML;
-            btnTrigger.innerHTML = '<i data-lucide="loader-2" class="spin" style="width: 18px; height: 18px; animation: spin 1s linear infinite;"></i> 画像圧縮＆解析中...';
+            btnTrigger.innerHTML = '<i data-lucide="loader-2" class="spin" style="width: 18px; height: 18px; animation: spin 1s linear infinite;"></i> <span style="animation: neoDeepThought 2.5s ease-in-out infinite; display: inline-block;">Thinking...</span>';
         }
         if(window.lucide) window.lucide.createIcons();
         
@@ -5167,22 +5211,7 @@ window.addEventListener('load', async () => {
         if (previewWrapper && paperTarget) {
             // Calculate Perfect Fit Scale dynamically with Professional Margins
             const calculateFitScale = () => {
-                const innerWidth = window.innerWidth;
-                const innerHeight = window.innerHeight;
-                
-                // A4 dimensions approx 793x1122 px
-                const naturalWidth = (paperTarget.style.width === '182mm') ? 687 : 793;
-                const naturalHeight = (paperTarget.style.minHeight === '257mm') ? 971 : 1122;
-                
-                // Safe area: Subtract header (~60px) and footer (~160px) and side paddings (~40px)
-                const safeWidth = innerWidth - 40;
-                const safeHeight = innerHeight - 220;
-                
-                const scaleW = safeWidth / naturalWidth;
-                const scaleH = safeHeight / naturalHeight;
-                
-                // Return the scale that fits both dimensions perfectly, capped at 1.0
-                return Math.min(scaleW, scaleH, 1.0); 
+                return 1.0; // CSS natively handles the 100% responsive fit via aspect-ratio.
             };
 
             let currentZoom = calculateFitScale();
@@ -5191,11 +5220,13 @@ window.addEventListener('load', async () => {
             
             const updateLayout = () => {
                 if (sliderInput) sliderInput.value = currentZoom;
-                paperTarget.style.transform = `scale(${currentZoom})`;
-                
-                // Fix native scroll layout bounds by retracting the bottom margin
-                const nHeight = (paperTarget.style.minHeight === '257mm') ? 971 : 1122;
-                paperTarget.style.marginBottom = `-${nHeight * (1 - currentZoom)}px`;
+                if (currentZoom === 1.0) {
+                    paperTarget.style.transform = 'none';
+                    paperTarget.style.marginBottom = '0px';
+                } else {
+                    paperTarget.style.transform = `scale(${currentZoom})`;
+                    paperTarget.style.marginBottom = '0px'; 
+                }
             };
 
             // Apply initial perfect fit
@@ -5557,6 +5588,95 @@ window.addEventListener('load', async () => {
 
         const messagesContainer = document.getElementById('chat-messages');
 
+        // CEO Feedback Logic (Volatile Memory + Soul Compression)
+        window.saveNeoFeedback = window.saveNeoFeedback || function(topicUrlEncoded, liked) {
+            try {
+                const topic = decodeURIComponent(topicUrlEncoded);
+                // Switch to sessionStorage for volatile conversational memory
+                let memory = JSON.parse(sessionStorage.getItem('neo_volatile_feedback') || '[]');
+                memory.push({topic, liked, date: new Date().toISOString()});
+                
+                // Keep only last 10 volatile memories before compression
+                if (memory.length > 10) memory = memory.slice(memory.length - 10);
+                sessionStorage.setItem('neo_volatile_feedback', JSON.stringify(memory));
+                console.log("[Neo Learning] Volatile feedback saved:", topic, liked ? "👍" : "👎");
+
+                // Trigger Metabolism check
+                if (window.neoIntellectualMetabolism) window.neoIntellectualMetabolism();
+
+            } catch(e) { console.error("Failed to save feedback", e); }
+        };
+
+        // Automated Cache Cleaning & Core Essence Extraction ("Soul Compression")
+        window.neoIntellectualMetabolism = window.neoIntellectualMetabolism || function() {
+            try {
+                const chatContainer = document.getElementById('chat-messages');
+                if (!chatContainer) return;
+
+                const messages = chatContainer.querySelectorAll('.chat-message-row');
+                
+                // If conversation gets too long (e.g., > 15 messages), compress and wipe
+                if (messages.length > 15) {
+                    console.log("[Neo Core] Conversation cache limit reached. Initiating Soul Compression and Auto-Summarization...");
+                    
+                    // 1. Extract Soul (Long Term Memory)
+                    let volatileFeedback = JSON.parse(sessionStorage.getItem('neo_volatile_feedback') || '[]');
+                    let longTermSoul = JSON.parse(localStorage.getItem('neo_long_term_soul') || '{"likes":[], "dislikes":[]}');
+                    
+                    volatileFeedback.forEach(fb => {
+                        if (fb.liked) {
+                            if (!longTermSoul.likes.includes(fb.topic)) longTermSoul.likes.push(fb.topic);
+                        } else {
+                            if (!longTermSoul.dislikes.includes(fb.topic)) longTermSoul.dislikes.push(fb.topic);
+                        }
+                    });
+
+                    // Keep Soul concise (max 20 key points each)
+                    if (longTermSoul.likes.length > 20) longTermSoul.likes = longTermSoul.likes.slice(-20);
+                    if (longTermSoul.dislikes.length > 20) longTermSoul.dislikes = longTermSoul.dislikes.slice(-20);
+                    
+                    localStorage.setItem('neo_long_term_soul', JSON.stringify(longTermSoul));
+                    sessionStorage.removeItem('neo_volatile_feedback'); // Wipe volatile
+
+                    // 1.5. Extract Conversation Essence (Auto-Summarization of raw text)
+                    let essenceArr = [];
+                    // Skip the 1st (greeting), and skip the last 2 to keep context alive visually
+                    for(let i = 1; i < messages.length - 2; i++) {
+                       const textSnippet = messages[i].innerText.substring(0, 40).replace(/\\s+/g, ' ');
+                       if (textSnippet.length > 2) essenceArr.push(textSnippet);
+                    }
+                    let existingEssence = sessionStorage.getItem('neo_chat_summary') || "";
+                    // Keep essence under 500 characters
+                    sessionStorage.setItem('neo_chat_summary', (existingEssence + " | " + essenceArr.join(" | ")).substring(0, 500));
+
+                    // 2. Wipe DOM Chat Cache but KEEP context visually seamless
+                    const firstMsg = messages[0];
+                    const lastMsg1 = messages[messages.length - 2];
+                    const lastMsg2 = messages[messages.length - 1];
+
+                    chatContainer.innerHTML = '';
+                    if (firstMsg) chatContainer.appendChild(firstMsg);
+                    
+                    // 3. System Notification for Defrag
+                    const wipeNotice = document.createElement('div');
+                    wipeNotice.className = 'chat-message-row neo-message-row';
+                    wipeNotice.style.display = 'flex';
+                    wipeNotice.style.gap = '12px';
+                    wipeNotice.style.alignItems = 'center';
+                    wipeNotice.style.marginBottom = '12px';
+                    wipeNotice.style.justifyContent = 'center';
+                    wipeNotice.innerHTML = `<span style="font-size: 11px; display: inline-block; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: bold; letter-spacing: 0.05em;">[SYSTEM] 不要ログの洗浄とエッセンス抽出が完了しました。</span>`;
+                    chatContainer.appendChild(wipeNotice);
+
+                    // Re-append the last 2 interactions so UI looks continuous
+                    if (lastMsg1) chatContainer.appendChild(lastMsg1);
+                    if (lastMsg2) chatContainer.appendChild(lastMsg2);
+
+                    sessionStorage.setItem('neo_chat_dom', chatContainer.innerHTML);
+                }
+            } catch(e) { console.error("Metabolism failed", e); }
+        };
+
         // 1. Create User (CEO) Message Bubble (Right-aligned, Dark gray)
         const userRow = document.createElement('div');
         userRow.className = 'chat-message-row user-message-row';
@@ -5596,7 +5716,7 @@ window.addEventListener('load', async () => {
                 <img src="img/neo_avatar.jpg" class="avatar-circle" alt="Neo">
             </div>
             <div class="chat-bubble neo" style="max-width: 80%; font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
-                <span class="typing-indicator" style="animation: pulse 1.5s infinite opacity;">解析中...</span>
+                <span class="typing-indicator" style="animation: neoDeepThought 2.5s ease-in-out infinite; opacity: 0.6; display: inline-block;">Thinking...</span>
             </div>
         `;
         messagesContainer.appendChild(neoRow);
@@ -5608,8 +5728,18 @@ window.addEventListener('load', async () => {
         const neoBubbleText = neoRow.querySelector('.chat-bubble');
 
         try {
+            // Conversational Memory (User)
+            let history = JSON.parse(sessionStorage.getItem('neo_chat_history') || '[]');
+            history.push({role: "user", parts: [{text: text}]});
+            sessionStorage.setItem('neo_chat_history', JSON.stringify(history));
+
             // Wait for full text response from Gemini
             const fullResponse = await window.generateGeminiResponse(text, 'chat_room');
+            
+            // Conversational Memory (Model)
+            history.push({role: "model", parts: [{text: fullResponse}]});
+            if (history.length > 30) history = history.slice(-30); // Keep last 15 turns
+            sessionStorage.setItem('neo_chat_history', JSON.stringify(history));
             
             // Clear the placeholder
             neoBubbleText.innerHTML = '';
@@ -5629,6 +5759,16 @@ window.addEventListener('load', async () => {
                     // After streaming finishes, replace straight text with interpreted HTML for styling
                     neoBubbleText.innerHTML = fullResponse.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                     
+                    // Inject CEO Feedback UI
+                    const safeTopic = encodeURIComponent(text.substring(0, 40));
+                    const feedbackHtml = `
+                        <div class="neo-feedback-ui" style="margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+                            <button onclick="window.saveNeoFeedback('${safeTopic}', true); this.parentElement.innerHTML='<span style=\\'font-size:12px; color:#10b981; font-weight:bold;\\'>Neo: Learning Synced 👍</span>';" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); border-radius: 12px; padding: 4px 12px; font-size: 12px; cursor: pointer; transition: background-color 0.2s;">👍 良い解釈だ</button>
+                            <button onclick="window.saveNeoFeedback('${safeTopic}', false); this.parentElement.innerHTML='<span style=\\'font-size:12px; color:#ef4444; font-weight:bold;\\'>Neo: Parameter Adjusted 👎</span>';" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); border-radius: 12px; padding: 4px 12px; font-size: 12px; cursor: pointer; transition: background-color 0.2s;">👎 イマイチ</button>
+                        </div>
+                    `;
+                    neoBubbleText.insertAdjacentHTML('beforeend', feedbackHtml);
+
                     // Final scroll after HTML rendering
                     setTimeout(() => updateScroll(), 50);
                 }
@@ -5637,6 +5777,10 @@ window.addEventListener('load', async () => {
             function updateScroll() {
                 neoRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                // Save segregated session cache
+                sessionStorage.setItem('neo_chat_dom', messagesContainer.innerHTML);
+                // Run cache check after every AI response
+                if (window.neoIntellectualMetabolism) window.neoIntellectualMetabolism();
             }
 
         } catch (error) {

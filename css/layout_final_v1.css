@@ -1,15 +1,13 @@
 /* App Container Constraint (Mobile by default, wide on PC) */
 #app-container {
     width: 100%;
-    max-width: 480px;
-    height: 100vh;
+    max-width: 100%;
+    min-height: 100vh;
     margin: 0 auto;
     position: relative;
-    overflow-x: hidden;
-    overflow-y: hidden; /* Prevent body scroll, handle internally */
     background-color: var(--bg-color);
     display: grid; grid-auto-flow: column;
-    
+    pointer-events: auto !important;
 }
 
 /* PC block removed */
@@ -48,14 +46,6 @@
     background-color: var(--header-bg);
     z-index: 40;
     border-bottom: 0.5px solid rgba(150, 150, 150, 0.15); /* bare minimum subtle line */
-    pointer-events: none;
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-}
-
-/* Ensure header content remains clickable */
-.header-area > * {
-    pointer-events: auto;
 }
 
 /* PC block removed */
@@ -114,7 +104,7 @@ body {
     min-height: 100vh;
     letter-spacing: var(--letter-spacing-base);
     transition: background-color 0.4s ease, color 0.4s ease;
-    overflow-x: hidden;
+    pointer-events: auto !important;
 }
 
 .title {

@@ -147,6 +147,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield; /* Firefox */
+  appearance: textfield;      /* Standard */
 }
 
 /* ==========================================================================
@@ -279,6 +280,14 @@ input[type="number"] {
     print-color-adjust: exact !important;
   }
 }
+
+/* --- Neo Deep Thought Emotion --- */
+@keyframes neoDeepThought {
+  0% { opacity: 0.3; transform: scale(0.98); }
+  50% { opacity: 0.9; transform: scale(1.02); }
+  100% { opacity: 0.3; transform: scale(0.98); }
+}
+
 /* Chat Message Fast Fade-In 
    To resolve the issue where the message appears to be 'disappearing' or too slow. */
 @keyframes chatFadeIn {
@@ -296,24 +305,4 @@ input[type="number"] {
   animation: chatFadeIn 0.2s cubic-bezier(0.1, 0.82, 0.25, 1) forwards;
 }
 
-/* ==========================================================================
-   Mobile Tap Responsiveness & FastClick Optimization (Phase 7)
-   ========================================================================== */
-a, button, input, select, textarea, .btn-primary, .btn-secondary, .btn-electric, .btn-huge, .nav-item, .nav-item-nplus, .action-chip, .filter-option, .quick-replies button {
-    touch-action: manipulation !important; /* Disables 300ms tap delay on iOS */
-    position: relative; 
-    z-index: 50; /* Elevate interactive elements above background decorations */
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* Prevents rogue user-select blocking the view canvas */
-html, body, .view, #app-container {
-    -webkit-user-select: auto;
-    user-select: auto;
-}
-
-/* But prevent text selection on buttons to avoid accidental highlighting on rapid tapping */
-button, .nav-item, .nav-item-nplus, .chat-action-btn, .theme-toggle {
-    -webkit-user-select: none;
-    user-select: none;
-}
+/* Removed Phase 7 aggressive tap optimizations due to iOS Safari touch-blocking bug */

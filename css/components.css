@@ -17,6 +17,10 @@ button {
     width: auto;
     /* Added for consistency, will be overridden by btn-huge specific width */
     margin: 0 auto;
+    
+    /* FastClick / iOS Native Button Speed */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 button:hover {
