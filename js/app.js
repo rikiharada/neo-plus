@@ -1297,10 +1297,10 @@ window.addEventListener('load', async () => {
 
             const isEstimate = window.currentDocType === 'estimate';
             const tdStyle = isEstimate 
-                ? 'padding: 10px 8px; font-size: 11px; color: #0f172a; border-bottom: 1px solid #e2e8f0;'
+                ? 'padding: 8px; font-size: 11px; color: #333; border-bottom: 1px solid #ccc;'
                 : 'padding: 15px; font-size: 16px; color: #0f172a; border-bottom: 1px solid #e2e8f0;';
             const tdStyleRight = isEstimate
-                ? 'padding: 10px 8px; font-size: 11px; color: #0f172a; text-align: right; border-bottom: 1px solid #e2e8f0;'
+                ? 'padding: 8px; font-size: 11px; color: #333; text-align: right; border-bottom: 1px solid #ccc;'
                 : 'padding: 15px; font-size: 16px; color: #0f172a; text-align: right; border-bottom: 1px solid #e2e8f0;';
 
             linesHTML += `
