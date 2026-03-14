@@ -5615,8 +5615,9 @@ window.addEventListener('load', async () => {
         const text = inputField.value.trim();
         if (!text) return;
 
-        // Clear input
+        // Clear input and reset height
         inputField.value = '';
+        inputField.style.height = 'auto'; // Reset textarea height to original
 
         const messagesContainer = document.getElementById('chat-messages');
 
