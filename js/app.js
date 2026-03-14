@@ -5608,7 +5608,7 @@ window.addEventListener('load', async () => {
         };
 
         // Automated Cache Cleaning & Core Essence Extraction ("Soul Compression")
-        window.neoIntellectualMetabolism = window.neoIntellectualMetabolism || function() {
+        window.neoIntellectualMetabolism = window.neoIntellectualMetabolism || async function() {
             try {
                 const chatContainer = document.getElementById('chat-messages');
                 if (!chatContainer) return;
@@ -5617,9 +5617,9 @@ window.addEventListener('load', async () => {
                 
                 // If conversation gets too long (e.g., > 15 messages), compress and wipe
                 if (messages.length > 15) {
-                    console.log("[Neo Core] Conversation cache limit reached. Initiating Soul Compression and Auto-Summarization...");
+                    console.log("[Neo Core] Conversation cache limit reached. Initiating AI Soul Compression...");
                     
-                    // 1. Extract Soul (Long Term Memory)
+                    // 1. Extract Soul (Long Term Memory) from Feedback
                     let volatileFeedback = JSON.parse(sessionStorage.getItem('neo_volatile_feedback') || '[]');
                     let longTermSoul = JSON.parse(localStorage.getItem('neo_long_term_soul') || '{"likes":[], "dislikes":[]}');
                     
@@ -5638,16 +5638,29 @@ window.addEventListener('load', async () => {
                     localStorage.setItem('neo_long_term_soul', JSON.stringify(longTermSoul));
                     sessionStorage.removeItem('neo_volatile_feedback'); // Wipe volatile
 
-                    // 1.5. Extract Conversation Essence (Auto-Summarization of raw text)
-                    let essenceArr = [];
-                    // Skip the 1st (greeting), and skip the last 2 to keep context alive visually
-                    for(let i = 1; i < messages.length - 2; i++) {
-                       const textSnippet = messages[i].innerText.substring(0, 40).replace(/\\s+/g, ' ');
-                       if (textSnippet.length > 2) essenceArr.push(textSnippet);
+                    // 1.5. Advanced Soul Compression (AI-Driven)
+                    if (window.extractNeoCoreSoul) {
+                        try {
+                            const rawHistoryObj = JSON.parse(sessionStorage.getItem('neo_chat_history') || '[]');
+                            const rawHistoryStr = rawHistoryObj.map(h => (h.role === 'user' ? 'CEO: ' : 'Neo: ') + h.parts[0].text).join('\\n');
+                            
+                            if (rawHistoryStr.length > 100) {
+                                console.log("[Neo Core] Calling Gemini for Soul Extraction...");
+                                const extractedSoul = await window.extractNeoCoreSoul(rawHistoryStr);
+                                
+                                if (extractedSoul && extractedSoul.length > 10) {
+                                    localStorage.setItem('neo_long_term_soul_extracted', extractedSoul);
+                                    console.log("[Neo Core] Soul Extraction Complete. Wiping volatile history.");
+                                    
+                                    // Wipe the API history to free up context window
+                                    sessionStorage.removeItem('neo_chat_history');
+                                    sessionStorage.removeItem('neo_chat_summary');
+                                }
+                            }
+                        } catch(apiErr) {
+                            console.error("Soul compression API call failed:", apiErr);
+                        }
                     }
-                    let existingEssence = sessionStorage.getItem('neo_chat_summary') || "";
-                    // Keep essence under 500 characters
-                    sessionStorage.setItem('neo_chat_summary', (existingEssence + " | " + essenceArr.join(" | ")).substring(0, 500));
 
                     // 2. Wipe DOM Chat Cache but KEEP context visually seamless
                     const firstMsg = messages[0];
@@ -5665,7 +5678,7 @@ window.addEventListener('load', async () => {
                     wipeNotice.style.alignItems = 'center';
                     wipeNotice.style.marginBottom = '12px';
                     wipeNotice.style.justifyContent = 'center';
-                    wipeNotice.innerHTML = `<span style="font-size: 11px; display: inline-block; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: bold; letter-spacing: 0.05em;">[SYSTEM] 不要ログの洗浄とエッセンス抽出が完了しました。</span>`;
+                    wipeNotice.innerHTML = `<span style="font-size: 11px; display: inline-block; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: bold; letter-spacing: 0.05em;">[SYSTEM] 揮発性メモリの洗浄と『魂』の圧縮が完了しました。</span>`;
                     chatContainer.appendChild(wipeNotice);
 
                     // Re-append the last 2 interactions so UI looks continuous

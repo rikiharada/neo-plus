@@ -579,6 +579,10 @@ ${toneInstruction}
 - Entertainment expenses require a business purpose.
 - If the user asks general questions, answer them clearly based on facts.
 
+[CEO'S EXTRACTED SOUL / LONG-TERM MEMORY]
+Always remember these core facts about the user's ongoing situation and goals:
+${localStorage.getItem('neo_long_term_soul_extracted') || "No long term soul extracted yet."}
+
 [GOOGLE GROUNDING & CITATION (CRITICAL)]
 You have access to Google Search tools. When providing professional advice (e.g., regarding taxes, FP knowledge, business structure), you MUST:
 1. Ground your answers in the latest official information, prioritizing queries from "国税庁" (National Tax Agency) and "日本FP協会" (Japan FP Association).
@@ -697,5 +701,56 @@ ${(() => {
     } catch (error) {
         console.error("N+ Chat Engine failed:", error);
         return "通信エラーが発生しました。脳の接続を確認してください。";
+    }
+};
+
+/**
+ * N+ Soul Extraction Engine (Intellectual Metabolism)
+ * Summarizes the volatile chat history into a dense "Soul" to persist across session wipes.
+ */
+window.extractNeoCoreSoul = async function(historyText) {
+    const apiKey = getGeminiApiKey();
+    if (!apiKey) return "";
+
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + TIER_1_KEY;
+    
+    const extractionPrompt = `
+あなたはNeoの自己圧縮モジュールです。以下の「過去の会話ログ」を分析し、Neoが今後の会話で絶対に忘れてはならない『システムプロンプト用の魂（要約テキスト）』を作成してください。
+
+[抽出必須項目]
+1. CEOの現在の具体的な目標や悩み（例: MacBookを買いたい、〇〇の案件を進めている）
+2. 登場した重要なFP的/税務的な指標や文脈（例: 交際費の枠、免税事業者の扱い）
+3. その他、会話の前提となっている重要なコンテキスト
+
+[出力フォーマット]
+簡潔な箇条書き形式で、そのままシステムプロンプトとして組み込めるように出力してください。挨拶や説明は不要です。
+
+[過去の会話ログ]
+${historyText}
+    `;
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ role: "user", parts: [{ text: extractionPrompt }] }],
+                generationConfig: {
+                    temperature: 0.1, // Keep it highly deterministic
+                    maxOutputTokens: 500
+                }
+            })
+        });
+
+        if (!response.ok) return "";
+
+        const data = await response.json();
+        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        return generatedText ? generatedText.trim() : "";
+
+    } catch (error) {
+        console.error("Soul Extraction failed:", error);
+        return "";
     }
 };
