@@ -697,9 +697,9 @@ ${(() => {
         if (generatedText) {
              // Strip out markdown links and footnote markers before returning
              let cleanText = generatedText
-                .replace(/\\[\\d+\\]/g, '') // Remove [1], [2], etc.
-                .replace(/\\[(.*?)\\]\\(.*?\\)/g, '$1') // Convert [text](url) to just text
-                .replace(/https?:\\/\\/[^\\s]+/g, ''); // Remove raw URLs
+                .replace(/\[\d+\]/g, '') // Remove [1], [2], etc.
+                .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Convert [text](url) to just text
+                .replace(/https?:\/\/[^\s]+/g, ''); // Remove raw URLs
              return cleanText.trim();
         }
         return "申し訳ありません、応答の生成に失敗しました。";
