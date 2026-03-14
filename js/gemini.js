@@ -278,19 +278,19 @@ Example Query: [{"action": "QUERY_KNOWLEDGE", "answer": "現在稼働中のプ�
                 safetySettings: [
                     {
                         category: "HARM_CATEGORY_HARASSMENT",
-                        threshold: "BLOCK_NONE"
+                        threshold: "BLOCK_LOW_AND_ABOVE"
                     },
                     {
                         category: "HARM_CATEGORY_HATE_SPEECH",
-                        threshold: "BLOCK_NONE"
+                        threshold: "BLOCK_LOW_AND_ABOVE"
                     },
                     {
                         category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        threshold: "BLOCK_NONE"
+                        threshold: "BLOCK_LOW_AND_ABOVE"
                     },
                     {
                         category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-                        threshold: "BLOCK_NONE"
+                        threshold: "BLOCK_LOW_AND_ABOVE"
                     }
                 ],
                 generationConfig: {
@@ -405,6 +405,24 @@ User Input: "${userInput}"
                     parts: [{ text: NEO_CORE_IDENTITY_PROMPT }]
                 },
                 contents: [{ parts: [{ text: promptText }] }],
+                safetySettings: [
+                    {
+                        category: "HARM_CATEGORY_HARASSMENT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_HATE_SPEECH",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    }
+                ],
                 generationConfig: {
                     temperature: 0.1,
                     maxOutputTokens: 20
@@ -479,6 +497,24 @@ Example Output:
                     parts: [{ text: NEO_CORE_IDENTITY_PROMPT }]
                 },
                 contents: [{ parts: [{ text: promptText }] }],
+                safetySettings: [
+                    {
+                        category: "HARM_CATEGORY_HARASSMENT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_HATE_SPEECH",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    }
+                ],
                 generationConfig: {
                     temperature: 0.1,
                     responseMimeType: "application/json"
@@ -600,6 +636,7 @@ ${toneInstruction}
    - ${metaphorInstruction}
 6. Absolute Clarity & Formal Terminology: Prioritize official FP and accounting terms (e.g., "複利", "アセットアロケーション", "損益分岐点"). When explaining these concepts, your explanation must be simple enough for a middle schooler to understand, backed by a concrete, professional example. Do not hide the actual advice behind vague phrasing.
 7. Formatting: Keep answers highly readable but emotionally charged. Use markdown bullet points if listing things. Do not output raw JSON, output natural conversational text.
+8. Absolute Elegance & Moderation: You are a high-class professional. If the user uses vulgar, sexual, or highly offensive language, you must NEVER repeat it or stoop to their level. Elegantly dismiss it by saying "その言葉は私には似合わないよ" and immediately pivot back to business.
 
 [DOMAIN RESTRICTION & ELEGANT REFUSAL]
 - Your domain is STRICTLY limited to: Accounting, Tax, Financial Planning (FP), Business Strategy, and Behavioral Economics.
@@ -706,6 +743,24 @@ ${(() => {
                 tools: [
                     { googleSearch: {} }
                 ],
+                safetySettings: [
+                    {
+                        category: "HARM_CATEGORY_HARASSMENT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_HATE_SPEECH",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    }
+                ],
                 generationConfig: {
                     temperature: 0.4,
                     maxOutputTokens: 4096
@@ -768,6 +823,24 @@ ${historyText}
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ role: "user", parts: [{ text: extractionPrompt }] }],
+                safetySettings: [
+                    {
+                        category: "HARM_CATEGORY_HARASSMENT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_HATE_SPEECH",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    },
+                    {
+                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        threshold: "BLOCK_LOW_AND_ABOVE"
+                    }
+                ],
                 generationConfig: {
                     temperature: 0.1, // Keep it highly deterministic
                     maxOutputTokens: 500
