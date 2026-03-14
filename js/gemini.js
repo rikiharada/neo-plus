@@ -681,7 +681,7 @@ ${(() => {
                 ],
                 generationConfig: {
                     temperature: 0.4,
-                    maxOutputTokens: 1024
+                    maxOutputTokens: 4096
                 }
             })
         });
@@ -700,13 +700,13 @@ ${(() => {
                 .replace(/\[\d+\]/g, '') // Remove [1], [2], etc.
                 .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Convert [text](url) to just text
                 .replace(/https?:\/\/[^\s]+/g, ''); // Remove raw URLs
-             return cleanText.trim();
+             return { text: cleanText.trim(), finishReason: data.candidates[0].finishReason };
         }
-        return "申し訳ありません、応答の生成に失敗しました。";
+        return { text: "申し訳ありません、応答の生成に失敗しました。", finishReason: "ERROR" };
 
     } catch (error) {
         console.error("N+ Chat Engine failed:", error);
-        return "通信エラーが発生しました。脳の接続を確認してください。";
+        return { text: "通信エラーが発生しました。脳の接続を確認してください。", finishReason: "ERROR" };
     }
 };
 

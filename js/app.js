@@ -5740,18 +5740,48 @@ window.addEventListener('load', async () => {
 
         const neoBubbleText = neoRow.querySelector('.chat-bubble');
 
+        if (window.isNeoSpeaking) return;
+        window.isNeoSpeaking = true;
+
         try {
             // Conversational Memory (User)
             let history = JSON.parse(sessionStorage.getItem('neo_chat_history') || '[]');
             history.push({role: "user", parts: [{text: text}]});
-            sessionStorage.setItem('neo_chat_history', JSON.stringify(history));
-
-            // Wait for full text response from Gemini
-            const fullResponse = await window.generateGeminiResponse(text, 'chat_room');
             
-            // Conversational Memory (Model)
-            history.push({role: "model", parts: [{text: fullResponse}]});
-            if (history.length > 30) history = history.slice(-30); // Keep last 15 turns
+            let fullResponseText = "";
+            let apiResult = null;
+            let retryCount = 0;
+            const maxRetries = 2; // Prevent infinite loop on bad connections
+            
+            // Loop until the AI naturally stops or we hit retry limit
+            do {
+                sessionStorage.setItem('neo_chat_history', JSON.stringify(history));
+                
+                // Wait for text response from Gemini
+                // If this is a retry continuation, we pass a hidden continuation prompt
+                let promptToSend = (retryCount === 0) ? text : "（Neoのシステムノート：先程の続きから、そのまま文章を続けてください）";
+                apiResult = await window.generateGeminiResponse(promptToSend, 'chat_room');
+                
+                if (retryCount > 0) {
+                     // Add recovery flavor text on the UI side if it broke
+                     fullResponseText += "\\n\\n[SYSTEM: 息継ぎ復旧中...]\\nごめん、ちょっと息切れしちゃった。続きを話すね：\\n" + apiResult.text;
+                } else {
+                     fullResponseText = apiResult.text;
+                }
+
+                if (apiResult.finishReason === 'MAX_TOKENS') {
+                    // Prepare history for the next loop to fetch the continuation
+                    history.push({role: "model", parts: [{text: fullResponseText}]});
+                    retryCount++;
+                    console.log("[Neo Core] Auto-Recovery Triggered. Fetching continuation...", retryCount);
+                } else {
+                    break;
+                }
+            } while (retryCount < maxRetries && apiResult.finishReason === 'MAX_TOKENS');
+
+            // Save final history
+            history.push({role: "model", parts: [{text: fullResponseText}]});
+            if (history.length > 30) history = history.slice(-30);
             sessionStorage.setItem('neo_chat_history', JSON.stringify(history));
             
             // Clear the placeholder
@@ -5760,17 +5790,18 @@ window.addEventListener('load', async () => {
             // Streaming Effect (Character by Character)
             let i = 0;
             const streamInterval = setInterval(() => {
-                // Ignore HTML tags for the raw streaming effect, handle cleanly later if needed
-                neoBubbleText.textContent += fullResponse.charAt(i);
+                neoBubbleText.textContent += fullResponseText.charAt(i);
                 
                 // Keep viewport glued to the bottom during rapid streaming
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 
                 i++;
-                if (i >= fullResponse.length) {
+                if (i >= fullResponseText.length) {
                     clearInterval(streamInterval);
+                    window.isNeoSpeaking = false;
+                    
                     // After streaming finishes, replace straight text with interpreted HTML for styling
-                    neoBubbleText.innerHTML = fullResponse.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    neoBubbleText.innerHTML = fullResponseText.replace(/\\n/g, '<br>').replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
                     
                     // Inject CEO Feedback UI
                     const safeTopic = encodeURIComponent(text.substring(0, 40));
@@ -5799,6 +5830,7 @@ window.addEventListener('load', async () => {
         } catch (error) {
             neoBubbleText.innerHTML = `<span style="color: #f87171;">エラーが発生しました。接続を確認してください。</span>`;
             console.error("Chat Error:", error);
+            window.isNeoSpeaking = false;
         }
     };
 
