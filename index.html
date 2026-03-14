@@ -1271,23 +1271,27 @@
                         <div style="border-bottom: 2px solid #333; margin-bottom: 15px;"></div>
                     </div>
 
-                    <!-- Footer Table (Totals only, pushed to right) -->
+                    <!-- Footer Table (Totals only, perfectly aligned with the grid above) -->
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td style="width: 50%;"></td>
-                            <td style="width: 50%; vertical-align: bottom;">
-                                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <!-- Blank left space to match Subject and Quantity columns (60%) -->
+                            <td style="width: 60%;"></td>
+                            <!-- Totals space to match Unit Price and Amount columns (20% + 20% = 40%) -->
+                            <td style="width: 40%; vertical-align: bottom;">
+                                <table style="width: 100%; border-collapse: collapse;">
                                     <tr>
-                                        <td style="padding: 4px 8px; text-align: right;">小計</td>
-                                        <td id="preview-subtotal" style="padding: 4px 8px; text-align: right; width: 50%;">¥0</td>
+                                        <!-- Label perfectly aligns under Unit Price (50% of 40% = 20%) -->
+                                        <td style="padding: 4px 8px; font-size: 11px; color: #475569; width: 50%;">小計</td>
+                                        <!-- Value perfectly aligns under Amount (50% of 40% = 20%) -->
+                                        <td id="preview-subtotal" style="padding: 4px 8px; font-size: 12px; color: #94a3b8; text-align: right; width: 50%;">¥0</td>
                                     </tr>
                                     <tr>
-                                        <td id="preview-tax-label" style="padding: 4px 8px; text-align: right;">消費税 (10%)</td>
-                                        <td id="preview-tax" style="padding: 4px 8px; text-align: right; width: 50%;">¥0</td>
+                                        <td id="preview-tax-label" style="padding: 4px 8px; font-size: 11px; color: #475569; width: 50%;">消費税 (10%)</td>
+                                        <td id="preview-tax" style="padding: 4px 8px; font-size: 12px; color: #94a3b8; text-align: right; width: 50%;">¥0</td>
                                     </tr>
                                     <tr>
-                                        <td style="padding: 8px; text-align: right; font-weight: bold; border-top: 1px solid #333;">合計金額</td>
-                                        <td id="preview-grand-total" style="padding: 8px; text-align: right; font-weight: bold; border-top: 1px solid #333; font-size: 16px;">¥0</td>
+                                        <td style="padding: 8px 8px; font-size: 12px; font-weight: 800; color: #0f172a; border-top: 1px solid #cbd5e1; width: 50%;">合計金額</td>
+                                        <td id="preview-grand-total" style="padding: 8px 8px; font-size: 24px; font-weight: 800; color: #0f172a; text-align: right; border-top: 1px solid #cbd5e1; width: 50%;">¥0</td>
                                     </tr>
                                 </table>
                             </td>
@@ -1296,10 +1300,16 @@
 
                     <!-- Absolute Bottom-Left QR Code -->
                     <div style="position: absolute; bottom: 30px; left: 30px; margin: 0; padding: 0;">
-                        <img id="preview-qr-code" src="" style="width: 50px; height: 50px; display: none;" alt="QR">
-                        <div style="font-size: 9px; color: #666; padding-bottom: 2px;">
-                            このQRコードをカメラで読み取ると、本書類をデジタル保存できます。
-                        </div>
+                        <table style="border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 60px; vertical-align: bottom;">
+                                    <img id="preview-qr-code" src="" style="width: 50px; height: 50px; display: none;" alt="QR">
+                                </td>
+                                <td style="vertical-align: bottom; font-size: 9px; color: #666; padding-bottom: 2px;">
+                                    このQRコードをカメラで読み取ると、<br>本書類をデジタル保存できます。
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1884,8 +1894,8 @@
     <!-- Core App Scripts -->
     <script src="js/i18n.js?v=neo-99-RECOVERY23"></script>
     <script src="js/neo.js?v=neo-99-RECOVERY23"></script>
-    <script src="js/gemini.js?v=NEO_SAFE_62"></script>
-    <script src="js/app.js?v=NEO_SAFE_62"></script>
+    <script src="js/gemini.js?v=NEO_SAFE_64"></script>
+    <script src="js/app.js?v=NEO_SAFE_64"></script>
 
 </body>
 
