@@ -10,7 +10,6 @@ window.validateUserName = function(name) {
 
 window.mockDB = window.mockDB || {
     userConfig: {
-        industry: localStorage.getItem('neo_industry') || "construction",
         cloudProvider: localStorage.getItem('neo_cloud') || "icloud",
         targetMonthlyProfit: 1000000
     },
@@ -259,15 +258,15 @@ window.addEventListener('load', async () => {
     const selectIndustry = document.getElementById('select-industry');
 
     // Populate Massive Industry List from window.INDUSTRIES
-    if (selectIndustry && window.INDUSTRIES) {
-        selectIndustry.innerHTML = '<option value="" disabled selected>選択して下さい（選択不可）</option>';
-        window.INDUSTRIES.forEach(ind => {
-            const opt = document.createElement('option');
-            opt.value = ind.id;
-            opt.textContent = ind.name;
-            selectIndustry.appendChild(opt);
-        });
-    }
+    // if (selectIndustry && window.INDUSTRIES) {
+    //     selectIndustry.innerHTML = '<option value="" disabled selected>選択して下さい（選択不可）</option>';
+    //     window.INDUSTRIES.forEach(ind => {
+    //         const opt = document.createElement('option');
+    //         opt.value = ind.id;
+    //         opt.textContent = ind.name;
+    //         selectIndustry.appendChild(opt);
+    //     });
+    // }
 
     // Dashboard Elements
     const neoDashContainer = document.getElementById('neo-dash-container');
@@ -470,10 +469,10 @@ window.addEventListener('load', async () => {
         localStorage.setItem('fini_setup_complete', 'true');
         localStorage.setItem('neo_legal_consent', 'true'); // Formalize consent matrix
         
-        if (selectIndustry && window.mockDB && window.mockDB.userConfig) {
-            window.mockDB.userConfig.industry = selectIndustry.value;
-            localStorage.setItem('neo_industry', selectIndustry.value);
-        }
+        // if (selectIndustry && window.mockDB && window.mockDB.userConfig) {
+        //     window.mockDB.userConfig.industry = selectIndustry.value;
+        //     localStorage.setItem('neo_industry', selectIndustry.value);
+        // }
 
         const selectUiLang = document.getElementById('select-ui-lang');
         const selectNeoMode = document.getElementById('select-neo-mode');
@@ -4260,10 +4259,10 @@ window.addEventListener('load', async () => {
                 }
             });
 
-            const catInput = document.getElementById('new-proj-category');
-            if (catInput) {
-                catInput.value = ''; // プレースホルダー「業種」を表示する
-            }
+            // const catInput = document.getElementById('new-proj-category');
+            // if (catInput) {
+            //     catInput.value = ''; // プレースホルダー「業種」を表示する
+            // }
         });
     }
 
@@ -4276,7 +4275,7 @@ window.addEventListener('load', async () => {
     }
 
     // Neo Reaction on Category Change (Removed to keep modal pure/silent)
-    const categorySelect = document.getElementById('new-proj-category');
+    // const categorySelect = document.getElementById('new-proj-category');
 
     if (btnCloseModal) {
         btnCloseModal.addEventListener('click', () => {
@@ -4292,8 +4291,9 @@ window.addEventListener('load', async () => {
             const name = document.getElementById('new-proj-name').value;
             const locationLink = document.getElementById('new-proj-location').value;
             const note = document.getElementById('new-proj-note').value;
-            const categorySelectObj = document.getElementById('new-proj-category');
-            const category = categorySelectObj ? categorySelectObj.value : 'other';
+            // const categorySelectObj = document.getElementById('new-proj-category');
+            // const category = categorySelectObj ? categorySelectObj.value : 'other';
+            const category = 'other';
 
             const dStartVal = document.getElementById('new-proj-start-date').value;
             const dEndVal = document.getElementById('new-proj-end-date').value;
@@ -4430,8 +4430,8 @@ window.addEventListener('load', async () => {
             const editNote = document.getElementById('edit-proj-note');
             if (editNote) editNote.value = proj.note || '';
 
-            const editCat = document.getElementById('edit-proj-category');
-            if (editCat) editCat.value = proj.category || '';
+            // const editCat = document.getElementById('edit-proj-category');
+            // if (editCat) editCat.value = proj.category || '';
 
             const editDate = document.getElementById('edit-proj-date');
             if (editDate) editDate.value = proj.startDate ? proj.startDate.replace(/\//g, '-') : '';
@@ -4458,7 +4458,8 @@ window.addEventListener('load', async () => {
             const name = document.getElementById('edit-proj-name').value;
             const loc = document.getElementById('edit-proj-location').value;
             const note = document.getElementById('edit-proj-note').value;
-            const cat = document.getElementById('edit-proj-category').value;
+            // const cat = document.getElementById('edit-proj-category').value;
+            const cat = 'other'; // Hardcoded default
 
             if (!name) {
                 alert('プロジェクト名を入力してください');
@@ -5120,7 +5121,7 @@ window.addEventListener('load', async () => {
                     if(btnEdit) btnEdit.style.display = 'none'; // Use display none since hidden class might not stick due to inline styles
                     
                     // Determine User vs Guest dynamically based on industry or mockDB
-                    const isNeoUser = localStorage.getItem('neo_industry') != null || localStorage.getItem('fini_setup_complete') === 'true';
+                    const isNeoUser = localStorage.getItem('fini_setup_complete') === 'true';
                     if (isNeoUser) {
                         const btnSaveNeo = document.getElementById('btn-shared-save-neo');
                         if(btnSaveNeo) btnSaveNeo.classList.remove('hidden');
