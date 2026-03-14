@@ -3171,6 +3171,12 @@ window.addEventListener('load', async () => {
             currentProjectPage = 1;
         }
 
+        // CEO Fix: Default sort should ALWAYS be Created At (newest) first.
+        // If the raw mockDB.projects array is passed, we clone and sort it desc by ID.
+        if (projectsToRender === mockDB.projects) {
+            projectsToRender = [...mockDB.projects].sort((a, b) => b.id - a.id);
+        }
+
         if (!filterType) {
             const activeSortOpt = document.querySelector('#filter-dropdown .filter-option.active');
             filterType = activeSortOpt ? activeSortOpt.getAttribute('data-filter') : 'newest';
@@ -5585,6 +5591,24 @@ window.addEventListener('load', async () => {
     // ==========================================
     // N+ CHAT ENGINE (CEO COCKPIT)
     // ==========================================
+    window.updateChatCharCounter = function(inputElement) {
+        const counter = document.getElementById('chat-char-counter');
+        if (!counter) return;
+        
+        const len = inputElement.value.length;
+        const max = inputElement.getAttribute('maxlength') || 400;
+        counter.textContent = `${len} / ${max}`;
+        
+        // Visual warning for CFO mode when approaching the limit
+        if (len >= 380) {
+            counter.style.color = '#ef4444'; // Red
+        } else if (len >= 300) {
+            counter.style.color = '#f59e0b'; // Orange
+        } else {
+            counter.style.color = 'var(--text-muted)';
+        }
+    };
+
     window.sendChatMessage = async function() {
         const inputField = document.getElementById('chat-input-field');
         if (!inputField) return;
