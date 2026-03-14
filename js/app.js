@@ -5763,7 +5763,7 @@ window.addEventListener('load', async () => {
                     const safeTopic = encodeURIComponent(text.substring(0, 40));
                     const feedbackHtml = `
                         <div class="neo-feedback-ui" style="margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
-                            <button onclick="window.saveNeoFeedback('${safeTopic}', true); this.parentElement.innerHTML='<span style=\\'font-size:12px; color:#10b981; font-weight:bold;\\'>Neo: Learning Synced 👍</span>';" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); border-radius: 12px; padding: 4px 12px; font-size: 12px; cursor: pointer; transition: background-color 0.2s;">👍 良い解釈だ</button>
+                            <button onclick="window.saveNeoFeedback('${safeTopic}', true); this.parentElement.innerHTML='<span style=\\'font-size:12px; color:#10b981; font-weight:bold;\\'>Neo: Learning Synced 👍</span>';" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); border-radius: 12px; padding: 4px 12px; font-size: 12px; cursor: pointer; transition: background-color 0.2s;">👍 イイね</button>
                             <button onclick="window.saveNeoFeedback('${safeTopic}', false); this.parentElement.innerHTML='<span style=\\'font-size:12px; color:#ef4444; font-weight:bold;\\'>Neo: Parameter Adjusted 👎</span>';" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); border-radius: 12px; padding: 4px 12px; font-size: 12px; cursor: pointer; transition: background-color 0.2s;">👎 イマイチ</button>
                         </div>
                     `;
