@@ -1176,11 +1176,6 @@ window.addEventListener('load', async () => {
     
     // (Core data model variables like window._neoDocMemory remain fully active in doc-engine.js)
 
-    window.switchDocTab = (type) => {
-        console.warn("window.switchDocTab is now handled by doc-engine.js. This is a stub.");
-        // Placeholder for external logic
-    };
-
     // MULTI-LINE SUPPORT: Function to add item rows
     window.addDocLineItem = () => {
         const container = document.getElementById('doc-line-items-container');
