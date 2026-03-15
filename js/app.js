@@ -1326,14 +1326,13 @@ window.addEventListener('load', async () => {
             window.defaultGenericTemplateHTML = docPaperContainer.innerHTML;
         }
 
-        if (window.currentDocType === 'estimate' || window.currentDocType === 'invoice') {
-            const dateStr = dateInputStr.replace(/-/g, '/');
-            const deadlineStr = deadlineInputStr ? deadlineInputStr.replace(/-/g, '/') : '';
-            const docNo = (window.currentDocType === 'estimate' ? 'EST-' : 'INV-') + dateInputStr.replace(/-/g, '') + '-01';
+        if (window.currentDocType === 'estimate') {
+            const estimate_dateStr = dateInputStr.replace(/-/g, '/');
+            const estimate_docNo = 'EST-' + dateInputStr.replace(/-/g, '') + '-01';
 
             if (docPaperContainer) {
-                if (window.currentDocType === 'estimate') {
-                    docPaperContainer.innerHTML = `
+                docPaperContainer.innerHTML = ''; // EXPLICIT DOM CLEARING
+                docPaperContainer.innerHTML = `
         <div id="neo-v3-estimate">
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                 <tr>
@@ -1346,8 +1345,8 @@ window.addEventListener('load', async () => {
                         <div id="preview-client-name" style="font-size: 14px !important; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 4px; display: inline-block; min-width: 80%; color: #000;">${client}</div>
                     </td>
                     <td style="width: 40%; vertical-align: top; text-align: right; font-size: 11px !important; padding-bottom: 10px; color: #333;">
-                        <div id="preview-doc-date" style="font-size: 11px !important;">発行日: ${dateStr}</div>
-                        <div id="preview-doc-no" style="font-size: 11px !important;">No: ${docNo}</div>
+                        <div id="preview-doc-date" style="font-size: 11px !important;">発行日: ${estimate_dateStr}</div>
+                        <div id="preview-doc-no" style="font-size: 11px !important;">No: ${estimate_docNo}</div>
                     </td>
                 </tr>
                 <tr>
@@ -1418,9 +1417,20 @@ window.addEventListener('load', async () => {
                 </table>
             </div>
         </div>
-                    `;
-                } else {
-                    docPaperContainer.innerHTML = `
+                `;
+            }
+            // Update tiny UI
+            document.getElementById('doc-tax-calc').textContent = `¥${fmt.format(tax)}`;
+            document.getElementById('doc-total-calc').textContent = `¥${fmt.format(total)}`;
+            return; // EXIT EARLY
+        } else if (window.currentDocType === 'invoice') {
+            const invoice_dateStr = dateInputStr.replace(/-/g, '/');
+            const invoice_deadlineStr = deadlineInputStr ? deadlineInputStr.replace(/-/g, '/') : '';
+            const invoice_docNo = 'INV-' + dateInputStr.replace(/-/g, '') + '-01';
+
+            if (docPaperContainer) {
+                docPaperContainer.innerHTML = ''; // EXPLICIT DOM CLEARING
+                docPaperContainer.innerHTML = `
         <div id="neo-v3-estimate">
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                 <tr>
@@ -1433,8 +1443,8 @@ window.addEventListener('load', async () => {
                         <div id="preview-client-name" style="font-size: 14px !important; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 4px; display: inline-block; min-width: 80%; color: #000;">${client}</div>
                     </td>
                     <td style="width: 40%; vertical-align: top; text-align: right; font-size: 11px !important; padding-bottom: 10px; color: #333;">
-                        <div id="preview-doc-date" style="font-size: 11px !important;">請求日: ${dateStr}</div>
-                        <div id="preview-doc-no" style="font-size: 11px !important;">No: ${docNo}</div>
+                        <div id="preview-doc-date" style="font-size: 11px !important;">請求日: ${invoice_dateStr}</div>
+                        <div id="preview-doc-no" style="font-size: 11px !important;">No: ${invoice_docNo}</div>
                     </td>
                 </tr>
                 <tr>
@@ -1444,7 +1454,7 @@ window.addEventListener('load', async () => {
                             <span style="font-size: 11px !important; margin-right: 10px;">件名:</span>
                             <span id="preview-subject" style="font-size: 12px !important; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 2px; display: inline-block; min-width: 60%; color: #000;">${subject}</span>
                         </div>
-                        <div style="font-size: 11px !important; margin-bottom: 5px; color: #333;">お支払期限: <span style="font-weight: bold; color: #000;">${deadlineStr || '末日'}</span></div>
+                        <div style="font-size: 11px !important; margin-bottom: 5px; color: #333;">お支払期限: <span style="font-weight: bold; color: #000;">${invoice_deadlineStr || '末日'}</span></div>
                     </td>
                     <td style="width: 40%; vertical-align: top; text-align: right; font-size: 11px !important; line-height: 1.6; color: #333;">
                         <div style="font-size: 12px !important; font-weight: bold; margin-bottom: 5px; color: #000;">あなたの会社名</div>
@@ -1505,8 +1515,7 @@ window.addEventListener('load', async () => {
                 </table>
             </div>
         </div>
-                    `;
-                }
+                `;
             }
             // Update tiny UI
             document.getElementById('doc-tax-calc').textContent = `¥${fmt.format(tax)}`;
