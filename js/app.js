@@ -1164,7 +1164,23 @@ window.addEventListener('load', async () => {
         }
     };
 
+    window._neoDocMemory = window._neoDocMemory || {};
+
     window.switchDocTab = (type) => {
+        // SAVE CURRENT STATE BEFORE SWITCHING (Strict Isolation)
+        if (window.currentDocType) {
+            window._neoDocMemory[window.currentDocType] = {
+                client: document.getElementById('doc-client-name')?.value || '',
+                issueDate: document.getElementById('doc-issue-date')?.value || '',
+                deadline: document.getElementById('doc-deadline-date')?.value || '',
+                subject: document.getElementById('doc-subject')?.value || '',
+                receiptMemo: document.getElementById('doc-receipt-memo')?.value || '',
+                paymentMethod: document.getElementById('doc-payment-method')?.value || 'cash',
+                bankInfo: document.getElementById('doc-bank-info')?.value || '',
+                itemsHTML: document.getElementById('doc-line-items-container')?.innerHTML || ''
+            };
+        }
+
         window.currentDocType = type;
         
         // Reset tab styling
@@ -1203,34 +1219,34 @@ window.addEventListener('load', async () => {
                 tTitle.textContent = '経費精算書';
                 tDeadlineLabel.textContent = '(なし)';
             }
+        }
 
-            // --- Cascading Data Copy Feature ---
-            // If switching to a new tab, try to copy data from a previous logical step
-            // Order: Estimate -> Invoice -> Delivery -> Receipt
-            const sourceOrder = ['receipt', 'delivery', 'invoice', 'estimate'];
-            let sourceData = null;
-            
-            // Find the closest previous data source available
-            const currentIndex = sourceOrder.indexOf(type);
-            for (let i = currentIndex + 1; i < sourceOrder.length; i++) {
-                if (window.docDbStorage[sourceOrder[i]]) {
-                    sourceData = window.docDbStorage[sourceOrder[i]];
-                    break;
-                }
+        // --- RESTORE ISOLATED STATE ---
+        const mem = window._neoDocMemory[type];
+        if (mem) {
+            if (document.getElementById('doc-client-name')) document.getElementById('doc-client-name').value = mem.client;
+            if (document.getElementById('doc-issue-date')) document.getElementById('doc-issue-date').value = mem.issueDate;
+            if (document.getElementById('doc-deadline-date')) document.getElementById('doc-deadline-date').value = mem.deadline;
+            if (document.getElementById('doc-subject')) document.getElementById('doc-subject').value = mem.subject;
+            if (document.getElementById('doc-receipt-memo')) document.getElementById('doc-receipt-memo').value = mem.receiptMemo;
+            if (document.getElementById('doc-payment-method')) document.getElementById('doc-payment-method').value = mem.paymentMethod;
+            if (document.getElementById('doc-bank-info')) document.getElementById('doc-bank-info').value = mem.bankInfo;
+            if (document.getElementById('doc-line-items-container') && mem.itemsHTML) {
+                document.getElementById('doc-line-items-container').innerHTML = mem.itemsHTML;
             }
-
-            if (sourceData) {
-                const clientInput = document.getElementById('doc-client-name');
-                if (clientInput && !clientInput.value && sourceData.client) clientInput.value = sourceData.client;
-                
-                const subjInput = document.getElementById('doc-subject');
-                if (subjInput && !subjInput.value && sourceData.subject) subjInput.value = sourceData.subject;
-                
-                const itemInput = document.getElementById('doc-item-name');
-                if (itemInput && !itemInput.value && sourceData.itemName) itemInput.value = sourceData.itemName;
-                
-                const priceInput = document.getElementById('doc-item-price');
-                if (priceInput && !priceInput.value && sourceData.itemPrice) priceInput.value = sourceData.itemPrice;
+        } else {
+            // First time opening this specific tab: clear fields completely to ensure ZERO BLEEDING
+            if (document.getElementById('doc-client-name')) document.getElementById('doc-client-name').value = '';
+            if (document.getElementById('doc-subject')) document.getElementById('doc-subject').value = document.getElementById('detail-project-name')?.textContent || '';
+            if (document.getElementById('doc-issue-date')) document.getElementById('doc-issue-date').value = new Date().toISOString().split('T')[0];
+            if (document.getElementById('doc-deadline-date')) document.getElementById('doc-deadline-date').value = '';
+            if (document.getElementById('doc-receipt-memo')) document.getElementById('doc-receipt-memo').value = '';
+            
+            // Reset items to default 1 row
+            const container = document.getElementById('doc-line-items-container');
+            if(container) {
+                container.innerHTML = '';
+                container.insertAdjacentHTML('beforeend', window.generateDocLineHTML('', 0, 1, false));
             }
         }
 
