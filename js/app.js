@@ -1326,11 +1326,12 @@ window.addEventListener('load', async () => {
             window.defaultGenericTemplateHTML = docPaperContainer.innerHTML;
         }
 
-        if (window.currentDocType === 'estimate' && typeof window.renderEstimateTemplate === 'function') {
+        if ((window.currentDocType === 'estimate' || window.currentDocType === 'invoice') && typeof window.renderEstimateTemplate === 'function') {
             const data = {
                 client,
                 dateStr: dateInputStr.replace(/-/g, '/'),
-                docNo: 'EST-' + dateInputStr.replace(/-/g, '') + '-01',
+                deadlineStr: deadlineInputStr ? deadlineInputStr.replace(/-/g, '/') : '',
+                docNo: (window.currentDocType === 'estimate' ? 'EST-' : 'INV-') + dateInputStr.replace(/-/g, '') + '-01',
                 subject,
                 items,
                 subTotal,
@@ -1340,7 +1341,11 @@ window.addEventListener('load', async () => {
                 bankInfo
             };
             if (docPaperContainer) {
-                docPaperContainer.innerHTML = window.renderEstimateTemplate(data);
+                if (window.currentDocType === 'estimate') {
+                    docPaperContainer.innerHTML = window.renderEstimateTemplate(data);
+                } else {
+                    docPaperContainer.innerHTML = window.renderInvoiceTemplate(data);
+                }
             }
             // Update tiny UI
             document.getElementById('doc-tax-calc').textContent = `¥${fmt.format(tax)}`;
