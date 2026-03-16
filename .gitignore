@@ -10,3 +10,9 @@ test_*.spec.js
 temp_*.js
 gemini_history.txt
 chat_input_test*.png
+
+# System and Build files
+.DS_Store
+dist/
+build/
+.env
