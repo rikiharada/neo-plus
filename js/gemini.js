@@ -188,6 +188,7 @@ Rules for mapping actions:
    - [Bookkeeping Master]: You MUST select the most accurate Japanese accounting category (勘定科目) for the "category" field from this master list: ["旅費交通費", "消耗品費", "接待交際費", "外注工賃", "通信費", "水道光熱費", "地代家賃", "租税公課", "雑費", "売上高"].
    - [Tax Rate Inference]: If the expense is related to food/beverages (e.g., "接待交際費", meals, drinks, groceries), you MUST output an optional "inferred_tax_rate" field containing either "8%" (likely takeout/groceries) or "10%" (likely dine-in/alcohol) based on context.
    - [Tax Judgment]: Set "is_bookkeeping" to true ONLY IF you are confident this is a valid, logical business expense or revenue that should be reported to a tax accountant. If it's a clearly private/personal expense (e.g. "個人のタバコ"), set it to false.
+   - [Translation Engine]: If the user's input is in English or any non-Japanese language (e.g. "Taxi fare 2000", "Buy coffee"), you MUST mentally translate the "title" into Japanese (e.g. "タクシー代", "コーヒー") and use the correct Japanese accounting category. NEVER output English in the ADD_EXPENSE output payload.
    - [Universal Context]: The user's specific industry/occupation is strictly defined as "${userOccupation}". You must deeply contextualize their input (slang, jargon, material names) based purely on this industry. Translate their domain-specific jargon into universally understood but highly accurate accounting/business titles.
    - [Pro-Artisan Extraction]: Extract manufacturer/part/service numbers (e.g. "マキタ", "D-12345", "AWS", "Adobe") into an optional "tags" array.
    - [CRITICAL CLASSIFICATION RULE]: Expenditures such as 'Taxi', 'Food', 'Drinks', 'Tools', 'Purchases' (タクシー, 食事, 飲食, 材料, 購入, 買った) are STRICTLY 'expense' or a specific sub-category ('transport', 'entertainment', 'material'). They must NEVER be classified as 'sales' (revenue). 'Sales' is only when the user receives payment.
@@ -280,9 +281,6 @@ Example Query: [{"action": "QUERY_KNOWLEDGE", "answer": "現在稼働中のプ�
                         text: promptText
                     }]
                 }],
-                tools: [
-                    { googleSearch: {} }
-                ],
                 safetySettings: [
                     {
                         category: "HARM_CATEGORY_HARASSMENT",
@@ -863,5 +861,100 @@ ${historyText}
     } catch (error) {
         console.error("Soul Extraction failed:", error);
         return "";
+    }
+};
+
+/**
+ * [Silent AI Core]
+ * Lightweight, non-ui-blocking API call used when store.js local cache misses.
+ * Returns strict JSON array and triggers dynamic caching upon success.
+ */
+window.parseInputToData = async function(text) {
+    if (!text) return null;
+    const apiKey = getGeminiApiKey();
+    if (!apiKey) return null;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+    const promptText = `
+You are a strict data extraction AI for a Japanese accounting system.
+Extract the transaction details from the user's input.
+Output ONLY a raw JSON array of objects. No markdown, no prose, no backticks.
+If you cannot determine the category, use "雑費".
+
+[UNIVERSAL LANGUAGE TRANSLATION RULE]
+If the input is in English or any language other than Japanese (e.g., "Taxi fare 2000", "Uber $15"), you MUST mentally translate the item into Japanese and output BOTH the "title" and the "category" in Japanese ONLY (e.g., title: "タクシー", category: "旅費交通費"). Never output English in the final JSON.
+
+Format:
+[
+  {
+    "action": "ADD_EXPENSE",
+    "title": "Main keyword in Japanese (e.g. ホームセンター, 領収書, タクシー)",
+    "amount": <number>,
+    "category": "Japanese Accounting Category (e.g. 消耗品費, 旅費交通費)"
+  }
+]
+
+Input: ${text}
+`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: promptText }] }],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 200 // Low token footprint
+                }
+            })
+        });
+
+        if (!response.ok) return null;
+        
+        const data = await response.json();
+        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!responseText) return null;
+
+        let parsed = null;
+        try {
+            const cleanText = responseText.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+            parsed = JSON.parse(cleanText);
+        } catch (e) {
+            console.error("[Silent AI Core] JSON Parse Error", e);
+            return null;
+        }
+
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            const item = parsed[0];
+            if (item.title && item.category) {
+                // Dynamically cache the new term for O(1) performance next time
+                if (typeof window.learnNewTerm === 'function') {
+                    window.learnNewTerm(item.title, item.category);
+                }
+                
+                // Ensure entities exist for the UI to predictably render Hexa-Tags later if needed
+                const today = new Date();
+                const formattedDate = `${today.getMonth() + 1}/${today.getDate()}`;
+
+                item.entities = {
+                    LOCATION: [],
+                    ENTITY: [item.title],
+                    ACTION: ["記録"],
+                    MONEY: [item.amount ? `${item.amount}円` : ""],
+                    ITEM: [],
+                    DATE: [formattedDate]
+                };
+            }
+            return parsed;
+        }
+        
+        return null;
+
+    } catch (e) {
+        console.error("[Silent AI Core] Network/Fetch Error", e);
+        return null;
     }
 };

@@ -50,21 +50,26 @@ window.insertProject = async (proj) => {
 
 window.insertTransaction = async (tx) => {
     window.mockDB.transactions.push(tx);
-    if (window.supabaseClient) {
-        try {
-            await window.supabaseClient.from('activities').insert([{
-                project_id: tx.projectId,
-                type: tx.type,
-                category: tx.category,
-                title: tx.title,
-                amount: tx.amount,
-                date: tx.date,
-                receipt_url: tx.receiptUrl || null,
-                is_bookkeeping: tx.isBookkeeping || false,
-                is_deleted: false // Explicitly initialize persistent state
-            }]);
-            console.log("Supabase insertTransaction success:", tx.title, "is_bookkeeping:", tx.isBookkeeping);
-        } catch(e) { console.error('Supabase Error:', e); }
+    if (!window.supabaseClient) return Promise.resolve(tx);
+    
+    try {
+        const { data, error } = await window.supabaseClient.from('activities').insert([{
+            project_id: tx.projectId,
+            type: tx.type,
+            category: tx.category,
+            title: tx.title,
+            amount: Number(tx.amount) || 0,
+            date: new Date().toISOString(), // Strict Supabase ISO compliance
+            receipt_url: tx.receiptUrl || null,
+            is_bookkeeping: tx.isBookkeeping || false
+        }]);
+        
+        if (error) throw error;
+        console.log("Supabase insertTransaction success:", tx.title, "is_bookkeeping:", tx.isBookkeeping);
+        return data || tx;
+    } catch(e) { 
+        console.error('Supabase Error:', e);
+        throw e; // Bubble to correctly prevent false success UI
     }
 };
 
@@ -655,14 +660,11 @@ window.addEventListener('load', async () => {
             if (el) {
                 el.classList.add('hidden');
                 el.style.display = 'none';
-                el.style.opacity = '';
+                el.style.opacity = '0';
             }
         });
 
         const targetViewElement = document.getElementById(targetId);
-
-        // The global-neo-btn was removed to enforce the singleton pattern.
-
 
         if (targetId === 'view-sites') {
             const listContainer = document.getElementById('project-list-container');
@@ -674,6 +676,70 @@ window.addEventListener('load', async () => {
             if (targetViewElement) {
                 targetViewElement.classList.remove('hidden');
                 targetViewElement.style.display = 'block';
+            }
+        } else if (targetId === 'view-chat') {
+            // Strict Chat Layout enforcement & Router Loading
+            const routerAnchor = document.getElementById('router-view-chat');
+            let chatView = document.getElementById('view-chat');
+            
+            const showChatView = () => {
+                chatView = document.getElementById('view-chat');
+                if (chatView) {
+                    chatView.classList.remove('hidden');
+                    chatView.style.display = 'flex'; // Uses flex for strict bottom anchoring
+                    chatView.style.flexDirection = 'column';
+                    chatView.style.height = '100vh';
+                    chatView.style.overflow = 'hidden';
+                }
+                // Ensure Cockpit from dash doesn't bleed
+                const dashCockpit = document.getElementById('neo-cockpit');
+                if (dashCockpit) dashCockpit.style.display = 'none';
+            };
+
+            if (!chatView && routerAnchor) {
+                fetch('views/chat.html')
+                    .then(r => r.text())
+                    .then(html => {
+                        routerAnchor.outerHTML = html; // Replace router anchor with actual view
+                        showChatView();
+                        
+                        // We also need to re-attach the event listener since the DOM is fresh
+                        const newInstructionInput = document.getElementById('main-instruction-input');
+                        if (newInstructionInput && window.handleInstruction) {
+                            newInstructionInput.addEventListener('keydown', (e) => {
+                                if (e.isComposing || e.keyCode === 229) return;
+                                if (e.key === 'Enter') {
+                                    if (e.shiftKey) return;
+                                    e.preventDefault();
+                                    if (window.createNewProjectFromTags && window.createNewProjectFromTags()) return;
+                                    const textValue = e.target.value.trim();
+                                    if (textValue) window.handleInstruction(textValue);
+                                }
+                            });
+                        }
+                        
+                        // Also reattach mic and camera listeners mapped to the new layout
+                        const micBtn = document.getElementById('btn-chat-voice');
+                        if (micBtn) {
+                            micBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                            });
+                        }
+
+                        // Attach Send Button listener mapped from old app.js logic
+                        const sendBtn = document.getElementById('btn-send');
+                        if (sendBtn && window.handleInstruction && newInstructionInput) {
+                            sendBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                if (window.createNewProjectFromTags && window.createNewProjectFromTags()) return;
+                                const textValue = newInstructionInput.value.trim();
+                                if (textValue) window.handleInstruction(textValue);
+                            });
+                        }
+                    })
+                    .catch(e => console.error("Router Error: Failed to load chat view", e));
+            } else {
+                showChatView();
             }
         } else if (targetViewElement) {
             targetViewElement.classList.remove('hidden');
@@ -1701,940 +1767,7 @@ window.addEventListener('load', async () => {
     // Run diagnostic ping every 1 hour (3600000 ms)
     setInterval(window.runNeoDiagnostic, 3600000);
 
-    const handleInstruction = async (text, hasImage = false) => {
-        if (!text && !hasImage) return;
-        if (isProcessingInstruction) return;
-        
-        // --- 1. Hardcoded Compliance Blacklist Check ---
-        const matchedToxicKw = COMPLIANCE_BLACKLIST.find(keyword => text.includes(keyword));
-        if (matchedToxicKw) {
-            window.handleComplianceViolation(`Physical Blacklist Match (${matchedToxicKw})`, text);
-            if (instructionInput) instructionInput.value = '';
-            return; // Immediately halt all execution
-        }
-
-        // --- 1.5 Offline Guardianship Validation Check ---
-        if (!navigator.onLine) {
-            const neoBubble = document.getElementById('neo-fab-bubble');
-            if (neoBubble) {
-                neoBubble.textContent = `現在オフラインですが、セキュリティチェックは正常に完了しました。通信環境の良いところで再度お試しください。`;
-                neoBubble.classList.add('show');
-                setTimeout(() => { neoBubble.classList.remove('show'); }, 6000);
-            }
-            if (instructionInput) instructionInput.value = '';
-            return; // Halt AI execution safely, physical blacklist already ran
-        }
-
-        isProcessingInstruction = true;
-
-        const instructionStartTime = Date.now();
-        instructionMics.forEach(mic => mic.disabled = true);
-        btnAttachImages.forEach(btn => btn.disabled = true);
-
-        // Tag relay logic has been moved to createNewProjectFromTags and the send button listener
-
-        // UI Indicator for AI processing
-        if (instructionInput) {
-            instructionInput.style.transition = 'border-color 0.3s ease, box-shadow 0.3s ease';
-            instructionInput.style.borderColor = 'var(--accent-neo-blue)';
-            instructionInput.style.boxShadow = '0 0 10px rgba(29, 155, 240, 0.2)';
-            instructionInput.disabled = true;
-        }
-
-        try {
-            // Simulate AI Processing Time (Multi-modal parsing)
-            if (neo) neo.speak('neo_thinking');
-
-            // --- 強制コマンド: 複合(フォルダ作成 ＋ 経費追加) ---
-            // 例: 「品川駅というフォルダを作って、タクシー代2000円を追加して」
-            const compoundMatch = text.match(/(?:「([^」]+)」|([^\s]+?))(?:という|で)(?:フォルダ|プロジェクト)を?作って(.*?(?:追加|計上).*)/);
-            if (compoundMatch) {
-                const newProjectName = compoundMatch[1] || compoundMatch[2];
-                const expenseText = compoundMatch[3]; // 「、タクシー代2000円を追加して」の部分
-
-                if (newProjectName && expenseText) {
-                    const newProjId = Date.now();
-                    const newProj = {
-                        id: newProjId,
-                        name: newProjectName,
-                        customerName: "-",
-                        location: "-",
-                        note: "",
-                        category: "other",
-                        color: "#007AFF",
-                        unit: "-",
-                        hasUnpaid: false,
-                        revenue: 0,
-                        status: 'active',
-                        clientName: "",
-                        paymentDeadline: "",
-                        bankInfo: "",
-                        lastUpdated: new Date().toLocaleDateString('ja-JP').replace(/\//g, '/')
-                    };
-                    window.insertProject(newProj);
-                    currentOpenProjectId = newProjId;
-
-                    // 経費部分の解析
-                    let finalAmount = 0;
-                    const amountMatch = expenseText.match(/\d+/);
-                    if (amountMatch) {
-                        finalAmount = parseInt(amountMatch[0], 10);
-                    }
-
-                    // タイトルから作成したプロジェクト名と不要なコマンド語彙を削る
-                    let finalTitle = expenseText
-                        .replace(/[、,。]/g, '')
-                        .replace(/追加して/g, '')
-                        .replace(/追加/g, '')
-                        .replace(/計上して/g, '')
-                        .replace(/計上/g, '')
-                        .replace(newProjectName, '')
-                        .trim();
-
-                    const newTransaction = {
-                        id: Date.now() + 1,
-                        projectId: newProjId,
-                        type: "expense",
-                        title: finalTitle || "無題の経費",
-                        amount: finalAmount,
-                        date: new Date().toLocaleDateString('ja-JP').replace(/\//g, '/'),
-                        source: "inline-compound"
-                    };
-
-                    window.insertTransaction(newTransaction);
-                    try {
-                        const savedTxs = JSON.parse(localStorage.getItem('neo_transactions') || '[]');
-                        savedTxs.push(newTransaction);
-                        localStorage.setItem('neo_transactions', JSON.stringify(savedTxs));
-                    } catch (e) { /* ignore */ }
-
-                    renderProjects(mockDB.projects);
-
-                    // 通知バブル
-                    const neoBubble = document.getElementById('neo-fab-bubble');
-                    if (neoBubble) {
-                        neoBubble.textContent = `フォルダ「${newProjectName}」を作成し、${finalAmount}円を記録したよ⚡️`;
-                        neoBubble.classList.add('show');
-                        setTimeout(() => { neoBubble.classList.remove('show'); }, 5000);
-                    }
-
-                    if (instructionInput) {
-                        instructionInput.value = '';
-                    }
-                    const curView = document.querySelector('.view:not(.hidden)');
-                    const currentViewId = curView ? curView.id : null;
-                    if (currentViewId !== 'view-sites') {
-                        switchView('view-sites');
-                    }
-                    return; // AI呼び出しを完全バイパス
-                }
-            }
-
-            // --- 強制コマンド: オフライン・エンティティ抽出（完全ローカル対応） ---
-            const commandData = window.parseCommand(text);
-
-            // Accept offline parsing if we explicitly found a date or location, OR if it has action verbs/conversational triggers
-            const hasActionVerb = /(作って|新規|作成|立ち上げて|が入った|決まった|する|はいいた|はいいった|入った|決定|儲かった|ゲット)/.test(text);
-            if (commandData.date || commandData.location || hasActionVerb) {
-
-                // Ensure createProject exists explicitly - now globally hoisted
-
-                const newProjInfo = window.createProject(commandData.title, commandData.date, commandData.location);
-
-                // 通知バブル
-                const neoBubble = document.getElementById('neo-fab-bubble');
-                if (neoBubble) {
-                    neoBubble.textContent = `了解！「${newProjInfo.name}」プロジェクトを作成したよ⚡️`;
-                    neoBubble.classList.add('show');
-                    setTimeout(() => { neoBubble.classList.remove('show'); }, 4000);
-                }
-
-                if (instructionInput) {
-                    instructionInput.value = '';
-                }
-                const curViewBottom = document.querySelector('.view:not(.hidden)');
-                const currentViewId = curViewBottom ? curViewBottom.id : null;
-                if (currentViewId !== 'view-sites') {
-                    switchView('view-sites');
-                }
-                return; // 重要: 完全にAPIをバイパス
-            }
-
-            // --- 強制コマンド: 集計・合計 ---
-            // 例: 「東京駅の請求書まとめて」「東京駅を合計して」
-            const aggregateMatch = text.match(/(?:「([^」]+)」|([^\s]+?))(?:の請求書まとめて|を合計して|の集計|の合計)/);
-            if (aggregateMatch) {
-                const targetProjectName = aggregateMatch[1] || aggregateMatch[2];
-                if (targetProjectName) {
-                    const targetProjId = findProjectIdByName(targetProjectName);
-                    if (targetProjId) {
-                        const targetProj = mockDB.projects.find(p => p.id === targetProjId);
-
-                        // 経費（expense）と人工（labor）を合計
-                        const expenses = mockDB.transactions
-                            .filter(t => t.projectId === targetProjId && (t.type === 'expense' || t.type === 'labor'))
-                            .reduce((acc, curr) => acc + curr.amount, 0);
-
-                        // 通知バブル
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            neoBubble.textContent = `了解。「${targetProj.name}」の現在の経費合計は ¥${expenses.toLocaleString()} だよ📊`;
-                            neoBubble.classList.add('show');
-                            setTimeout(() => { neoBubble.classList.remove('show'); }, 5000);
-                        }
-
-                        // ネイティブアラートでも出す（確実な認知のため）
-                        alert(`【集計結果】\nプロジェクト: ${targetProj.name}\n経費合計: ¥${expenses.toLocaleString()}`);
-
-                        if (instructionInput) {
-                            instructionInput.value = '';
-                        }
-                        return; // ここで抜けることでAI呼び出しを完全バイパス
-                    } else {
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            neoBubble.textContent = `ごめん、「${targetProjectName}」が見つからなかった。`;
-                            neoBubble.classList.add('show');
-                            setTimeout(() => { neoBubble.classList.remove('show'); }, 4000);
-                        }
-                        if (instructionInput) {
-                            instructionInput.value = '';
-                        }
-                        return;
-                    }
-                }
-            }
-
-            // --- 強制コマンド: 請求書プレビュー ---
-            // 例: 「東京駅の請求書プレビュー」「東京駅の請求書」
-            const invoiceMatch = text.match(/(?:「([^」]+)」|([^\s]+?))の請求書(プレビュー)?/);
-            if (invoiceMatch && text.includes('プレビュー')) {
-                const targetProjectName = invoiceMatch[1] || invoiceMatch[2];
-                if (targetProjectName) {
-                    const targetProjId = findProjectIdByName(targetProjectName);
-                    if (targetProjId) {
-                        const targetProj = mockDB.projects.find(p => p.id === targetProjId);
-
-                        // 経費（expense）と人工（labor）を集計
-                        const expenses = mockDB.transactions
-                            .filter(t => t.projectId === targetProjId && (t.type === 'expense' || t.type === 'labor'));
-
-                        const subtotal = expenses.reduce((acc, curr) => acc + curr.amount, 0);
-                        const tax = Math.floor(subtotal * 0.1);
-                        const grandTotal = subtotal + tax;
-
-                        // Universal Engine: 職種に応じたテンプレート自動切り替え
-                        const industry = mockDB.userConfig.industry;
-                        const honorific = (industry === 'freelance' || industry === 'general') ? '様' : '御中';
-                        const itemDescription = (industry === 'construction') ? '一式' : '内容';
-                        const itemUnit = (industry === 'construction') ? '式' : '回';
-
-                        // 請求書プレビューUIの更新
-                        document.getElementById('invoice-client-name').textContent = (targetProj.clientName || '株式会社〇〇') + ` ${honorific}`;
-                        document.getElementById('invoice-date').textContent = `発行日: ${new Date().toLocaleDateString('ja-JP').replace(/\//g, '/')}`;
-                        document.getElementById('invoice-no').textContent = `請求番号: INV-${Date.now().toString().slice(-4)}`;
-
-                        document.getElementById('invoice-total-amount').textContent = `¥${grandTotal.toLocaleString()}`;
-
-                        // --- Company Stamp Overlay Logic ---
-                        const stampOverlay = document.getElementById('invoice-stamp-overlay');
-                        const savedStamp = localStorage.getItem('neo_company_stamp_data');
-                        
-                        if (stampOverlay && savedStamp) {
-                            const scale = localStorage.getItem('neo_company_stamp_scale') || "1.0";
-                            const x = localStorage.getItem('neo_company_stamp_x') || "0";
-                            const y = localStorage.getItem('neo_company_stamp_y') || "0";
-                            
-                            stampOverlay.src = savedStamp;
-                            stampOverlay.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-                            stampOverlay.style.display = 'block';
-                            
-                            const companyInfoArea = document.getElementById('invoice-company-info-area');
-                            if (companyInfoArea) {
-                                companyInfoArea.style.minHeight = '120px';
-                            }
-                        } else if (stampOverlay) {
-                            stampOverlay.style.display = 'none';
-                        }
-                        // -----------------------------------
-
-                        const tbody = document.getElementById('invoice-items-body');
-                        if (tbody) {
-                            tbody.innerHTML = `
-                                <tr style="border-bottom: 1px solid #eee;">
-                                    <td style="padding: 12px 8px;">${targetProj.name} ${itemDescription}</td>
-                                    <td style="padding: 12px 8px; text-align: center;">1</td>
-                                    <td style="padding: 12px 8px; text-align: center;">${itemUnit}</td>
-                                    <td style="padding: 12px 8px; text-align: right;">${subtotal.toLocaleString()}</td>
-                                </tr>
-                            `;
-                        }
-
-                        document.getElementById('invoice-subtotal').textContent = `¥${subtotal.toLocaleString()}`;
-                        document.getElementById('invoice-tax').textContent = `¥${tax.toLocaleString()}`;
-                        document.getElementById('invoice-grand-total').textContent = `¥${grandTotal.toLocaleString()}`;
-
-                        document.getElementById('invoice-bank-info').textContent = targetProj.bankInfo || '指定なし（プロジェクト設定から入力してください）';
-                        document.getElementById('invoice-deadline').textContent = targetProj.paymentDeadline ? targetProj.paymentDeadline.replace(/-/g, '/') : '指定なし';
-
-                        // 通知バブル
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            neoBubble.textContent = `了解。「${targetProj.name}」の請求書を下書きしたよ⚡️`;
-                            neoBubble.classList.add('show');
-                            setTimeout(() => { neoBubble.classList.remove('show'); }, 3000);
-                        }
-
-                        if (instructionInput) {
-                            instructionInput.value = '';
-                        }
-                        switchView('view-invoice');
-                        return; // AI呼び出しを完全バイパス
-                    }
-                }
-            }
-
-            // --- 強制コマンド: 画面遷移 (Navigation) ---
-            // 例: 「一覧見せて」「ホームに戻して」
-            const navMatch = text.match(/(ホーム|ダッシュボード|トップ|プロジェクト|プロジェクト一覧|現場|現場一覧|一覧|設定|プロファイル|アカウント)\s*(に|へ)?(戻して|戻る|見せて|開いて|いって|いく)/);
-            if (navMatch) {
-                const keyword = navMatch[1];
-                let targetView = null;
-
-                if (keyword.includes('ホーム') || keyword.includes('ダッシュボード') || keyword.includes('トップ')) {
-                    targetView = 'view-dash';
-                } else if (keyword.includes('プロジェクト') || keyword.includes('現場') || keyword.includes('一覧')) {
-                    targetView = 'view-sites';
-                } else if (keyword.includes('設定') || keyword.includes('プロファイル') || keyword.includes('アカウント')) {
-                    targetView = 'view-settings';
-                }
-
-                if (targetView) {
-                    // 通知バブル
-                    const neoBubble = document.getElementById('neo-fab-bubble');
-                    if (neoBubble) {
-                        neoBubble.textContent = `了解、移動するよ⚡️`;
-                        neoBubble.classList.add('show');
-                        setTimeout(() => { neoBubble.classList.remove('show'); }, 3000);
-                    }
-
-                    if (instructionInput) {
-                        instructionInput.value = '';
-                    }
-                    switchView(targetView);
-                    return; // AI呼び出しを完全バイパス
-                }
-            }
-
-            // --- Home Parsing Logic for Projects (Fuzzy Match / あいまい検索) ---
-            const matchedProjectId = findProjectIdByName(text);
-            if (matchedProjectId) {
-                currentOpenProjectId = matchedProjectId;
-            }
-
-            // Artificial delay to simulate complex parsing
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            // Trigger the Neo-Sync glowing effect -> Data is being distributed
-            triggerNeoSyncGlow();
-
-            // Allow glow to be visible for a moment before switching views
-            await new Promise(resolve => setTimeout(resolve, 600));
-
-            // Logic to determine route based on input type
-            let intents = [{ action: "UNKNOWN" }];
-
-            if (!hasImage) {
-                const localMatch = findLocalMatch(text);
-
-                if (false && localMatch && localMatch.amount > 0) {
-                    intents = [localMatch];
-                    console.log("[Neo AI] LOCAL CACHE HIT:", localMatch);
-                    
-                    // Show a fast cache notification indicator playfully
-                    const neoBubble = document.getElementById('neo-fab-bubble');
-                    if (neoBubble) {
-                        neoBubble.textContent = `過去のデータから一瞬で答えたよ⚡️`;
-                        neoBubble.classList.add('show');
-                        setTimeout(() => neoBubble.classList.remove('show'), 2000);
-                    }
-                } else {
-                    // --- Construct Memory ---
-                    const condensedProjects = mockDB.projects.map(p => ({
-                        id: p.id,
-                        name: p.name,
-                        revenue: p.revenue,
-                        status: p.status
-                    })).slice(0, 10);
-                    
-                    const recentLogs = mockDB.transactions
-                        .filter(t => !t.is_deleted)
-                        .slice(0, 5)
-                        .map(t => ({
-                            title: t.title,
-                            amount: t.amount,
-                            date: t.date
-                        }));
-                        
-                    // Add Correction History to prevent repeated mistakes
-                    const correctionHistory = window.aiCorrectionLog ? window.aiCorrectionLog.slice(-5) : [];
-                        
-                    const stateMemory = JSON.stringify({ 
-                        active_projects: condensedProjects, 
-                        recent_transactions: recentLogs,
-                        recent_corrections: correctionHistory
-                    });
-
-                    // Call Gemini API from gemini.js with Memory Context (with Fallback)
-                    try {
-                        const currentDateTime = new Date().toLocaleString('ja-JP');
-                        const geminiResult = await determineRouteFromIntent(text, mockDB.userConfig.industry, stateMemory, currentDateTime);
-                        if (Array.isArray(geminiResult)) {
-                            intents = geminiResult;
-                        } else {
-                            intents = [geminiResult];
-                        }
-                    } catch (aiError) {
-                        console.error("[Neo AI Fallback] Gemini call failed:", aiError);
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            neoBubble.textContent = "ごめんなさい、ちょっと考えすぎてフリーズしちゃった。手動で入力画面から登録してくれるかな💦";
-                            neoBubble.classList.add('show');
-                            setTimeout(() => { neoBubble.classList.remove('show'); }, 5000);
-                        }
-                        
-                        // Fail safely back to home
-                        if (instructionInput) instructionInput.value = '';
-                        switchView('view-dash');
-                        return; // Halt AI execution
-                    }
-                }
-            }
-
-            console.log('Final Intents:', intents);
-
-            // Loop through all actions sequentially
-            for (const intent of intents) {
-                const action = intent.action;
-
-                if (action === "CREATE_PROJECT") {
-                    const newProjectName = intent.project_name || "名称未設定プロジェクト";
-                    const newProjId = Date.now();
-                    const newProj = {
-                        id: newProjId,
-                        name: newProjectName,
-                        customerName: "-",
-                        location: "-",
-                        note: "",
-                        category: "other",
-                        color: "#007AFF",
-                        unit: "-",
-                        hasUnpaid: false,
-                        revenue: 0,
-                        status: 'active',
-                        clientName: "",
-                        paymentDeadline: "",
-                        bankInfo: "",
-                        lastUpdated: new Date().toLocaleDateString('ja-JP').replace(/\//g, '/')
-                    };
-                    window.insertProject(newProj);
-                    currentOpenProjectId = newProjId;
-                    renderProjects(mockDB.projects);
-
-                    const neoBubble = document.getElementById('neo-fab-bubble');
-                    if (neoBubble) {
-                        neoBubble.textContent = `プロジェクト「${newProjectName}」を作成したよ⚡️`;
-                        neoBubble.classList.add('show');
-                        setTimeout(() => { neoBubble.classList.remove('show'); }, 3000);
-                    }
-
-                } else if (action === "ADD_EXPENSE") {
-                    const projId = currentOpenProjectId || 1;
-                    const pObj = mockDB.projects.find(p => p.id === projId);
-                    const projName = pObj ? pObj.name : '未分類';
-
-                    let finalAmount = intent.amount;
-                    if (!finalAmount || finalAmount === 0 || isNaN(finalAmount)) {
-                        const match = text.match(/\d+/);
-                        finalAmount = match ? parseInt(match[0], 10) : 0;
-                    }
-
-                    let finalTitle = intent.title || text;
-                    if (projName !== '未分類') {
-                        finalTitle = finalTitle.replace(projName, '').trim();
-                    }
-
-                    // BusinessLexicon: 専門用語・多言語マッピング
-                    let entryType = intent.type || "expense";
-                    let matchedByLearning = intent.source_cache ? true : false;
-                    const checkString = (finalTitle + " " + text).toLowerCase();
-
-                    // 1. Pro-Artisan Learning System (Highest Priority)
-                    const extractedTags = intent.tags || [];
-                    if (!matchedByLearning) {
-                        const allKeywords = [...extractedTags.map(t => t.toLowerCase()), ...checkString.split(/\s+/)];
-                        for (const kw of allKeywords) {
-                            if (mockDB.learnedKeywords[kw]) {
-                                entryType = mockDB.learnedKeywords[kw];
-                                matchedByLearning = true;
-                                console.log(`[Neo AI] Applied Lexicon Category: "${kw}" => ${entryType}`);
-                                break;
-                            }
-                        }
-                    }
-
-                    // 2. Default BusinessLexicon Fallback
-                    if (!matchedByLearning) {
-                        if (/(人工|作業員|職人|応援|labor|worker|helper)/.test(checkString)) {
-                            entryType = "labor";
-                        } else if (/(材料|資材|建材|ホームセンター|material|lumber|hardware)/.test(checkString)) {
-                            entryType = "material";
-                        } else if (/(外注|下請|協力業|outsource|subcontractor)/.test(checkString)) {
-                            entryType = "outsource";
-                        } else if (/(接待|交際|会食|飲み会|coffee|dinner|meeting|entertainment)/.test(checkString)) {
-                            entryType = "entertainment";
-                        } else if (/(交通|タクシー|新幹線|電車|バス|ガソリン|transport|taxi|train|gas|fuel)/.test(checkString)) {
-                            entryType = "transport";
-                        }
-                    }
-
-                    const newTransactionDraft = {
-                        id: Date.now(),
-                        projectId: projId,
-                        projectName: projName,
-                        type: entryType,
-                        category: intent.category || "その他",
-                        title: finalTitle || "無題の経費",
-                        amount: finalAmount,
-                        date: new Date().toLocaleDateString('ja-JP').replace(/\//g, '/'),
-                        source: intent.source_cache ? "local-cache" : "inline-ai",
-                        isBookkeeping: intent.is_bookkeeping || false,
-                        inferredTaxRate: intent.inferred_tax_rate || null,
-                        taxComment: intent.tax_comment || null,
-                        tags: extractedTags,
-                        originalInput: text // Save what the user actually said
-                    };
-
-                    // --- Duplicate Entry Guardrail ---
-                    const todayDate = new Date().toLocaleDateString('ja-JP').replace(/\//g, '/');
-                    const isDuplicate = mockDB.transactions.some(t => 
-                        !t.is_deleted && 
-                        t.date === todayDate && 
-                        t.amount === finalAmount && 
-                        (t.title === finalTitle || t.category === newTransactionDraft.category)
-                    );
-
-                    if (isDuplicate) {
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            neoBubble.textContent = `【確認】同じ金額・内容のデータが最近登録されています。二重登録ではありませんか？`;
-                            neoBubble.style.backgroundColor = '#FF9500'; // Warning Orange
-                            neoBubble.style.color = '#FFF';
-                            neoBubble.classList.add('show');
-                            setTimeout(() => { 
-                                neoBubble.classList.remove('show'); 
-                                neoBubble.style.backgroundColor = '';
-                                neoBubble.style.color = '';
-                            }, 6000);
-                        }
-                    }
-
-                    // ---- RAG Rejection Immediate Feedback ----
-                    if (intent.is_bookkeeping === false && intent.tax_comment) {
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            let displayText = intent.tax_comment;
-                            if (intent.citation && intent.citation !== "Neo+ Memory") {
-                                displayText += `<div style="margin-top: 8px; font-size: 10px; color: var(--accent-neo-blue); background: rgba(15, 98, 254, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block; align-items: center; gap: 4px;"><i data-lucide="book-open" style="width: 12px; height: 12px;"></i> 法的根拠: ${intent.citation}</div>`;
-                            }
-                            neoBubble.innerHTML = displayText;
-                            if (window.lucide) window.lucide.createIcons();
-                            neoBubble.classList.add('show');
-                            setTimeout(() => { neoBubble.classList.remove('show'); }, 8000);
-                        }
-                        return; // Prevent modal opening
-                    }
-
-                    // ---- DOUBLE CHECK VALIDATION GATE ----
-                    // Instead of saving directly, store in pending and open confirmation modal
-                    window.pendingAiDecision = newTransactionDraft;
-                    
-                    document.getElementById('confirm-tx-title').value = newTransactionDraft.title;
-                    document.getElementById('confirm-tx-amount').value = newTransactionDraft.amount;
-                    document.getElementById('confirm-tx-category').value = newTransactionDraft.type;
-                    document.getElementById('confirm-tx-original-category').value = newTransactionDraft.type;
-                    
-                    // Populate Tax Hint UI if inferred
-                    const taxHintBox = document.getElementById('confirm-tax-hint');
-                    const taxRateVal = document.getElementById('confirm-tax-rate-val');
-                    if (taxHintBox && taxRateVal) {
-                        if (newTransactionDraft.inferredTaxRate) {
-                            taxRateVal.textContent = newTransactionDraft.inferredTaxRate;
-                            taxHintBox.classList.remove('hidden');
-                        } else {
-                            taxHintBox.classList.add('hidden');
-                        }
-                    }
-
-                    document.getElementById('modal-neo-confirm').classList.remove('hidden');
-
-                    if (!isDuplicate) {
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            neoBubble.textContent = `この内容で保存していいかな？ (修正もできるよ☝️)`;
-                            neoBubble.classList.add('show');
-                        }
-                    }
-
-                } else if (action === "PREVIEW_INVOICE") {
-                    const targetProjectName = intent.project_name;
-                    let targetProjId = currentOpenProjectId;
-
-                    if (targetProjectName) {
-                        targetProjId = findProjectIdByName(targetProjectName) || currentOpenProjectId;
-                    }
-
-                    if (targetProjId) {
-                        const targetProj = mockDB.projects.find(p => p.id === targetProjId);
-                        const expenses = mockDB.transactions.filter(t => t.projectId === targetProjId && !t.is_deleted && (t.type === 'expense' || t.type === 'labor' || t.type === 'material' || t.type === 'outsource' || t.type === 'entertainment' || t.type === 'transport'));
-                        const subtotal = expenses.reduce((acc, curr) => acc + curr.amount, 0);
-                        const tax = Math.floor(subtotal * 0.1);
-                        const grandTotal = subtotal + tax;
-
-                        // Universal Engine: 職種に応じたテンプレート自動切り替え
-                        const industry = mockDB.userConfig.industry;
-                        const honorific = (industry === 'freelance' || industry === 'general') ? '様' : '御中';
-                        const itemDescription = (industry === 'construction') ? '一式' : '内容';
-                        const itemUnit = (industry === 'construction') ? '式' : '回';
-
-                        document.getElementById('invoice-client-name').textContent = (targetProj.clientName || '株式会社〇〇') + ` ${honorific}`;
-                        document.getElementById('invoice-date').textContent = `発行日: ${new Date().toLocaleDateString('ja-JP').replace(/\//g, '/')}`;
-                        document.getElementById('invoice-no').textContent = `請求番号: INV-${Date.now().toString().slice(-4)}`;
-                        document.getElementById('invoice-total-amount').textContent = `¥${grandTotal.toLocaleString()}`;
-
-                        // --- Company Stamp Overlay Logic ---
-                        const stampOverlay = document.getElementById('invoice-stamp-overlay');
-                        const savedStamp = localStorage.getItem('neo_company_stamp_data');
-                        
-                        if (stampOverlay && savedStamp) {
-                            const scale = localStorage.getItem('neo_company_stamp_scale') || "1.0";
-                            const x = localStorage.getItem('neo_company_stamp_x') || "0";
-                            const y = localStorage.getItem('neo_company_stamp_y') || "0";
-                            
-                            stampOverlay.src = savedStamp;
-                            stampOverlay.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-                            stampOverlay.style.display = 'block';
-                            
-                            // Adjust company info area height to ensure stamp isn't cut off visually
-                            const companyInfoArea = document.getElementById('invoice-company-info-area');
-                            if (companyInfoArea) {
-                                companyInfoArea.style.minHeight = '120px';
-                            }
-                        } else if (stampOverlay) {
-                            stampOverlay.style.display = 'none';
-                        }
-                        // -----------------------------------
-
-                        const tbody = document.getElementById('invoice-items-body');
-                        if (tbody) {
-                            tbody.innerHTML = `
-                                <tr style="border-bottom: 1px solid #eee;">
-                                    <td style="padding: 12px 8px;">${targetProj.name} ${itemDescription}</td>
-                                    <td style="padding: 12px 8px; text-align: center;">1</td>
-                                    <td style="padding: 12px 8px; text-align: center;">${itemUnit}</td>
-                                    <td style="padding: 12px 8px; text-align: right;">${subtotal.toLocaleString()}</td>
-                                </tr>
-                            `;
-                        }
-
-                        document.getElementById('invoice-subtotal').textContent = `¥${subtotal.toLocaleString()}`;
-                        document.getElementById('invoice-tax').textContent = `¥${tax.toLocaleString()}`;
-                        document.getElementById('invoice-grand-total').textContent = `¥${grandTotal.toLocaleString()}`;
-                        document.getElementById('invoice-bank-info').textContent = targetProj.bankInfo || '指定なし（プロジェクト設定から入力してください）';
-                        document.getElementById('invoice-deadline').textContent = targetProj.paymentDeadline ? targetProj.paymentDeadline.replace(/-/g, '/') : '指定なし';
-
-                        switchView('view-invoice');
-
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            neoBubble.textContent = `了解。「${targetProj.name}」の請求書を下書きしたよ⚡️`;
-                            neoBubble.classList.add('show');
-                            setTimeout(() => { neoBubble.classList.remove('show'); }, 3000);
-                        }
-                    }
-
-                } else if (action === "AGGREGATE") {
-                    const targetProjectName = intent.project_name;
-                    if (targetProjectName) {
-                        const targetProjId = findProjectIdByName(targetProjectName);
-                        if (targetProjId) {
-                            const targetProj = mockDB.projects.find(p => p.id === targetProjId);
-                            const expenses = mockDB.transactions
-                                .filter(t => t.projectId === targetProjId && (t.type === 'expense' || t.type === 'labor' || t.type === 'material' || t.type === 'outsource' || t.type === 'entertainment' || t.type === 'transport'))
-                                .reduce((acc, curr) => acc + curr.amount, 0);
-
-                            console.log(`[DEBUG - AGGREGATE] Project: ${targetProj.name} | Total Scanned: ¥${expenses}`);
-
-                            const neoBubble = document.getElementById('neo-fab-bubble');
-                            if (neoBubble) {
-                                neoBubble.textContent = `了解。「${targetProj.name}」のこれまでの総経費は ¥${expenses.toLocaleString()} だよ📊`;
-                                neoBubble.classList.add('show');
-                                setTimeout(() => { neoBubble.classList.remove('show'); }, 5000);
-                            }
-                            alert(`【累計集計結果】\nプロジェクト: ${targetProj.name}\nこれまでの経費合計: ¥${expenses.toLocaleString()}`);
-                        }
-                    }
-                } else if (action === "NAVIGATE") {
-                    if (intent.target_view) {
-                        switchView(intent.target_view);
-                    }
-                } else if (action === "GENERATE_DOCUMENT") {
-                    try {
-                        const docType = intent.doc_type; // e.g. "invoice", "estimate"
-                        const targetProjectName = intent.project_name;
-                        
-                        let targetProjId = currentOpenProjectId || 1; 
-                        
-                        if (targetProjectName) {
-                            const foundId = findProjectIdByName(targetProjectName);
-                            if (foundId) {
-                                targetProjId = foundId;
-                            }
-                        }
-                        
-                        // 1. Physically swap to Sites view and open project detail
-                        switchView('view-sites');
-                        window.openProjectDetail(targetProjId);
-                        
-                        // 2. Wait for transition, then physically open document modal
-                        setTimeout(() => {
-                            try {
-                                const btnOpenDocModal = document.getElementById('btn-open-doc-modal');
-                                if (btnOpenDocModal) {
-                                    btnOpenDocModal.click(); // Stop at opening. Never auto-generate the actual PDF.
-                                    
-                                    const neoBubble = document.getElementById('neo-fab-bubble');
-                                    if (neoBubble) {
-                                        neoBubble.textContent = `書類作成の準備ができたよ⚡️`;
-                                        neoBubble.classList.add('show');
-                                        setTimeout(() => { neoBubble.classList.remove('show'); }, 3000);
-                                    }
-                                } else {
-                                    console.warn("[Neo Fallback] Generate Document button missing.");
-                                    throw new Error("Missing UI Element");
-                                }
-                            } catch(uiError) {
-                                const neoBubble = document.getElementById('neo-fab-bubble');
-                                if (neoBubble) {
-                                    neoBubble.textContent = "ごめんなさい、書類画面を開けなかったみたい。プロジェクト詳細から手動で開いてみてね💦";
-                                    neoBubble.classList.add('show');
-                                    setTimeout(() => { neoBubble.classList.remove('show'); }, 4000);
-                                }
-                            }
-                        }, 500); 
-                    } catch (genError) {
-                        console.error("[Neo Fallback] Document generation flow failed.", genError);
-                    }
-
-                } else if (action === "QUERY_KNOWLEDGE") {
-                    const answerText = intent.answer;
-                    const citation = intent.citation;
-                    if (answerText) {
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            let bubbleHTML = `<span>${answerText}</span>`;
-                            if (citation && citation !== "Neo+ Memory") {
-                                bubbleHTML += `<div style="margin-top: 8px; font-size: 10px; color: var(--accent-neo-blue); background: rgba(15, 98, 254, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block; align-items: center; gap: 4px;"><i data-lucide="book-open" style="width: 12px; height: 12px;"></i> 法的根拠: ${citation}</div>`;
-                            }
-                            neoBubble.innerHTML = bubbleHTML;
-                            if (window.lucide) window.lucide.createIcons();
-                            neoBubble.classList.add('show');
-                            setTimeout(() => { neoBubble.classList.remove('show'); }, 6000); // Wait 6s so user can read
-                        }
-                    }
-                } else if (action === "COMPLIANCE_VIOLATION") {
-                    window.handleComplianceViolation("AI Ethics Protocol Violation", text);
-                } else {
-                    // Check if UNKNOWN is actually an active AI refusal (Speculation, Sex, Ethics)
-                    const answerText = intent.answer || "";
-                    if (answerText.includes("お答えできません") || answerText.includes("一切行いません") || answerText.includes("不適切な発言")) {
-                        window.logSecurityEvent(`AI Behavioral Refusal: ${answerText.slice(0, 20)}...`, text);
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            neoBubble.textContent = answerText;
-                            neoBubble.classList.add('show');
-                            setTimeout(() => { neoBubble.classList.remove('show'); }, 6000);
-                        }
-                    } else {
-                        // Fallback to expense if UNKNOWN or unclear
-                        const projId = currentOpenProjectId || 1;
-
-                        let finalAmountFallback = 0;
-                        const match = text.match(/\d+/);
-                        if (match) {
-                            finalAmountFallback = parseInt(match[0], 10);
-                        }
-
-                        const newTransaction = {
-                            id: Date.now(),
-                            projectId: projId,
-                            type: "expense",
-                            title: text.trim() || "無題の経費",
-                            amount: finalAmountFallback,
-                            date: new Date().toLocaleDateString('ja-JP').replace(/\//g, '/'),
-                            source: "inline-fallback"
-                        };
-
-                        window.insertTransaction(newTransaction);
-                        renderProjects(mockDB.projects);
-
-                        const neoBubble = document.getElementById('neo-fab-bubble');
-                        if (neoBubble) {
-                            neoBubble.textContent = `内容が不明確なため、「未分類」として仮保存したよ⚡️`;
-                            neoBubble.classList.add('show');
-                            setTimeout(() => { neoBubble.classList.remove('show'); }, 4000);
-                        }
-                    }
-                }
-            }
-
-            if (instructionInput) {
-                instructionInput.value = '';
-            }
-        } catch (error) {
-            console.error("Failed to route via Gemini:", error);
-            // alert("AI連携に失敗しました。\nエラー: " + error.message);
-
-            // AIエラー時でもローカルで強制的に未分類として保存、もしくは入力から推測
-            let projId = 1; // 1 = 未分類
-
-            // 強制紐付け：入力テキストから「東京駅」などのプロジェクト名を特定する
-            const matchedFallbackProjectId = findProjectIdByName(text);
-            let projNameFallback = '未分類';
-            if (matchedFallbackProjectId) {
-                projId = matchedFallbackProjectId;
-                projNameFallback = mockDB.projects.find(p => p.id === projId).name || '未分類';
-            }
-
-            let errorFallbackAmount = 0;
-            const match = text.match(/\d+/);
-            if (match) {
-                errorFallbackAmount = parseInt(match[0], 10);
-            }
-
-            let errorFinalTitle = text;
-            if (projNameFallback !== '未分類') {
-                errorFinalTitle = errorFinalTitle.replace(projNameFallback, '').trim();
-            }
-
-            const errorTransaction = {
-                id: Date.now(),
-                projectId: projId,
-                type: "expense",
-                title: errorFinalTitle || "無題の経費",
-                amount: errorFallbackAmount,
-                date: new Date().toLocaleDateString('ja-JP').replace(/\//g, '/'),
-                source: "error-fallback"
-            };
-
-            window.insertTransaction(errorTransaction);
-
-            try {
-                const savedTxs = JSON.parse(localStorage.getItem('neo_transactions') || '[]');
-                savedTxs.push(errorTransaction);
-                localStorage.setItem('neo_transactions', JSON.stringify(savedTxs));
-                console.log("Error fallback expense forcefully saved to localStorage.");
-            } catch (e) { /* ignore */ }
-
-            // UIの即時同期・更新
-            renderProjects(mockDB.projects);
-
-            // 逃げのコードを物理的にコメントアウト
-            // switchView('view-expense');
-
-            const neoBubble = document.getElementById('neo-fab-bubble');
-            if (neoBubble) {
-                const projNameFallback = mockDB.projects.find(p => p.id === projId).name || '未分類';
-                if (errorFallbackAmount > 0) {
-                    neoBubble.textContent = `AIレスポンスエラー。「${projNameFallback}」へ${errorFallbackAmount}円を追加したよ⚡️`;
-                } else {
-                    neoBubble.textContent = `AI連携に失敗。「${projNameFallback}」に「${text}」で仮保存したよ⚡️`;
-                }
-                neoBubble.classList.add('show');
-                setTimeout(() => { neoBubble.classList.remove('show'); }, 4000);
-            }
-            // Clear input on fallback
-            if (instructionInput) {
-                instructionInput.value = '';
-            }
-        } finally {
-            // Restore input UI state
-            const elapsed = Date.now() - instructionStartTime;
-            const remainingDelay = Math.max(0, 3000 - elapsed);
-
-            setTimeout(() => {
-                if (instructionInput) {
-                    instructionInput.style.borderColor = '';
-                    instructionInput.style.boxShadow = '';
-                    instructionInput.disabled = false;
-                    instructionInput.focus();
-                }
-                instructionMics.forEach(mic => mic.disabled = false);
-                btnAttachImages.forEach(btn => btn.disabled = false);
-                isProcessingInstruction = false;
-                if (neo) neo.speak('neo_idle');
-            }, remainingDelay);
-        }
-    };
-
-    if (instructionInput) {
-        instructionInput.addEventListener('keydown', (e) => {
-            // IME変換中のEnter押下は無視する
-            if (e.isComposing || e.keyCode === 229) {
-                return;
-            }
-
-            if (e.key === 'Enter') {
-                if (e.shiftKey) {
-                    // Shift + Enter の場合は改行を許容するため、そのままにする（デフォルトの挙動）
-                    return;
-                } else {
-                    // 通常のEnter（変換確定後）は送信処理に回す
-                    e.preventDefault(); // デフォルトの改行を防ぐ
-
-                    // 送信インターセプト: DETECTEDタグがあれば最優先
-                    if (window.createNewProjectFromTags && window.createNewProjectFromTags()) {
-                        return;
-                    }
-
-                    const textValue = e.target.value.trim();
-                    if (textValue) {
-                        handleInstruction(textValue);
-                    }
-                }
-            }
-        });
-    }
-
-    instructionMics.forEach(mic => {
-        mic.addEventListener('click', (e) => {
-            e.preventDefault();
-            // 純粋に音声入力の待機状態にする (mousedown等で起動済み)
-            // お節介な自動入力は行わない
-        });
-    });
-
-    btnAttachImages.forEach((btn, index) => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            // 純粋に画像選択ポップアップを開く
-            if (ocrUploads[index]) {
-                ocrUploads[index].click();
-            } else if (ocrUploads[0]) {
-                ocrUploads[0].click();
-            }
-        });
-    });
+    // [Neo+] handleInstruction and input listeners have been extracted to pages/chat.js
 
     // Nav Item Listeners
     navItems.forEach(item => {
@@ -5215,4 +4348,7 @@ window.addEventListener('load', async () => {
     window.sendChatMessage = async function() {
         console.warn("Legacy window.sendChatMessage called. Logic is handled by neo-brain.js");
     };
+
+    // Expose handleInstruction globally for inline HTML event handlers
+    window.handleInstruction = handleInstruction;
 });
