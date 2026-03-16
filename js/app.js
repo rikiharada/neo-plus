@@ -346,6 +346,16 @@ window.addEventListener('load', async () => {
                 const email = document.getElementById('auth-email')?.value;
                 const password = document.getElementById('auth-password')?.value;
                 const errorMsg = document.getElementById('auth-error-msg');
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+                // Development Auto-Login Bypass
+                if (!email && !password && isLocalhost) {
+                    console.log("[NeoGatekeeper] Development bypass activated. Logging in as CEO.");
+                    if (errorMsg) errorMsg.style.display = 'none';
+                    btnLogin.textContent = "Bypass 成功";
+                    handleAuthState({ user: { email: 'ceo@example.com', id: 'dev-bypass-id' } });
+                    return;
+                }
 
                 if (!email || !password) {
                     if (errorMsg) {
