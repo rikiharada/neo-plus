@@ -8,11 +8,7 @@ window.validateUserName = function (name) {
     return !blacklist.some(word => normalizedName.includes(word));
 };
 
-// Global User State Foundation
-window.GlobalStore = {
-    user: null,
-    session: null
-};
+// Global User State Foundation is now located in js/store.js
 
 window.mockDB = window.mockDB || {
     userConfig: {
@@ -298,8 +294,10 @@ window.addEventListener('load', async () => {
         const handleAuthState = (session) => {
             if (session?.user) {
                 // Authenticated Route
-                window.GlobalStore.user = session.user;
-                window.GlobalStore.session = session;
+                window.GlobalStore.updateState({ user: session.user, session: session });
+                if (window.GlobalStore.initRealtimeSync) {
+                    window.GlobalStore.initRealtimeSync();
+                }
 
                 if (viewAuth) {
                     viewAuth.classList.add('hidden');
@@ -634,7 +632,7 @@ window.addEventListener('load', async () => {
         }
 
         // 強制的にすべてのビューを非表示にする
-        const allViewIds = ['router-view-setup', 'view-setup', 'view-dash', 'view-sites', 'view-expense', 'view-wallet', 'view-settings', 'view-project-detail', 'view-chat'];
+        const allViewIds = ['view-dash', 'view-sites', 'view-expense', 'view-wallet', 'view-settings', 'view-project-detail', 'view-chat'];
         allViewIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -646,39 +644,7 @@ window.addEventListener('load', async () => {
 
         const targetViewElement = document.getElementById(targetId);
 
-        if (targetId === 'view-setup') {
-            const routerAnchor = document.getElementById('router-view-setup');
-            let setupViewDom = document.getElementById('view-setup');
-
-            const showSetupView = () => {
-                setupViewDom = document.getElementById('view-setup');
-                if (setupViewDom) {
-                    setupViewDom.classList.remove('hidden');
-                    setupViewDom.style.display = 'block';
-                    setupViewDom.style.opacity = '1';
-                }
-                if (routerAnchor) {
-                    routerAnchor.classList.remove('hidden');
-                    routerAnchor.style.display = 'block';
-                }
-            };
-
-            if (!setupViewDom && routerAnchor) {
-                fetch('views/setup.html')
-                    .then(r => r.text())
-                    .then(html => {
-                        routerAnchor.innerHTML = html;
-                        return import('../pages/setup.js');
-                    })
-                    .then(module => {
-                        module.initSetupView();
-                        showSetupView();
-                    })
-                    .catch(err => console.error("Failed to load Setup View:", err));
-            } else {
-                showSetupView();
-            }
-        } else if (targetId === 'view-dash') {
+        if (targetId === 'view-dash') {
             const routerAnchor = document.getElementById('router-view-dash');
             let dashViewDom = document.getElementById('view-dash');
 

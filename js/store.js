@@ -1,9 +1,82 @@
 /**
- * Neo+ Store & Cache Logic (Phase 10: Local Lexicon Optimization)
+ * Neo+ Store & Cache Logic (Phase 10 & 6)
  * 
- * STANDARD_ACCOUNT_MAP: A static, zero-latency dictionary for frequently used business expenses.
- * parseLocally(): Intercepts input matching this map and processes it without invoking the Gemini API.
+ * GlobalStore: Single Source of Truth for application state.
+ * STANDARD_ACCOUNT_MAP: Static dictionary for fast local parsing.
  */
+
+// Phase 6: Global Reactive State Manager
+window.GlobalStore = {
+    state: {
+        user: null,
+        session: null,
+        transactions: [],
+        projects: []
+    },
+    listeners: [],
+    
+    getState() {
+        return this.state;
+    },
+    
+    updateState(updates) {
+        this.state = { ...this.state, ...updates };
+        this.notify();
+    },
+    
+    subscribe(listener) {
+        this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
+    },
+    
+    notify() {
+        this.listeners.forEach(listener => listener(this.state));
+    },
+
+    async initRealtimeSync() {
+        if (!window.supabaseClient) return;
+
+        console.log("[GlobalStore] Initializing Supabase Realtime Sync...");
+
+        // Initial Data Fetch
+        const fetchInitialData = async () => {
+            if (!this.state.user) return;
+            const [txRes, projRes] = await Promise.all([
+                window.supabaseClient.from('transactions').select('*').eq('user_id', this.state.user.id).order('date', { ascending: false }),
+                window.supabaseClient.from('projects').select('*').eq('user_id', this.state.user.id).order('created_at', { ascending: false })
+            ]);
+            
+            this.updateState({
+                transactions: txRes.data || [],
+                projects: projRes.data || []
+            });
+        };
+
+        await fetchInitialData();
+
+        // Realtime Subscriptions
+        const channels = window.supabaseClient.channel('custom-all-channel')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${this.state.user.id}` },
+                (payload) => {
+                    console.log('[GlobalStore] Realtime Transaction Change received!', payload);
+                    fetchInitialData(); // Re-fetch for simplicity and consistency, or patch state directly
+                }
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'projects', filter: `user_id=eq.${this.state.user.id}` },
+                (payload) => {
+                    console.log('[GlobalStore] Realtime Project Change received!', payload);
+                    fetchInitialData();
+                }
+            )
+            .subscribe();
+    }
+};
 
 // Dynamic Learning Memory
 window.DYNAMIC_ACCOUNT_CACHE = {};

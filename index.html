@@ -95,8 +95,26 @@
     <!-- MAIN APP WRAPPER (Hidden by Gatekeeper until authenticated) -->
     <div id="app-container" style="display: none;">
 
+        <!-- GLOBAL HEADER (Phase 6) -->
+        <header id="global-header" class="header-area" style="position: sticky; top: 0; z-index: 1000; background: var(--bg-color); border-bottom: 1px solid var(--btn-secondary-border);">
+            <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
+            <div class="header-actions">
+                <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
+                    <div class="system-health-indicator" style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); margin-right: 4px; transition: background-color 0.3s ease, box-shadow 0.3s ease;" title="System Health: Online"></div>
+                    <div style="position: relative;">
+                        <i data-lucide="cloud-check" style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;" title="iCloud同期中"></i>
+                        <div class="scan-pulse"></div>
+                    </div>
+                    <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun" class="icon-sun"></i><i data-lucide="moon" class="icon-moon" style="display: none;"></i></button>
+                    <div class="user-info-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-neo-blue), var(--accent-purple)); display: grid; place-items: center; color: white; font-weight: 700; font-size: 14px; cursor: pointer;">
+                        <span class="user-info-avatar-text" id="global-header-avatar">A</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
         <!-- Main Content Area Container (for the views) -->
-        <main style="position: relative; display: block; height: 100%; min-height: 100vh;">
+        <main id="main-content" style="position: relative; display: block; height: 100%; min-height: 100vh; padding-bottom: 80px;">
 
             <!-- SETUP VIEW (GATEKEEPER V2) -->
             <div id="router-view-setup"></div>
@@ -114,15 +132,8 @@
             <div id="router-view-sites"></div>
             <div id="router-view-project-detail"></div>
             <!-- EXPENSE & AI VIEW -->
-            <div id="view-expense" class="view hidden">
-                <div class="header-area">
-                    <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
-                    <div class="header-actions">
-                        <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun"
-                                class="icon-sun"></i><i data-lucide="moon" class="icon-moon"
-                                style="display: none;"></i></button>
-                    </div>
-                </div>
+            <div id="view-expense" class="view hidden" style="padding-top: 24px;">
+
                 <div class="content-area chat-container" id="expense-chat-container">
                     <!-- Chat history mock -->
                     <div class="chat-bubble neo" data-i18n="ai_chat_initial_msg">
@@ -160,28 +171,7 @@
                 </div>
             </div>
             <!-- WALLET VIEW (HEALTHCARE MONITOR & TAX HUB) -->
-            <div id="view-wallet" class="view hidden">
-                <div class="header-area">
-                    <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
-                    <div class="header-actions">
-                        <div
-                            style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
-                            <!-- System Health Indicator -->
-                            <div class="system-health-indicator"
-                                style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); margin-right: 4px; transition: background-color 0.3s ease, box-shadow 0.3s ease;"
-                                title="System Health: Online"></div>
-                            <div style="position: relative;">
-                                <i data-lucide="cloud-check"
-                                    style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;"
-                                    title="iCloud同期中"></i>
-                                <div class="scan-pulse"></div>
-                            </div>
-                            <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun"
-                                    class="icon-sun"></i><i data-lucide="moon" class="icon-moon"
-                                    style="display: none;"></i></button>
-                        </div>
-                    </div>
-                </div>
+            <div id="view-wallet" class="view hidden" style="padding-top: 24px;">
 
                 <div class="content-area dashboard-health"
                     style="padding: 0 var(--spacing-lg); display: block; gap: var(--spacing-xl); background-color: var(--bg-color); padding-bottom: 120px;">
@@ -305,28 +295,7 @@
             </div>
 
             <!-- SETTINGS VIEW -->
-            <div id="view-settings" class="view hidden">
-                <div class="header-area">
-                    <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
-                    <div class="header-actions">
-                        <div
-                            style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
-                            <!-- System Health Indicator -->
-                            <div class="system-health-indicator"
-                                style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); margin-right: 4px; transition: background-color 0.3s ease, box-shadow 0.3s ease;"
-                                title="System Health: Online"></div>
-                            <div style="position: relative;">
-                                <i data-lucide="cloud-check"
-                                    style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;"
-                                    title="iCloud同期中"></i>
-                                <div class="scan-pulse"></div>
-                            </div>
-                            <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun"
-                                    class="icon-sun"></i><i data-lucide="moon" class="icon-moon"
-                                    style="display: none;"></i></button>
-                        </div>
-                    </div>
-                </div>
+            <div id="view-settings" class="view hidden" style="padding-top: 24px;">
                 <div class="content-area" style="padding: var(--spacing-lg);">
                     <div class="settings-group" style="margin-bottom: var(--spacing-xl); text-align: left;">
                         <h3
@@ -1124,6 +1093,7 @@
     <script src="js/neo-brain.js?v=NEO_SAFE_74"></script>
     <script src="js/doc-engine.js?v=NEO_SAFE_74"></script>
     <script src="js/i18n.js?v=neo-99-RECOVERY23"></script>
+    <script src="js/store.js?v=NEO_PHASE_6"></script>
     <script src="js/app.js?v=NEO_SAFE_74"></script>
     <script type="module" src="pages/chat.js?v=ROUTER_1"></script>
 </body>
