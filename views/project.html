@@ -1,0 +1,816 @@
+<!-- EXTRACTED view-sites -->
+<div id="view-sites" class="view hidden" style="background-color: var(--bg-color);">
+                <!-- Header section matching standard Neo+ dashboard style -->
+                <div class="header-area">
+                    <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
+                    <div class="header-actions">
+                        <div
+                            style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
+                            <!-- System Health Indicator -->
+                            <div class="system-health-indicator"
+                                style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); margin-right: 4px; transition: background-color 0.3s ease, box-shadow 0.3s ease;"
+                                title="System Health: Online"></div>
+                            <div style="position: relative;">
+                                <i data-lucide="cloud-check"
+                                    style="width: 18px; height: 18px; stroke-width: 1.2px; color: #10b981;"
+                                    title="iCloud同期中"></i>
+                                <div class="scan-pulse"></div>
+                            </div>
+                            <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun"
+                                    class="icon-sun"></i><i data-lucide="moon" class="icon-moon"
+                                    style="display: none;"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Area -->
+                <div class="content-area" style="padding: var(--spacing-lg); gap: var(--spacing-md); display: block;">
+
+                    <div style="display: block; gap: 16px; margin-bottom: 12px;">
+                        <!-- Row 1: Hero Search Bar -->
+                        <div style="position: relative; width: 100%; margin-bottom: 24px;">
+                            <i data-lucide="search"
+                                style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: var(--accent-neo-blue);"></i>
+                            <input type="text" id="filter-search-input" data-testid="project-search-input"
+                                placeholder="プロジェクト名や場所を検索..."
+                                style="width: 100%; padding: 14px 44px 14px 48px; border-radius: 24px; border: 1.5px solid rgba(29, 155, 240, 0.4); background: rgba(29, 155, 240, 0.05); color: var(--text-main); font-size: 14px; outline: none; transition: all 0.2s ease; font-family: inherit; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                            <button id="btn-clear-search" class="hidden"
+                                style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: var(--btn-secondary-border); border: none; border-radius: 50%; width: 22px; height: 22px; display: grid; place-items: center; cursor: pointer; color: var(--text-muted);">
+                                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+
+                        <!-- Row 2: Thumb Zone Controls (+ Button & Filters) -->
+                        <div
+                            style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center;">
+                            <!-- + New Project Button (44x44 Circular, Thumb zone) -->
+                            <button id="btn-create-project" data-testid="project-btn-create"
+                                style="background: var(--accent-neo-blue); border: none; color: white; cursor: pointer; display: block; position: relative; width: 44px; height: 44px; border-radius: 50%; box-shadow: 0 4px 12px rgba(29, 155, 240, 0.3); transition: transform 0.2s, box-shadow 0.2s; "
+                                onmousedown="this.style.transform='scale(0.92)';"
+                                onmouseup="this.style.transform='scale(1)';" aria-label="新規プロジェクト">
+                                <i data-lucide="plus"
+                                    style="width: 24px; height: 24px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></i>
+                            </button>
+
+                            <div
+                                style="display: grid; grid-auto-flow: column; gap: 8px; align-items: center; justify-content: end;">
+                                <input type="month" id="filter-period"
+                                    style="background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); border-radius: 20px; padding: 8px 14px; font-size: 14px; outline: none; transition: border-color 0.2s; font-family: inherit; cursor: pointer;"
+                                    aria-label="期間で絞り込み" />
+                                <div style="position: relative;">
+                                    <button class="theme-toggle" id="btn-filter-projects" aria-label="Filter Projects"
+                                        style="background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); border-radius: 50%; padding: 8px; cursor: pointer; display: grid; place-items: center; width: 40px; height: 40px; transition: background 0.2s;">
+                                        <i data-lucide="filter" class="icon-filter"
+                                            style="width: 18px; height: 18px;"></i>
+                                    </button>
+                                    <!-- Filter Dropdown -->
+                                    <div id="filter-dropdown" class="filter-dropdown hidden"
+                                        style="top: 48px; right: 0;">
+                                        <button class="filter-option active" data-filter="newest">新着順</button>
+                                        <button class="filter-option" data-filter="date-desc">日付順</button>
+                                        <button class="filter-option" data-filter="cost-desc">コスト順</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Project List Container -->
+                    <div id="project-list-container"
+                        style="display: block; gap: 0; padding: 20px 0; visibility: visible !important;">
+                        <!-- Injected via JS -->
+                    </div>
+
+                    <!-- Pagination Container -->
+                    <div id="project-pagination-container"
+                        style="display: grid; grid-auto-flow: column; justify-content: center; align-items: center; gap: 12px; margin-top: 16px; padding-bottom: 120px; visibility: visible !important;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+<!-- EXTRACTED view-project-detail -->
+<div id="view-project-detail" class="view hidden"
+                style="background-color: var(--bg-color); position: relative; padding: 0;">
+
+                <!-- Passbook Header -->
+                <div class="passbook-header"
+                    style="position: relative; width: 100%; background: var(--bg-color); padding: calc(env(safe-area-inset-top) + 20px) var(--spacing-lg) var(--spacing-xl) var(--spacing-lg); color: var(--text-main); border-bottom: 1.2px solid var(--btn-secondary-border);">
+
+                    <!-- Navbar Area (Float/Absolute for perfect center) -->
+                    <div
+                        style="display: block; overflow: hidden; margin-bottom: var(--spacing-xl); width: 100%; position: relative; z-index: 2; height: 40px;">
+
+                        <!-- Left: Back Button -->
+                        <button class="nav-item passbook-back" data-target="view-sites" aria-label="戻る"
+                            style="float: left; background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); display: grid; place-items: center; border-radius: 50%; cursor: pointer; width: 40px; height: 40px; padding: 0; z-index: 10;">
+                            <i data-lucide="chevron-left" style="width: 24px; height: 24px;"></i>
+                        </button>
+
+                        <!-- Center: Truncated Title (Absolute Center) -->
+                        <div
+                            style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 60%; text-align: center; pointer-events: none; z-index: 5;">
+                            <h1 id="detail-project-name"
+                                style="font-size: 16px; font-weight: 700; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main);">
+                                プロジェクト名</h1>
+                        </div>
+
+                        <!-- Right: Menu Button -->
+                        <button id="btn-project-menu-toggle" aria-label="設定"
+                            style="float: right; background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); border-radius: 50%; cursor: pointer; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; z-index: 10;">
+                            <i data-lucide="more-horizontal" style="width: 24px; height: 24px;"></i>
+                        </button>
+                    </div>
+
+                    <!-- Profit Display & Formula -->
+                    <div
+                        style="text-align: center; position: relative; z-index: 1; pointer-events: none; transform: translateZ(0);">
+                        <div
+                            style="background: var(--btn-secondary-bg); border-radius: 20px; padding: 6px 16px; display: inline-block; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; font-weight: 600; border: 1.2px solid var(--btn-secondary-border);">
+                            <span style="color: #3b82f6;">売上 <span id="detail-revenue-mini">¥0</span></span>
+                            <span style="opacity: 0.5;">-</span>
+                            <span style="color: #ef4444;">経費 <span id="detail-expense-mini">¥0</span></span>
+                            <span style="opacity: 0.5;">=</span>
+                            <span style="color: var(--text-main);">利益(見込)</span>
+                        </div>
+                        <div id="detail-profit"
+                            style="font-size: 3.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; margin-bottom: var(--spacing-lg); color: var(--text-main);">
+                            ¥0
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons: Triple Tracking (Float Row) -->
+                    <div
+                        style="display: block; overflow: hidden; position: relative; z-index: 50; pointer-events: auto; margin-top: var(--spacing-xl); width: 100%;">
+
+                        <!-- Add Income -->
+                        <button onclick="console.log('Add Income Clicked!'); window.openIncomeModal();"
+                            data-testid="project-detail-btn-income"
+                            style="float: left; width: calc(33.333% - 6px); margin-right: 9px;  background: var(--bg-color); border: 1.5px solid #3b82f6; color: #3b82f6; padding: 12px 4px; border-radius: 12px; font-weight: 600; font-size: 12px; display: block; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: transform 0.1s; display: grid; place-items: center;"
+                            onmousedown="this.style.transform='scale(0.96)';"
+                            onmouseup="this.style.transform='scale(1)';">
+                            <i data-lucide="plus-circle" style="width: 20px; height: 20px; margin-bottom: 4px;"></i>
+                            売上/請求
+                        </button>
+
+                        <input type="file" id="hidden-receipt-upload" accept="image/*" capture="environment"
+                            style="display: none;" onchange="window.handleReceiptUpload(event)">
+
+                        <!-- Add Expense -->
+                        <button onclick="console.log('Add Expense Clicked!'); window.openAddExpenseModal();"
+                            data-testid="project-detail-btn-expense"
+                            style="float: left; width: calc(33.333% - 6px); margin-right: 9px;  background: var(--bg-color); border: 1.5px solid #ef4444; color: #ef4444; padding: 12px 4px; border-radius: 12px; font-weight: 600; font-size: 12px; display: block; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: transform 0.1s; display: grid; place-items: center;"
+                            onmousedown="this.style.transform='scale(0.96)';"
+                            onmouseup="this.style.transform='scale(1)';">
+                            <i data-lucide="minus-circle" style="width: 20px; height: 20px; margin-bottom: 4px;"></i>
+                            経費追加
+                        </button>
+
+                        <!-- Generate Doc -->
+                        <button id="btn-open-doc-gen" onclick="window.openDocGenModal()"
+                            data-testid="project-detail-btn-doc"
+                            style="float: left; width: calc(33.333% - 6px); margin-right: 0; position: relative; z-index: 99999 !important; pointer-events: auto !important;  background: #3b82f6; color: #fff; border: none; padding: 12px 4px; border-radius: 12px; font-weight: 700; font-size: 12px; display: block; text-align: center; box-shadow: 0 4px 15px rgba(59,130,246,0.2); transition: transform 0.1s; display: grid; place-items: center;"
+                            onmousedown="this.style.transform='scale(0.96)';"
+                            onmouseup="this.style.transform='scale(1)';">
+                            <i data-lucide="file-check-2" style="width: 20px; height: 20px; margin-bottom: 4px;"></i>
+                            書類作成
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Content Area (Data Dashboard) -->
+                <div class="passbook-content"
+                    style=" background: var(--bg-color); padding: var(--spacing-lg); display: block; gap: var(--spacing-md); padding-bottom: 120px; margin-top: 40px;">
+
+                    <div class="dashboard-grid"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
+
+                        <!-- 1. Notes (Full Width) -->
+                        <div class="dash-card"
+                            style="grid-column: 1 / -1; padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px; background: rgba(29, 155, 240, 0.02);">
+                            <div
+                                style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <div
+                                    style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 6px;">
+                                    <i data-lucide="sticky-note"
+                                        style="width: 14px; height: 14px; color: var(--accent-neo-blue);"></i>
+                                    <h3
+                                        style="font-size: 13px; font-weight: 600; color: var(--accent-neo-blue); margin: 0; letter-spacing: 0.05em;">
+                                        特記事項</h3>
+                                </div>
+                                <i data-lucide="edit-3"
+                                    style="width: 12px; height: 12px; color: var(--text-muted); opacity: 0.5;"></i>
+                            </div>
+                            <textarea id="detail-project-note" data-testid="project-detail-note-input"
+                                style="width: 100%; min-height: 48px; font-size: 14px; color: var(--text-main); line-height: 1.5; background: transparent; border: none; resize: none; overflow: hidden; outline: none; padding: 0; font-family: inherit;"
+                                placeholder="タップしてメモを追加..."
+                                oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px';"
+                                onblur="window.saveProjectNote(this.value)"></textarea>
+                        </div>
+
+                        <!-- 2. Documents (Half Width) -->
+                        <div class="dash-card"
+                            style="padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
+                            <div
+                                style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: start; margin-bottom: 12px;">
+                                <i data-lucide="file-text"
+                                    style="width: 20px; height: 20px; color: var(--text-muted);"></i>
+                            </div>
+                            <h3 style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 4px 0;">
+                                PDF書類
+                            </h3>
+                            <div id="detail-doc-count"
+                                style="font-size: 24px; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em;">
+                                <!-- Handled dynamically in JS -->
+                            </div>
+                        </div>
+
+                        <!-- 3. Photos (Half Width) -->
+                        <div class="dash-card"
+                            style="padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
+                            <i data-lucide="image"
+                                style="width: 20px; height: 20px; color: var(--text-muted); margin-bottom: 12px;"></i>
+                            <h3 style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 8px 0;">
+                                現場写真・資料
+                            </h3>
+                            <div id="detail-photo-gallery"
+                                style="display: grid; grid-auto-flow: column; gap: 6px; overflow-x: hidden;">
+                                <div
+                                    style="font-size: 11px; font-weight: 400; color: var(--text-muted); margin-top: 4px;">
+                                    データなし</div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Financials & Activity (Full Width) -->
+                        <div class="dash-card"
+                            style="grid-column: 1 / -1; padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
+                            <div
+                                style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <h3
+                                    style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 0; letter-spacing: 0.05em;">
+                                    収支明細・アクティビティ</h3>
+                                <div style="position: relative;">
+                                    <i data-lucide="search"
+                                        style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; color: var(--text-muted);"></i>
+                                    <input type="text" id="passbook-search" placeholder="検索"
+                                        style="width: 100px; padding: 6px 8px 6px 24px; border-radius: 8px; border: 1px solid var(--btn-secondary-border); background-color: var(--btn-secondary-bg); color: var(--text-main); font-size: 12px; outline: none;">
+                                </div>
+                            </div>
+
+                            <div id="activity-list-container" style="display: block; gap: 0;">
+                                <!-- Activity items populated by JS -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+<!-- EXTRACTED doc-neo-parsing-overlay -->
+<div id="doc-neo-parsing-overlay" class="hidden"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 250, 252, 0.85); backdrop-filter: blur(8px); z-index: 50; display: block; align-items: center; justify-content: center; gap: 16px; transition: opacity 0.3s ease;">
+        <div
+            style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #1D9BF0, #0ea5e9); display: grid; place-items: center; box-shadow: 0 8px 24px rgba(29, 155, 240, 0.4); animation: docPulse 2s infinite;">
+            <i data-lucide="sparkles" style="color: white; width: 32px; height: 32px;"></i>
+        </div>
+        <div
+            style="font-size: 18px; font-weight: 700; color: #0f172a; letter-spacing: 0.05em; animation: neoDeepThought 2.5s ease-in-out infinite;">
+            Neo is Thinking...</div>
+        <div style="font-size: 13px; color: #64748b;">レシートから項目を自動抽出しています</div>
+    </div>
+
+<!-- EXTRACTED modal-doc-preview -->
+<div id="modal-doc-preview" class="modal-overlay hidden"
+        style="z-index: 10001 !important; background: var(--bg-color); display: block; width: 100vw; max-width: 100%; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: scroll !important; -webkit-overflow-scrolling: touch; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+        <style>
+            #modal-doc-preview:not(.hidden) {
+                transform: translateY(0) !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+            }
+        </style>
+        <!-- PREVIEW HEADER (Grid Box Item) -->
+        <div id="preview-floating-header"
+            style=" padding: calc(env(safe-area-inset-top) + 8px) 16px 8px 16px; border-bottom: 1px solid rgba(203, 213, 225, 0.5); background: rgba(248, 250, 252, 0.95); z-index: 50; display: block; pointer-events: auto;">
+            <div style="font-weight: 700; font-size: 15px; color: #0f172a; text-align: center; width: 100%;">プレビュー</div>
+        </div>
+
+        <!-- A4 PREVIEW RENDER AREA -->
+        <div class="doc-gen-preview-container"
+            style=" overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: #64748b; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 16px 120px 16px; box-sizing: border-box; width: 100%; min-height: 100%; position: relative;">
+            <!-- A4 Paper Container -->
+            <div id="doc-preview-paper"
+                style="max-width: 100%; height: auto; aspect-ratio: 1 / 1.414; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 50px 40px 120px 40px; margin: 0 auto; position: relative; flex-shrink: 0; box-sizing: border-box; overflow: hidden; color: #333; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;">
+                <div id="neo-v3-estimate">
+                    <!-- Top Area (3 Rows) -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <!-- Row 1: Title -->
+                        <tr>
+                            <td colspan="2" style="text-align: center; padding-bottom: 30px;">
+                                <span id="preview-doc-title"
+                                    style="font-size: 18px !important; font-weight: bold; letter-spacing: 2px;">御見積書</span>
+                            </td>
+                        </tr>
+                        <!-- Row 2: Client & Date -->
+                        <tr>
+                            <td style="width: 60%; vertical-align: top; padding-bottom: 10px;">
+                                <div id="preview-client-name"
+                                    style="font-size: 14px !important; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 4px; display: inline-block; min-width: 80%;">
+                                    株式会社〇〇 御中</div>
+                            </td>
+                            <td
+                                style="width: 40%; vertical-align: top; text-align: right; font-size: 11px !important; padding-bottom: 10px;">
+                                <div id="preview-doc-date" style="font-size: 11px !important;">発行日: ----年--月--日</div>
+                                <div id="preview-doc-no" style="font-size: 11px !important;">No: --------------</div>
+                                <div id="preview-delivery-stamp" style="display: none;">受領印</div>
+                            </td>
+                        </tr>
+                        <!-- Row 3: Message & Company -->
+                        <tr>
+                            <td style="width: 60%; vertical-align: top;">
+                                <div style="font-size: 11px !important; margin-bottom: 15px;">下記の通り御見積申し上げます。</div>
+                                <div style="margin-bottom: 5px;">
+                                    <span style="font-size: 11px !important; margin-right: 10px;">件名:</span>
+                                    <span id="preview-subject"
+                                        style="font-size: 12px !important; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 2px; display: inline-block; min-width: 60%;">〇〇工事一式として</span>
+                                </div>
+                                <div id="preview-receipt-memo" style="display: none; font-size: 11px !important;">但し書き:
+                                    <span id="preview-memo-text"></span>
+                                </div>
+                            </td>
+                            <td
+                                style="width: 40%; vertical-align: top; text-align: right; font-size: 11px !important; line-height: 1.6;">
+                                <div style="font-size: 12px !important; font-weight: bold; margin-bottom: 5px;">あなたの会社名
+                                </div>
+                                <div style="font-size: 11px !important;">〒106-0032</div>
+                                <div style="font-size: 11px !important;">東京都港区六本木1-1-1</div>
+                                <div style="font-size: 11px !important;">TEL: 03-1234-5678</div>
+                                <div id="preview-bank-info"
+                                    style="margin-top: 10px; white-space: pre-line; font-size: 11px !important;"></div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Detail Table -->
+                    <div style="margin-bottom: 20px;">
+                        <table
+                            style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px !important;">
+                            <thead>
+                                <tr
+                                    style="background-color: #f8f9fa; border-top: 2px solid #000; border-bottom: 1px solid #000;">
+                                    <th
+                                        style="padding: 2px 4px; font-weight: normal; color: #333; font-size: 11px !important;">
+                                        内容・品名</th>
+                                    <th
+                                        style="padding: 2px 4px; font-weight: normal; text-align: center; width: 15%; color: #333; font-size: 11px !important;">
+                                        数量</th>
+                                    <th
+                                        style="padding: 2px 4px; font-weight: normal; text-align: right; width: 20%; color: #333; font-size: 11px !important;">
+                                        単価</th>
+                                    <th
+                                        style="padding: 2px 4px; font-weight: normal; text-align: right; width: 20%; color: #333; font-size: 11px !important;">
+                                        金額</th>
+                                </tr>
+                            </thead>
+                            <tbody id="preview-items-container">
+                                <!-- Dynamic JS Injection -->
+                            </tbody>
+                        </table>
+                        <div style="border-bottom: 2px solid #333; margin-bottom: 15px;"></div>
+                    </div>
+
+                    <!-- Footer Table (Totals only, perfectly aligned with the grid above) -->
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <!-- Blank left space to match Subject and Quantity columns (60%) -->
+                            <td style="width: 60%;"></td>
+                            <!-- Totals space to match Unit Price and Amount columns (20% + 20% = 40%) -->
+                            <td style="width: 40%; vertical-align: bottom;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <!-- Label perfectly aligns under Unit Price (50% of 40% = 20%) -->
+                                        <td
+                                            style="padding: 2px 4px; font-size: 11px !important; color: #666; width: 50%;">
+                                            小計</td>
+                                        <!-- Value perfectly aligns under Amount (50% of 40% = 20%) -->
+                                        <td id="preview-subtotal"
+                                            style="padding: 2px 4px; font-size: 11px !important; color: #333; text-align: right; width: 50%;">
+                                            ¥0</td>
+                                    </tr>
+                                    <tr>
+                                        <td id="preview-tax-label"
+                                            style="padding: 2px 4px; font-size: 11px !important; color: #666; width: 50%;">
+                                            消費税 (10%)</td>
+                                        <td id="preview-tax"
+                                            style="padding: 2px 4px; font-size: 11px !important; color: #333; text-align: right; width: 50%;">
+                                            ¥0</td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: 6px 4px; font-size: 12px !important; font-weight: bold; color: #000; border-top: 1px solid #666; width: 50%;">
+                                            合計金額</td>
+                                        <td id="preview-grand-total"
+                                            style="padding: 6px 4px; font-size: 16px !important; font-weight: bold; color: #000; text-align: right; border-top: 1px solid #666; width: 50%;">
+                                            ¥0</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Absolute Bottom-Left QR Code -->
+                    <div style="position: absolute; bottom: 30px; left: 30px; margin: 0; padding: 0;">
+                        <table style="border-collapse: collapse;">
+                            <tr>
+                                <td style="width: 60px; vertical-align: bottom;">
+                                    <img id="preview-qr-code" src="" style="width: 50px; height: 50px; display: none;"
+                                        alt="QR">
+                                </td>
+                                <td
+                                    style="vertical-align: bottom; font-size: 9px !important; color: #666; padding-bottom: 2px;">
+                                    このQRコードをカメラで読み取ると、<br>本書類をデジタル保存できます。
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sticky Footer Actions (Grid Box Item) -->
+        <div id="preview-floating-footer"
+            style=" background: rgba(248, 250, 252, 0.95); padding: 12px 16px calc(env(safe-area-inset-bottom) + 12px) 16px; border-top: 1px solid rgba(203, 213, 225, 0.5); z-index: 50; display: block; gap: 8px;">
+            <!-- Zoom Slider -->
+            <div
+                style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(255,255,255,0.8); border-radius: 12px; border: 1px solid rgba(203, 213, 225, 0.5);">
+                <i data-lucide="zoom-out" style="width: 16px; height: 16px; color: #64748b;"></i>
+                <input type="range" id="zoom-slider-doc" min="0.2" max="2.0" step="0.05"
+                    style=" accent-color: #1D9BF0;">
+                <i data-lucide="zoom-in" style="width: 16px; height: 16px; color: #64748b;"></i>
+            </div>
+
+            <!-- Original Flow -->
+            <div style="display: grid; grid-auto-flow: column; gap: 8px;">
+                <button id="btn-preview-save-pdf" onclick="window.saveDocument()" class="btn-electric"
+                    style=" padding: 12px 0; border-radius: 12px; font-size: 15px; font-weight: 700; display: grid; place-items: center; gap: 6px;">
+                    <i data-lucide="file-check-2" style="width: 18px; height: 18px;"></i> 完了・保存
+                </button>
+                <button id="btn-preview-print" onclick="window.printModalDoc()"
+                    style=" padding: 12px 0; background: #f8fafc; color: #0f172a; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 15px; font-weight: 700; display: grid; place-items: center; gap: 6px;">
+                    <i data-lucide="printer" style="width: 18px; height: 18px;"></i> 印刷 (AirPrint)
+                </button>
+            </div>
+            <button id="btn-preview-edit" onclick="document.getElementById('modal-doc-preview').classList.add('hidden')"
+                style="width: 100%; padding: 8px 0; background: transparent; border: none; color: var(--text-muted); font-size: 14px; font-weight: 600; transition: color 0.2s;">
+                修正する
+            </button>
+
+            <!-- Shared View Flow (Hidden by default) -->
+            <button id="btn-shared-save-neo" onclick="window.importSharedDoc()" class="btn-primary hidden"
+                style="width: 100%; padding: 12px 0; border-radius: 12px; font-size: 15px; font-weight: 700; display: grid; place-items: center; gap: 6px;">
+                <i data-lucide="download-cloud" style="width: 18px; height: 18px;"></i> 自分のプロジェクトに保存
+            </button>
+            <button id="btn-shared-save-pdf" onclick="window.print()" class="btn-secondary hidden"
+                style="width: 100%; padding: 12px 0; border-radius: 12px; font-size: 15px; font-weight: 700; display: grid; place-items: center; gap: 6px; border: 1.5px solid #cbd5e1; background: transparent; color: #0f172a;">
+                <i data-lucide="printer" style="width: 18px; height: 18px;"></i> PDFとして保存 (ゲスト)
+            </button>
+        </div>
+    </div>
+
+<!-- EXTRACTED project-action-menu -->
+<div id="project-action-menu" class="hidden"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999 !important; display: grid; place-items: center; backdrop-filter: blur(4px);">
+        <div
+            style="background: var(--bg-color); border-radius: 24px; width: 85%; max-width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 24px; display: block; gap: 12px; border: 1px solid var(--btn-primary-border);">
+            <h3 style="text-align: center; margin-bottom: 8px; font-size: 16px; font-weight: 600;">アクション
+            </h3>
+            <button id="btn-project-edit"
+                onclick="document.getElementById('project-action-menu').classList.add('hidden'); window.editProject(window.currentOpenProjectId);"
+                style="width: 100%; padding: 16px; background: var(--btn-secondary-bg); border: none; border-radius: 12px; font-size: 16px; font-weight: 600; color: var(--text-main); cursor: pointer;">
+                編集
+            </button>
+            <button id="btn-project-delete"
+                onclick="document.getElementById('project-action-menu').classList.add('hidden'); window.deleteProject(window.currentOpenProjectId);"
+                style="width: 100%; padding: 16px; background: rgba(255, 59, 48, 0.1); border: none; border-radius: 12px; font-size: 16px; font-weight: 600; color: #FF3B30; cursor: pointer;">
+                削除
+            </button>
+            <button class="btn-cancel-action"
+                onclick="document.getElementById('project-action-menu').classList.add('hidden')"
+                style="width: 100%; padding: 12px; background: transparent; border: none; font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; margin-top: 4px;">
+                キャンセル
+            </button>
+        </div>
+    </div>
+
+<!-- EXTRACTED modal-new-project -->
+<div id="modal-new-project" class="modal-overlay"
+        style="backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(0,0,0,0.6);">
+        <div class="modal-content" style="position: relative; padding: var(--spacing-lg); text-align: center;">
+            <button id="btn-close-modal" class="modal-close-icon" aria-label="閉じる"
+                style="position: absolute; top: 16px; right: 16px; background: rgba(15, 23, 42, 0.05); border: none; width: 32px; height: 32px; border-radius: 16px; display: grid; place-items: center; color: #0f172a; margin: 0; padding: 0; transition: background 0.2s; z-index: 10;">
+                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+            <h3 class="modal-title" style="margin-bottom: var(--spacing-xl); padding: 0 32px;">新規プロジェクト登録</h3>
+
+            <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                <input type="text" id="new-proj-name" data-testid="new-proj-input-name" class="form-control"
+                    placeholder="プロジェクト名を入力" style="padding: 12px 16px;">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                <input type="text" id="new-proj-location" class="form-control" placeholder="場所 / リンク"
+                    style="padding: 12px 16px;">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                <input type="text" id="new-proj-note" class="form-control" placeholder="メモ (一言)"
+                    style="padding: 12px 16px;">
+            </div>
+
+            <!-- Color Picker -->
+            <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                <div class="color-picker-container">
+                    <button type="button" class="color-picker-drop selected" data-color="#FF3B30"
+                        style="background-color: #FF3B30;"></button>
+                    <button type="button" class="color-picker-drop" data-color="#FF9500"
+                        style="background-color: #FF9500;"></button>
+                    <button type="button" class="color-picker-drop" data-color="#FFCC00"
+                        style="background-color: #FFCC00;"></button>
+                    <button type="button" class="color-picker-drop" data-color="#34C759"
+                        style="background-color: #34C759;"></button>
+                    <button type="button" class="color-picker-drop" data-color="#007AFF"
+                        style="background-color: #007AFF;"></button>
+                    <button type="button" class="color-picker-drop" data-color="#AF52DE"
+                        style="background-color: #AF52DE;"></button>
+                    <button type="button" class="color-picker-drop" data-color="#8E8E93"
+                        style="background-color: #8E8E93;"></button>
+                </div>
+            </div>
+
+            <div
+                style="display: grid; grid-template-columns: 1fr; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); text-align: left;">
+                <!-- Native Date Range -->
+                <div style="display: grid; grid-auto-flow: column; gap: 4px; height: 100%; align-items: center;">
+                    <input type="date" id="new-proj-start-date" class="form-control"
+                        style="padding: 10px 8px;  font-size: 12px; text-align: center;">
+                    <span style="color: var(--text-muted); font-size: 12px;">-</span>
+                    <input type="date" id="new-proj-end-date" class="form-control"
+                        style="padding: 10px 8px;  font-size: 12px; text-align: center;">
+                </div>
+            </div>
+
+            <button class="btn-electric" id="btn-save-project" data-testid="new-proj-btn-save"
+                style="width: 100%; padding: 10px 0; border-radius: 12px;">保存</button>
+        </div>
+    </div>
+
+<!-- EXTRACTED modal-edit-project -->
+<div id="modal-edit-project" class="half-modal-overlay">
+        <div class="half-modal-content"
+            style="position: relative; padding: var(--spacing-lg) var(--spacing-lg) 0 var(--spacing-lg); text-align: center; height: auto; max-height: 80vh !important; overflow-y: scroll !important; padding-bottom: 120px !important; display: block;">
+            <div class="half-modal-handle"></div>
+            <button id="btn-close-edit-modal" class="modal-close-icon" aria-label="閉じる"
+                style="position: absolute; top: 16px; right: 16px; background: rgba(15, 23, 42, 0.05); border: none; width: 32px; height: 32px; border-radius: 16px; display: grid; place-items: center; color: #0f172a; margin: 0; padding: 0; transition: background 0.2s; z-index: 10;">
+                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+            <h3 class="modal-title" style="margin-bottom: var(--spacing-xl); padding: 0 32px;">プロジェクト情報の編集</h3>
+
+            <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                <label
+                    style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: block;">プロジェクト名</label>
+                <input type="text" id="edit-proj-name" class="form-control" placeholder="プロジェクト名を入力"
+                    style="padding: 12px 16px;">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                <label style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: block;">場所 /
+                    現場</label>
+                <input type="text" id="edit-proj-location" class="form-control" placeholder="未設定"
+                    style="padding: 12px 16px;">
+            </div>
+            <!-- 予定日の追加 -->
+            <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                <label style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: block;">予定日
+                </label>
+                <input type="date" id="edit-proj-date" class="form-control" style="padding: 12px 16px;">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-md); text-align: left;">
+                <label
+                    style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; display: block;">特記事項</label>
+                <textarea id="edit-proj-note" class="form-control" placeholder="特記事項はありません" rows="4"
+                    style="padding: 12px 16px; resize: none; font-weight: normal;"></textarea>
+            </div>
+
+            <div
+                style="display: grid; grid-template-columns: 1fr; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); text-align: left;">
+            </div>
+
+            <!-- Sticky Footer Actions -->
+            <div
+                style="position: sticky; bottom: 0; background: var(--bg-color); padding: var(--spacing-md) 0; display: block; align-items: stretch; margin-top: auto; z-index: 10;">
+
+                <!-- Full Width Save Button Centered -->
+                <div style="display: grid; grid-auto-flow: column; justify-content: center; width: 100%;">
+                    <button class="btn-electric" id="btn-update-project"
+                        style="position: relative; z-index: 99999 !important; pointer-events: auto; padding: 14px 0; border-radius: 12px; display: grid; place-items: center; gap: 6px; font-size: 16px; font-weight: 700; width: 100%;">
+                        完了
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- EXTRACTED modal-delete-confirm -->
+<div id="modal-delete-confirm" class="modal-overlay"
+        style="backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(0,0,0,0.6);">
+        <div class="modal-content"
+            style="position: relative; padding: 32px 24px; text-align: center; max-width: 320px; background: var(--bg-color); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); border-radius: 28px;">
+            <div
+                style="width: 48px; height: 48px; border-radius: 50%; background-color: #fee2e2; color: #ef4444; display: grid; place-items: center; margin: 0 auto var(--spacing-md) auto;">
+                <i data-lucide="alert-triangle" style="width: 24px; height: 24px;"></i>
+            </div>
+            <h3 class="modal-title" style="margin-bottom: var(--spacing-sm); font-size: 1.1rem;">プロジェクトの削除</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: var(--spacing-xl); line-height: 1.4;">
+                本当にプロジェクトを削除してよろしいですか？<br>この操作は取り消せません。</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-sm);">
+                <button id="btn-cancel-delete"
+                    style=" padding: 12px 0; border-radius: 12px; border: 1px solid #EFF3F4; background: transparent; color: var(--text-main); font-weight: 600;">いいえ</button>
+                <button id="btn-confirm-delete"
+                    style=" padding: 12px 0; border-radius: 12px; border: none; background: #FF3B30; color: white; font-weight: 600; box-shadow: 0 4px 10px rgba(255,59,48,0.3);">はい（削除）</button>
+            </div>
+        </div>
+    </div>
+
+<!-- EXTRACTED view-invoice -->
+<div id="view-invoice" class="view hidden" style="background: var(--bg-color); min-height: 100vh; display: block;">
+        <header class="app-header"
+            style="justify-content: space-between; position: sticky; top: 0; z-index: 10; background: var(--header-bg); border-bottom: 1.2px solid var(--btn-secondary-border); padding: 12px 20px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; color: var(--text-main);">
+            <button class="icon-btn" onclick="switchView('view-sites')"
+                style="background:none; border:none; color:var(--text-main); cursor:pointer;"><i
+                    data-lucide="arrow-left"></i></button>
+            <h1
+                style="font-size: 1.1rem; font-weight: 700; margin: 0; position: absolute; left: 50%; transform: translateX(-50%); color: var(--text-main);">
+                請求書プレビュー</h1>
+            <button class="icon-btn"
+                style="background:none; border:none; color: var(--accent-neo-blue); cursor:pointer;"><i
+                    data-lucide="download"></i></button>
+        </header>
+        <div id="invoice-preview-container"
+            style=" padding: var(--spacing-lg); overflow-y: auto; display: grid; grid-auto-flow: column; justify-content: center; align-items: start;">
+            <!-- A4 Format Canvas -->
+            <div class="invoice-a4"
+                style="background: #fff; width: 100%; max-width: 800px; padding: 40px 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); font-family: 'Noto Sans JP', sans-serif; color: #333;">
+                <div
+                    style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+                    <div>
+                        <h2 id="invoice-client-name"
+                            style="font-size: 20px; font-weight: 700; border-bottom: 1px solid #333; padding-bottom: 4px; display: inline-block;">
+                            株式会社〇〇 御中</h2>
+                    </div>
+                    <div style="text-align: right; font-size: 12px; line-height: 1.6; ">
+                        <h1
+                            style="font-size: 28px; font-weight: 300; letter-spacing: 0.2em; margin: 0 0 16px 0; color: #555;">
+                            INVOICE</h1>
+                        <p id="invoice-date" style="margin: 0;">発行日: 2026/03/11</p>
+                        <p id="invoice-no" style="margin: 0;">請求番号: INV-0001</p>
+                    </div>
+                </div>
+
+                <div
+                    style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-bottom: 40px; position: relative;">
+                    <div style="align-self: end;">
+                        <p style="font-size: 14px; margin: 0 0 8px 0;">下記の通りご請求申し上げます。</p>
+                        <div
+                            style="font-size: 24px; font-weight: 700; border-bottom: 3px solid #333; padding-bottom: 4px;">
+                            ご請求金額: <span id="invoice-total-amount">¥0</span><span
+                                style="font-size: 14px; font-weight: 400; margin-left: 4px;">(税込)</span>
+                        </div>
+                    </div>
+
+                    <!-- Company Info & Stamp Container -->
+                    <div style="text-align: right; font-size: 12px; line-height: 1.6; position: relative;"
+                        id="invoice-company-info-area">
+                        <p style="margin: 0; font-weight: 700; font-size: 14px;">自社名・屋号が入ります</p>
+                        <p style="margin: 0;">〒000-0000 東京都...</p>
+                        <p style="margin: 0;">TEL: 090-0000-0000</p>
+                        <p style="margin: 0;">Email: info@example.com</p>
+
+                        <!-- Dynamic Stamp Overlay -->
+                        <img id="invoice-stamp-overlay" src=""
+                            style="display: none; position: absolute; max-width: none; mix-blend-mode: multiply; pointer-events: none; z-index: 5;">
+                    </div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #333; text-align: left;">
+                            <th style="padding: 12px 8px;">品目 (プロジェクト名)</th>
+                            <th style="padding: 12px 8px; text-align: center;">数量</th>
+                            <th style="padding: 12px 8px; text-align: center;">単位</th>
+                            <th style="padding: 12px 8px; text-align: right;">金額(円)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoice-items-body">
+                        <!-- Items populate here -->
+                    </tbody>
+                </table>
+
+                <div
+                    style="display: grid; grid-auto-flow: column; justify-content: end; margin-bottom: 40px; font-size: 13px;">
+                    <table style="width: 250px; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 8px;">小計</td>
+                            <td id="invoice-subtotal" style="padding: 8px; text-align: right;">¥0</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 8px;">消費税 (10%)</td>
+                            <td id="invoice-tax" style="padding: 8px; text-align: right;">¥0</td>
+                        </tr>
+                        <tr style="border-bottom: 2px solid #333; font-weight: 700; font-size: 15px;">
+                            <td style="padding: 12px 8px;">合計</td>
+                            <td id="invoice-grand-total" style="padding: 12px 8px; text-align: right;">¥0</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div
+                    style="font-size: 12px; line-height: 1.6; border: 1px solid #ccc; padding: 16px; border-radius: 4px;">
+                    <p style="margin: 0 0 8px 0; font-weight: 700;">【お振込先】</p>
+                    <p id="invoice-bank-info" style="margin: 0 0 8px 0; white-space: pre-line;">指定なし（プロジェクト設定から入力してください）
+                    </p>
+                    <p style="margin: 0; font-weight: 700;">【お支払期限】 <span id="invoice-deadline"
+                            style="font-weight: 400;">指定なし</span></p>
+                    <p style="margin: 8px 0 0 0; color: #666;">※振込手数料は貴社にてご負担願います。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- EXTRACTED modal-receipt-grid -->
+<div id="modal-receipt-grid" class="modal-overlay hidden"
+        style="z-index: 10002 !important; background: var(--bg-color); display: block; width: 100vw; max-width: 100%; height: 100vh; height: 100dvh; min-height: -webkit-fill-available; position: fixed; top: 0; left: 0; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+        <style>
+            #modal-receipt-grid:not(.hidden) {
+                transform: translateY(0) !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+            }
+        </style>
+
+        <!-- HEADER -->
+        <div id="grid-floating-header"
+            style="position: absolute; top: 0; left: 0; right: 0; padding: calc(env(safe-area-inset-top) + 16px) 20px 16px 20px; border-bottom: 1px solid rgba(203, 213, 225, 0.5); background: rgba(248, 250, 252, 0.95); z-index: 50; display: grid; grid-auto-flow: column; justify-content: center; align-items: center; transition: opacity 0.3s ease; pointer-events: auto;">
+            <div style="font-weight: 700; font-size: 16px; color: #0f172a;">PDFプレビュー: 領収書原本台帳</div>
+        </div>
+
+        <!-- CANVAS WRAPPER -->
+        <div class="receipt-grid-preview-container"
+            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; background: #64748b; display: grid; place-items: center; touch-action: none; padding: 80px 20px 220px 20px; box-sizing: border-box;">
+            <!-- Natively Centralized A4 Container -->
+            <div id="a4-print-container"
+                style="background: white; width: 210mm; min-height: 297mm; padding: 20mm; font-family: 'Noto Sans JP', sans-serif; color: #333; transform-origin: center center; transform: scale(0.35);  will-change: transform; box-shadow: 0 10px 40px rgba(0,0,0,0.3); margin: auto;">
+                <div
+                    style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; align-items: end;">
+                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.1em;">領収書画像 原本台帳
+                        (Neo-Sync)</h1>
+                    <div style="text-align: right;">
+                        <p style="margin: 0; font-size: 14px; color: #666;" id="a4-print-date">抽出日: 2026/03/11</p>
+                        <p style="margin: 0; font-size: 14px; font-weight: 600;" id="a4-print-user">CEO: 〇〇様</p>
+                    </div>
+                </div>
+
+                <div id="a4-receipt-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15mm;">
+                    <!-- Rendered by JS -->
+                </div>
+
+                <div style="margin-top: 30mm; text-align: center; color: #999; font-size: 12px;">
+                    -- End of Document generated by Neo+ Business OS --
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER: ZOOM AND ACTIONS -->
+        <div id="grid-floating-footer"
+            style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(248, 250, 252, 0.95); padding: 16px 20px calc(env(safe-area-inset-bottom) + 16px) 20px; border-top: 1px solid rgba(203, 213, 225, 0.5); z-index: 50; display: block; gap: 12px; transition: opacity 0.3s ease; pointer-events: auto;">
+            <!-- Zoom Slider -->
+            <div
+                style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 4px 8px; background: rgba(255,255,255,0.5); border-radius: 12px; border: 1px solid rgba(203, 213, 225, 0.5);">
+                <i data-lucide="zoom-out" style="width: 18px; height: 18px; color: #64748b;"></i>
+                <input type="range" id="zoom-slider-grid" min="0.2" max="2.0" step="0.05"
+                    style=" accent-color: #1D9BF0;">
+                <i data-lucide="zoom-in" style="width: 18px; height: 18px; color: #64748b;"></i>
+            </div>
+
+            <div style="display: grid; grid-auto-flow: column; gap: 12px;">
+                <button onclick="document.getElementById('modal-receipt-grid').classList.add('hidden')"
+                    style=" padding: 16px 0; background: #f8fafc; color: #0f172a; border: 1.5px solid #cbd5e1; border-radius: 16px; font-size: 16px; font-weight: 700;">
+                    閉じる
+                </button>
+                <button onclick="window.printModalGrid()"
+                    style="height: 100%; padding: 16px 0; background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; display: grid; place-items: center; gap: 8px;">
+                    <i data-lucide="printer" style="width: 20px; height: 20px;"></i> 印刷 (AirPrint)
+                </button>
+            </div>
+        </div>
+    </div>
+

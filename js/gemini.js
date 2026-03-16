@@ -30,7 +30,7 @@ All protocols (ABSOLUTE_ETHICS, ANTI_SPECULATION, ZERO_TOLERANCE_SEXUAL, NG_WORD
 // Retrieve API key
 function getGeminiApiKey() {
     let key = typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_GEMINI_API_KEY ? process.env.NEXT_PUBLIC_GEMINI_API_KEY : TIER_1_KEY;
-    
+
     // CEO Audit: Prove API Key is loaded
     console.log("[Neo Security] API Key loaded:", (key && key !== 'WAITING_FOR_CEO_API_KEY') ? "Yes" : "No");
 
@@ -70,16 +70,16 @@ async function determineRouteFromIntent(userInput, userOccupation = "general", s
                 console.log("[Neo RAG] Querying Supabase knowledge_base...");
                 // Scaffolding: Generating dummy vector for the query since Gemini embedding API key applies differently locally
                 const dummyEmbedding = Array.from({ length: 768 }, () => Math.random() * 2 - 1);
-                
+
                 const rpcPromise = window.supabaseClient.rpc('match_knowledge', {
                     query_embedding: dummyEmbedding,
                     match_threshold: 0.1,
                     match_count: 2
                 });
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('RAG Timeout')), 1000));
-                
+
                 const { data: kbData, error: kbError } = await Promise.race([rpcPromise, timeoutPromise]);
-                
+
                 if (!kbError && kbData && kbData.length > 0) {
                     ragContext = kbData.map(d => `Title: ${d.metadata?.title}\nContent: ${d.content}\nSource: ${d.metadata?.url}`).join("\n\n");
                     console.log("[Neo RAG] Data retrieved from Supabase:", kbData.length, "records");
@@ -119,7 +119,7 @@ Source: 個人的な支出の否認ルール
             }
         }
     }
-    
+
     // --- CEO Feedback Memory Injection (Intellectual Metabolism) ---
     let feedbackMemoryContext = "";
     try {
@@ -146,7 +146,7 @@ Source: 個人的な支出の否認ルール
         if (volatileLatest || soulLatest) {
             feedbackMemoryContext = `\n[CEO FEEDBACK LEARNING LOG (Adjust tone)]\n${volatileLatest}${soulLatest}\n`;
         }
-    } catch(e) { console.error(e); }
+    } catch (e) { console.error(e); }
 
     const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + TIER_1_KEY;
 
@@ -302,8 +302,7 @@ Example Query: [{"action": "QUERY_KNOWLEDGE", "answer": "現在稼働中のプ�
                 generationConfig: {
                     temperature: 0.1, // Low temperature for deterministic output
                     maxOutputTokens: 4096,
-                    stopSequences: ["]\n", "]`"], // JSON配列が閉じた時点で強制終了
-                    responseMimeType: "application/json"
+                    stopSequences: ["]\n", "]`"] // JSON配列が閉じた時点で強制終了
                 }
             })
         });
@@ -439,7 +438,7 @@ User Input: "${userInput}"
         if (!response.ok) return null;
         const data = await response.json();
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
+
         if (generatedText) {
             return generatedText.trim().replace(/['"\[\]]/g, '');
         }
@@ -522,8 +521,7 @@ Example Output:
                     }
                 ],
                 generationConfig: {
-                    temperature: 0.1,
-                    responseMimeType: "application/json"
+                    temperature: 0.1
                 }
             })
         });
@@ -533,17 +531,17 @@ Example Output:
             console.error("Failed API Call to parseReceiptRecords:", errBody);
             throw new Error(`API Error: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log("========== [Gemini API] RAW RESPONSE ==========\n", JSON.stringify(data, null, 2), "\n===============================================");
-        
+
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
+
         if (generatedText) {
             try {
                 const parsed = JSON.parse(generatedText);
                 return Array.isArray(parsed) ? parsed : [];
-            } catch(e) {
+            } catch (e) {
                 console.error("Failed to parse receipt array JSON", e);
                 throw new Error("JSON Parse Error on Document Ingestion");
             }
@@ -559,12 +557,12 @@ Example Output:
  * N+ Core Chat Engine: Conversational Response
  * Handles direct text queries in the CEO Chat Room.
  */
-window.generateGeminiResponse = async function(userInput, context = "chat_room") {
+window.generateGeminiResponse = async function (userInput, context = "chat_room") {
     const apiKey = getGeminiApiKey();
     if (!apiKey) return "APIキーが設定されていません。";
 
     const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + TIER_1_KEY;
-    
+
     // --- RAG: Retrieving vectors from Supabase (FP/Tax PDFs) ---
     let ragContext = "";
     try {
@@ -580,9 +578,9 @@ window.generateGeminiResponse = async function(userInput, context = "chat_room")
                     match_count: 3
                 });
                 const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('RAG Timeout')), 1500));
-                
+
                 const { data: kbData, error: kbError } = await Promise.race([rpcPromise, timeoutPromise]);
-                
+
                 if (!kbError && kbData && kbData.length > 0) {
                     ragContext = kbData.map(d => `Title: ${d.metadata?.title}\nContent: ${d.content}\nSource: ${d.metadata?.url}`).join("\n\n");
                     console.log("[Neo RAG Chat] Data retrieved from Supabase PDF store:", kbData.length, "records");
@@ -592,7 +590,7 @@ window.generateGeminiResponse = async function(userInput, context = "chat_room")
     } catch (e) {
         console.warn("[Neo RAG Chat] Vector search failed or blocked.", e);
     }
-    
+
     // Neo unconditionally calls the user 'あなた'
     const ceoName = 'あなた';
 
@@ -663,54 +661,54 @@ ${ragContext ? ragContext : "(No specific internal PDF data matched.)"}
 [GOLDEN_KNOWLEDGE_INJECTION / CEO FEEDBACK]
 If the user's query matches any Golden Knowledge, embed it fluidly:
 ${(() => {
-    let gk = "";
-    if (window.GoldenKnowledge) {
-        for (const k of window.GoldenKnowledge) {
-            if (userInput.includes(k.term) || (k.reading && userInput.includes(k.reading)) || userInput.toLowerCase().includes(k.english.toLowerCase())) {
-                if (neoLangMode === 'en_full' || neoLangMode === 'en_terms') {
-                    const engExample = (k.english_example && k.english_example.length > 0) ? k.english_example[Math.floor(Math.random() * k.english_example.length)] : "";
-                    gk += `【${k.english}】\nDefinition: ${k.english_definition}\nRecommended Metaphor: "${engExample}"\n\n`;
-                } else {
-                    const interpretation = window.getRandomNeoInterpretation(k.term) || "";
-                    gk += `【${k.term}】\n定義: ${k.definition}\n推奨セリフ: "${interpretation}"\n\n`;
+            let gk = "";
+            if (window.GoldenKnowledge) {
+                for (const k of window.GoldenKnowledge) {
+                    if (userInput.includes(k.term) || (k.reading && userInput.includes(k.reading)) || userInput.toLowerCase().includes(k.english.toLowerCase())) {
+                        if (neoLangMode === 'en_full' || neoLangMode === 'en_terms') {
+                            const engExample = (k.english_example && k.english_example.length > 0) ? k.english_example[Math.floor(Math.random() * k.english_example.length)] : "";
+                            gk += `【${k.english}】\nDefinition: ${k.english_definition}\nRecommended Metaphor: "${engExample}"\n\n`;
+                        } else {
+                            const interpretation = window.getRandomNeoInterpretation(k.term) || "";
+                            gk += `【${k.term}】\n定義: ${k.definition}\n推奨セリフ: "${interpretation}"\n\n`;
+                        }
+                    }
                 }
             }
-        }
-    }
-    return gk;
-})()}
+            return gk;
+        })()}
 ${(() => {
-    try {
-        let logArr = [];
-        
-        // Short-term
-        const vStr = sessionStorage.getItem('neo_volatile_feedback');
-        if (vStr) {
-            const fArr = JSON.parse(vStr);
-            if (fArr && fArr.length > 0) {
-                logArr.push("VOLATILE: " + fArr.slice(-2).map(f => `「${f.topic}」=${f.liked ? '👍' : '👎'}`).join(", "));
-            }
-        }
-        
-        // Long-term soul
-        const sStr = localStorage.getItem('neo_long_term_soul');
-        if (sStr) {
-            const soul = JSON.parse(sStr);
-            logArr.push("SOUL_LIKES(👍): " + soul.likes.slice(-3).join(', '));
-            logArr.push("SOUL_DISLIKES(👎): " + soul.dislikes.slice(-3).join(', '));
-        }
+            try {
+                let logArr = [];
 
-        let outputStr = logArr.length > 0 ? "[FEEDBACK_LOG: " + logArr.join(" | ") + "]" : "No feedback history.";
+                // Short-term
+                const vStr = sessionStorage.getItem('neo_volatile_feedback');
+                if (vStr) {
+                    const fArr = JSON.parse(vStr);
+                    if (fArr && fArr.length > 0) {
+                        logArr.push("VOLATILE: " + fArr.slice(-2).map(f => `「${f.topic}」=${f.liked ? '👍' : '👎'}`).join(", "));
+                    }
+                }
 
-        // Chat Essence (Text Summaries of recently wiped large logs)
-        const summaryStr = sessionStorage.getItem('neo_chat_summary');
-        if (summaryStr) {
-            outputStr += `\n[RECENT_CONVERSATION_ESSENCE: ${summaryStr}]`;
-        }
+                // Long-term soul
+                const sStr = localStorage.getItem('neo_long_term_soul');
+                if (sStr) {
+                    const soul = JSON.parse(sStr);
+                    logArr.push("SOUL_LIKES(👍): " + soul.likes.slice(-3).join(', '));
+                    logArr.push("SOUL_DISLIKES(👎): " + soul.dislikes.slice(-3).join(', '));
+                }
 
-        return outputStr;
-    } catch(e) { return "No feedback history."; }
-})()}
+                let outputStr = logArr.length > 0 ? "[FEEDBACK_LOG: " + logArr.join(" | ") + "]" : "No feedback history.";
+
+                // Chat Essence (Text Summaries of recently wiped large logs)
+                const summaryStr = sessionStorage.getItem('neo_chat_summary');
+                if (summaryStr) {
+                    outputStr += `\n[RECENT_CONVERSATION_ESSENCE: ${summaryStr}]`;
+                }
+
+                return outputStr;
+            } catch (e) { return "No feedback history."; }
+        })()}
 `;
 
     try {
@@ -725,11 +723,11 @@ ${(() => {
                 // that app.js saves back to sessionStorage after this function returns.
                 chatHistory = JSON.parse(hStr);
             }
-        } catch(e) { console.warn("Failed to parse chat history", e); }
+        } catch (e) { console.warn("Failed to parse chat history", e); }
 
         // Inject current context strictly to the final user message for the API call ONLY
         let payloadContents = JSON.parse(JSON.stringify(chatHistory)); // Deep clone again just to be safe
-        
+
         if (!payloadContents || payloadContents.length === 0) {
             payloadContents = [{ role: "user", parts: [{ text: userInput }] }];
         }
@@ -778,14 +776,14 @@ ${(() => {
 
         const data = await response.json();
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
+
         if (generatedText) {
-             // Strip out markdown links and footnote markers before returning
-             let cleanText = generatedText
+            // Strip out markdown links and footnote markers before returning
+            let cleanText = generatedText
                 .replace(/\[\d+\]/g, '') // Remove [1], [2], etc.
                 .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Convert [text](url) to just text
                 .replace(/https?:\/\/[^\s]+/g, ''); // Remove raw URLs
-             return { text: cleanText.trim(), finishReason: data.candidates[0].finishReason };
+            return { text: cleanText.trim(), finishReason: data.candidates[0].finishReason };
         }
         return { text: "申し訳ありません、応答の生成に失敗しました。", finishReason: "ERROR" };
 
@@ -799,12 +797,12 @@ ${(() => {
  * N+ Soul Extraction Engine (Intellectual Metabolism)
  * Summarizes the volatile chat history into a dense "Soul" to persist across session wipes.
  */
-window.extractNeoCoreSoul = async function(historyText) {
+window.extractNeoCoreSoul = async function (historyText) {
     const apiKey = getGeminiApiKey();
     if (!apiKey) return "";
 
     const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + TIER_1_KEY;
-    
+
     const extractionPrompt = `
 あなたはNeoの自己圧縮モジュールです。以下の「過去の会話ログ」を分析し、Neoが今後の会話で絶対に忘れてはならない『システムプロンプト用の魂（要約テキスト）』を作成してください。
 
@@ -855,7 +853,7 @@ ${historyText}
 
         const data = await response.json();
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
+
         return generatedText ? generatedText.trim() : "";
 
     } catch (error) {
@@ -869,7 +867,7 @@ ${historyText}
  * Lightweight, non-ui-blocking API call used when store.js local cache misses.
  * Returns strict JSON array and triggers dynamic caching upon success.
  */
-window.parseInputToData = async function(text) {
+window.parseInputToData = async function (text) {
     if (!text) return null;
     const apiKey = getGeminiApiKey();
     if (!apiKey) return null;
@@ -912,10 +910,10 @@ Input: ${text}
         });
 
         if (!response.ok) return null;
-        
+
         const data = await response.json();
         const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
+
         if (!responseText) return null;
 
         let parsed = null;
@@ -934,7 +932,7 @@ Input: ${text}
                 if (typeof window.learnNewTerm === 'function') {
                     window.learnNewTerm(item.title, item.category);
                 }
-                
+
                 // Ensure entities exist for the UI to predictably render Hexa-Tags later if needed
                 const today = new Date();
                 const formattedDate = `${today.getMonth() + 1}/${today.getDate()}`;
@@ -950,7 +948,7 @@ Input: ${text}
             }
             return parsed;
         }
-        
+
         return null;
 
     } catch (e) {

@@ -1,0 +1,108 @@
+<div id="view-setup" class="view hidden"
+    style="overflow-y: auto; padding-bottom: 120px; background-color: var(--bg-color);">
+    <div class="header-area"
+        style="position: sticky; top: 0; z-index: 100; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
+        <div class="header-actions">
+            <button id="btn-theme-toggle-setup" class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun"
+                    class="icon-sun"></i><i data-lucide="moon" class="icon-moon" style="display: none;"></i></button>
+        </div>
+    </div>
+
+    <div class="content-area" style="max-width: 600px; margin: 0 auto; padding: 24px 20px;">
+
+        <div style="text-align: center; margin-bottom: 32px; margin-top: 8px;">
+            <div
+                style="width: 56px; height: 56px; background: rgba(139, 92, 246, 0.1); border-radius: 16px; margin: 0 auto 16px auto; display: grid; place-items: center; color: var(--accent-neo-purple);">
+                <i data-lucide="shield-check" style="width: 28px; height: 28px;"></i>
+            </div>
+            <h2 style="font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.02em;">Welcome to Neo+</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">あなた専用のAIコックピットを構築します。</p>
+        </div>
+
+        <!-- Step 1: Industry (Removed) -->
+
+        <!-- Step 2: Global Brain Configuration -->
+        <div class="settings-group"
+            style="margin-bottom: 32px; background: rgba(15, 23, 42, 0.02); padding: 20px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.03);">
+            <div
+                style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span
+                    style="background: var(--text-main); color: var(--bg-color); width: 20px; height: 20px; display: inline-grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 800;">2</span>
+                <p style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-main);">グローバル・ブレイン設定</p>
+            </div>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px; line-height: 1.5;">
+                UIの言語および、Neoの中枢プロンプト言語（思考の母国語）を選択します。</p>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <label
+                        style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">UI
+                        Language</label>
+                    <select id="select-ui-lang" data-testid="setup-ui-lang" class="select-huge"
+                        style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                        <option value="ja" selected>日本語 (Japanese)</option>
+                        <option value="en">English (US)</option>
+                    </select>
+                </div>
+                <div>
+                    <label
+                        style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Neo's
+                        Brain Mode</label>
+                    <select id="select-neo-mode" data-testid="setup-brain-mode" class="select-huge"
+                        style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                        <option value="ja" selected>Standard Japanese (通常)</option>
+                        <option value="en_terms">Bilingual: English Terms Mixed (専門用語のみ英語)</option>
+                        <option value="en_full">Native English (フル英語)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Terms & Consent -->
+        <div class="settings-group"
+            style="margin-bottom: 24px; background: rgba(15, 23, 42, 0.02); padding: 20px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.03);">
+            <div
+                style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <span
+                    style="background: var(--text-main); color: var(--bg-color); width: 20px; height: 20px; display: inline-grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 800;">3</span>
+                <p style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-main);">利用規約と免責事項</p>
+            </div>
+            <div
+                style="height: 150px; overflow-y: auto; background: var(--bg-color); border-radius: 8px; padding: 16px; font-size: 12px; color: var(--text-muted); line-height: 1.6; border: 1px solid var(--btn-secondary-border); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                <p style="font-weight: 700; color: var(--text-main); margin-top: 0;">第1条（適用）</p>
+                <p>本規約は、ユーザーと当社との間の本サービスの利用に関わる一切の関係に適用されるものとします。</p>
+
+                <p style="font-weight: 700; color: var(--text-main); margin-top: 16px;">第2条（AIによるデータ解析と免責）</p>
+                <p>本サービスは生成AIを利用して入力データの解析および仕訳推論等を行いますが、その結果の正確性、適法性、有用性について当社は如何なる保証も行いません。最終的な税務申告・会計処理の責任はすべてユーザーに帰属します。
+                </p>
+
+                <p style="font-weight: 700; color: var(--text-main); margin-top: 16px;">第3条（BYOCアーキテクチャ）</p>
+                <p>本サービスはユーザー自身のクラウドストレージまたはローカル環境にデータを保存するBYOC（Bring Your Own
+                    Cloud）方式を採用しています。ユーザーのストレージ内におけるデータの消失、流出について当社は一切の責任を負いません。</p>
+            </div>
+
+            <label
+                style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; margin-top: 16px; cursor: pointer; padding: 16px; background: rgba(16, 185, 129, 0.08); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); transition: background 0.2s ease;">
+                <input type="checkbox" id="setup-consent-checkbox" data-testid="setup-consent-checkbox"
+                    style="width: 20px; height: 20px; accent-color: #10b981; cursor: pointer;">
+                <span style="font-size: 14px; font-weight: 700; color: var(--text-main);">すべての規約および免責事項に同意する</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Fixed Bottom Action Area -->
+    <div
+        style="position: fixed; bottom: 0; left: 0; right: 0; padding: 16px 20px calc(env(safe-area-inset-bottom) + 16px) 20px; background: rgba(15, 23, 42, 0.98); border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; box-shadow: 0 -10px 30px rgba(0,0,0,0.1);">
+        <div style="max-width: 600px; margin: 0 auto;">
+            <button id="btn-start" data-testid="setup-btn-start" class="btn-huge btn-primary"
+                style="width: 100%; opacity: 0.4; cursor: not-allowed; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: none;"
+                disabled>
+                <i data-lucide="check-circle" style="width: 20px; height: 20px; margin-right: 8px;"></i> 同意して開始する
+            </button>
+            <p id="setup-validation-msg"
+                style="text-align: center; color: #ef4444; font-size: 12px; font-weight: 600; margin: 8px 0 0 0; opacity: 1; transition: opacity 0.2s;">
+                規約への同意が必要です</p>
+        </div>
+    </div>
+</div>

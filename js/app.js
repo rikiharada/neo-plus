@@ -1,11 +1,17 @@
 // --- Neo-Sync v2.0 Global Data Model ---
 // Neo's Pride Validation: Prevents inappropriate user names
-window.validateUserName = function(name) {
+window.validateUserName = function (name) {
     if (!name || typeof name !== 'string') return false;
     // Primary blacklist for profanity, slurs, and highly inappropriate terms
     const blacklist = ["ちんちん", "うんこ", "バカ", "アホ", "死ね", "殺す", "sex", "fuck", "bitch", "shit", "まんこ", "クソ", "カス", "キチガイ", "ガイジ", "ゴミ"];
     const normalizedName = name.toLowerCase();
     return !blacklist.some(word => normalizedName.includes(word));
+};
+
+// Global User State Foundation
+window.GlobalStore = {
+    user: null,
+    session: null
 };
 
 window.mockDB = window.mockDB || {
@@ -44,14 +50,14 @@ window.insertProject = async (proj) => {
                 last_updated: proj.lastUpdated || null,
                 currency: proj.currency || 'JPY'
             }]);
-        } catch(e) { console.error('Supabase Error:', e); }
+        } catch (e) { console.error('Supabase Error:', e); }
     }
 };
 
 window.insertTransaction = async (tx) => {
     window.mockDB.transactions.push(tx);
     if (!window.supabaseClient) return Promise.resolve(tx);
-    
+
     try {
         const { data, error } = await window.supabaseClient.from('activities').insert([{
             project_id: tx.projectId,
@@ -63,11 +69,11 @@ window.insertTransaction = async (tx) => {
             receipt_url: tx.receiptUrl || null,
             is_bookkeeping: tx.isBookkeeping || false
         }]);
-        
+
         if (error) throw error;
         console.log("Supabase insertTransaction success:", tx.title, "is_bookkeeping:", tx.isBookkeeping);
         return data || tx;
-    } catch(e) { 
+    } catch (e) {
         console.error('Supabase Error:', e);
         throw e; // Bubble to correctly prevent false success UI
     }
@@ -77,15 +83,15 @@ window.updateTransaction = async (txId, updates) => {
     // Local Update
     const tx = window.mockDB.transactions.find(t => t.id === txId);
     if (!tx) return;
-    
+
     // Merge updates
     const originalTitle = tx.title;
     const originalAmount = tx.amount;
-    
+
     if (updates.category) tx.category = updates.category;
     if (updates.title) tx.title = updates.title;
     if (updates.amount !== undefined) tx.amount = Number(updates.amount);
-    
+
     tx.is_user_corrected = true; // Flag for Ground Truth Cache Priority
 
     // Sync to Supabase if exists
@@ -106,7 +112,7 @@ window.updateTransaction = async (txId, updates) => {
             });
             await query;
             console.log("Supabase updateTransaction success:", tx.title, "updates:", updates);
-        } catch(e) { console.error('Supabase Update Error:', e); }
+        } catch (e) { console.error('Supabase Update Error:', e); }
     }
 };
 
@@ -220,18 +226,18 @@ setTimeout(() => {
 }, 1000);
 
 // --- Boot-time Brain Defrag ---
-window.neoBrainDefrag = function() {
+window.neoBrainDefrag = function () {
     console.log("[Neo Boot] Initiating Brain Defrag...");
     // 1. Session Storage Lifecycle Check
     const sessionStart = sessionStorage.getItem('neo_session_start');
     const now = Date.now();
     // If no session start time, or if the session is logically stale (e.g. > 24 hours), wipe it.
-    if (!sessionStart || (now - parseInt(sessionStart) > 1000 * 60 * 60 * 24)) { 
+    if (!sessionStart || (now - parseInt(sessionStart) > 1000 * 60 * 60 * 24)) {
         sessionStorage.clear(); // Pure wipe of all temporary conversational states
         sessionStorage.setItem('neo_session_start', now.toString());
         console.log("[Neo Boot] Volatile Session Cleared. Brain is fresh.");
     }
-    
+
     // 2. Strict Memory Segregation Check (localStorage vs sessionStorage)
     const lsVersion = localStorage.getItem('neo_cache_version');
     if (lsVersion !== "v2.1") {
@@ -254,11 +260,10 @@ window.addEventListener('load', async () => {
     await window.i18n.loadLocale('ja'); // Load default 'ja' locale
 
     // Setup Views
-    const setupView = document.getElementById('view-setup');
+    // (view-setup removed, handled via router lazily)
     const dashView = document.getElementById('view-dash');
 
     // Setup Elements
-    const btnStart = document.getElementById('btn-start');
     const selectFontSize = document.getElementById('select-font-size');
     const selectIndustry = document.getElementById('select-industry');
 
@@ -280,59 +285,105 @@ window.addEventListener('load', async () => {
     let currentOpenProjectId = null;
     let currentProjectPage = 1;
 
-    // Initial state logic
-    const checkInitialSetup = () => {
-        // --- Gatekeeper V2: Temoporarily bypassed to test tap fixes on Dashboard ---
-        // CEO Request: Keep setup page OFF until manually requested to turn back on
-        localStorage.setItem('fini_setup_complete', 'true'); // Force true for testing
+    // --- Phase 5: Auth Gatekeeper Initialization ---
+    const initAuthGatekeeper = async () => {
+        const viewAuth = document.getElementById('view-auth');
+        const appContainer = document.getElementById('app-container');
 
-        const hasSetup = localStorage.getItem('fini_setup_complete');
-        // A single source of truth for completion.
-        if (!hasSetup) {
-            window.switchView('view-setup');
-            
-            // Re-eval setup validation on boot if they are on the setup screen
-            setTimeout(() => {
-                if(window.validateSetupGatekeeper) window.validateSetupGatekeeper();
-            }, 500);
-        } else {
-            window.showDash();
-            
-            // Re-render user info on Dash
-            const uiAvatar = document.querySelector('.user-info-avatar-text');
-            if (uiAvatar) {
-                uiAvatar.textContent = 'A'; // "A" for あなた (You)
+        if (!window.supabaseClient) {
+            console.error("Supabase Client is not initialized.");
+            return;
+        }
+
+        const handleAuthState = (session) => {
+            if (session?.user) {
+                // Authenticated Route
+                window.GlobalStore.user = session.user;
+                window.GlobalStore.session = session;
+
+                if (viewAuth) {
+                    viewAuth.classList.add('hidden');
+                    viewAuth.style.display = 'none';
+                }
+                if (appContainer) {
+                    appContainer.style.display = 'block';
+                }
+
+                window.showDash();
+
+                const uiAvatar = document.querySelector('.user-info-avatar-text');
+                if (uiAvatar) {
+                    uiAvatar.textContent = session.user.email ? session.user.email.charAt(0).toUpperCase() : 'A';
+                }
+            } else {
+                // Unauthorized Route -> Gatekeeper
+                window.GlobalStore.user = null;
+                window.GlobalStore.session = null;
+
+                if (appContainer) {
+                    appContainer.style.display = 'none';
+                }
+                if (viewAuth) {
+                    viewAuth.classList.remove('hidden');
+                    viewAuth.style.display = 'grid';
+                }
             }
+        };
 
-            // --- 📡 Initialize Neo Trend Alerts ---
-            checkLatestBusinessTrends();
+        // 1. Initial Check
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        handleAuthState(session);
+
+        // 2. Continuous Listener
+        window.supabaseClient.auth.onAuthStateChange((_event, currentSession) => {
+            handleAuthState(currentSession);
+        });
+
+        // 3. Login Button Binding
+        const btnLogin = document.getElementById('btn-auth-login');
+        if (btnLogin) {
+            btnLogin.addEventListener('click', async () => {
+                const email = document.getElementById('auth-email')?.value;
+                const password = document.getElementById('auth-password')?.value;
+                const errorMsg = document.getElementById('auth-error-msg');
+
+                if (!email || !password) {
+                    if (errorMsg) {
+                        errorMsg.textContent = "メールとパスワードを入力してください";
+                        errorMsg.style.display = 'block';
+                    }
+                    return;
+                }
+
+                btnLogin.disabled = true;
+                btnLogin.textContent = "認証中...";
+
+                const { error } = await window.supabaseClient.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+
+                if (error) {
+                    if (errorMsg) {
+                        errorMsg.textContent = "ログインに失敗しました: " + error.message;
+                        errorMsg.style.display = 'block';
+                    }
+                    btnLogin.disabled = false;
+                    btnLogin.textContent = "ログイン";
+                } else {
+                    if (errorMsg) errorMsg.style.display = 'none';
+                    btnLogin.textContent = "ログイン成功";
+                }
+            });
         }
     };
 
-    /**
-     * 📡 Future Feature: checkLatestBusinessTrends()
-     * Simulates fetching real-time tax/subsidy news from the internet (e.g. via RSS or API).
-     */
-    function checkLatestBusinessTrends() {
-        const marqueeText = document.getElementById('trend-marquee-text');
-        
-        const mockTrendNews = [
-            "【IT導入補助金】令和8年度のスケジュールが更新されました。",
-            "【インボイス制度】免税事業者の経過措置（8割控除）に関するFAQが追加されました",
-            "【確定申告】今年のe-Taxのメンテナンス予定が発表されました",
-            "【Neo+稼働状況】AI監査エンジンは現在100%の精度で稼働中..."
-        ];
 
-        if (marqueeText) {
-            const randomNews = mockTrendNews[Math.floor(Math.random() * mockTrendNews.length)];
-            marqueeText.textContent = `SYSTEM ONLINE: ${randomNews} // Current Status: Awaiting CEO Input...`;
-        }
-    }
 
     // --- Global Profit Calculation ---
     window.updateGlobalProfitDisplay = () => {
         if (!window.mockDB) return;
-        
+
         // Calculate total revenue from projects and transactions
         let totalRevenue = 0;
         if (window.mockDB.projects) {
@@ -350,7 +401,7 @@ window.addEventListener('load', async () => {
                 if (t.type === 'sales') totalRevenue += t.amount;
             });
         }
-        
+
         const currentProfit = totalRevenue - totalExpenses;
         const fmt = new Intl.NumberFormat('ja-JP');
 
@@ -374,16 +425,18 @@ window.addEventListener('load', async () => {
             const target = (window.mockDB.userConfig && window.mockDB.userConfig.targetMonthlyProfit) ? window.mockDB.userConfig.targetMonthlyProfit : 1000000;
             const percentage = Math.min(100, Math.max(0, (currentProfit / target) * 100));
             profitProgress.style.strokeDasharray = `${percentage}, 100`;
-            
+
             const percentageText = document.getElementById('profit-percentage');
             if (percentageText) percentageText.textContent = `${Math.floor(percentage)}%`;
         }
     };
 
     window.showDash = () => {
-        if (setupView) {
-            setupView.classList.add('hidden');
-            setupView.style.display = 'none';
+        // Hide the router container for setup
+        const routerSetup = document.getElementById('router-view-setup');
+        if (routerSetup) {
+            routerSetup.classList.add('hidden');
+            routerSetup.style.display = 'none';
         }
 
         if (dashView) {
@@ -430,13 +483,13 @@ window.addEventListener('load', async () => {
 
             let industrySpecificButtons = [];
             if (userIndustry === 'construction') {
-                 industrySpecificButtons = [
-                     createDocBtn('hammer', '#6366f1', '人工出面表', '作業員報告用', 'expense')
-                 ];
+                industrySpecificButtons = [
+                    createDocBtn('hammer', '#6366f1', '人工出面表', '作業員報告用', 'expense')
+                ];
             } else if (userIndustry === 'freelance') {
                 industrySpecificButtons = [
-                     createDocBtn('briefcase', '#ec4899', '業務委託契約書', '簡易フォーマット', 'estimate')
-                 ];
+                    createDocBtn('briefcase', '#ec4899', '業務委託契約書', '簡易フォーマット', 'estimate')
+                ];
             }
             docBtnContainer.innerHTML = [...baseButtons, ...industrySpecificButtons].join('');
             if (window.lucide) window.lucide.createIcons();
@@ -459,89 +512,7 @@ window.addEventListener('load', async () => {
         });
     }
 
-    // Make the start button handler globally accessible to prevent mis-bindings
-    window.handleStartApp = () => {
-        const consentCheckbox = document.getElementById('setup-consent-checkbox');
-        
-        if (consentCheckbox && !consentCheckbox.checked) {
-            alert('利用規約に同意してください。');
-            return;
-        }
-
-        console.log('[DEBUG] btnStart globally clicked (Gatekeeper passed)');
-        
-        // Save Master Settings
-        localStorage.setItem('fini_setup_complete', 'true');
-        localStorage.setItem('neo_legal_consent', 'true'); // Formalize consent matrix
-        
-        // if (selectIndustry && window.mockDB && window.mockDB.userConfig) {
-        //     window.mockDB.userConfig.industry = selectIndustry.value;
-        //     localStorage.setItem('neo_industry', selectIndustry.value);
-        // }
-
-        const selectUiLang = document.getElementById('select-ui-lang');
-        const selectNeoMode = document.getElementById('select-neo-mode');
-
-        if (selectUiLang) {
-            const chosenLang = selectUiLang.value || 'ja';
-            localStorage.setItem('neo_ui_lang', chosenLang);
-            if(window.i18n) {
-                window.i18n.loadLocale(chosenLang).then(() => {
-                    window.i18n.updateDOM();
-                });
-            }
-        }
-        if (selectNeoMode) {
-            localStorage.setItem('neo_language_mode', selectNeoMode.value || 'ja');
-        }
-
-        // Final structural reset & entrance
-        document.body.style.overflow = '';
-        window.showDash();
-
-        // 最初の接続テストが成功した瞬間のログ (CEO Request)
-        console.log('%cNEO+ CORE SYSTEM: ONLINE / PAID TIER ACTIVATED', 'color: #10b981; font-weight: bold; font-size: 16px;');
-    };
-
-    // Gatekeeper V2 Dynamic Validation Matrix
-    window.validateSetupGatekeeper = () => {
-        const consentCheckbox = document.getElementById('setup-consent-checkbox');
-        const startBtn = document.getElementById('btn-start');
-        const validationMsg = document.getElementById('setup-validation-msg');
-        
-        if (!startBtn) return;
-        
-        let isValid = false;
-        if (consentCheckbox) {
-            if (consentCheckbox.checked) {
-                isValid = true;
-            }
-        }
-        
-        if (isValid) {
-            startBtn.disabled = false;
-            startBtn.style.opacity = '1';
-            startBtn.style.cursor = 'pointer';
-            startBtn.style.boxShadow = '0 8px 25px rgba(29, 155, 240, 0.4)';
-            if(validationMsg) validationMsg.style.opacity = '0';
-        } else {
-            startBtn.disabled = true;
-            startBtn.style.opacity = '0.4';
-            startBtn.style.cursor = 'not-allowed';
-            startBtn.style.boxShadow = 'none';
-            if(validationMsg) validationMsg.style.opacity = '1';
-        }
-    };
-
-    const setupConsentCheckbox = document.getElementById('setup-consent-checkbox');
-    
-    if (setupConsentCheckbox) {
-        setupConsentCheckbox.addEventListener('change', window.validateSetupGatekeeper);
-    }
-
-    if (btnStart) {
-        btnStart.addEventListener('click', window.handleStartApp);
-    }
+    // [Gatekeeper Functions removed: Migrated to pages/setup.js]
 
     // Theme Management
     // Now using a class for theme toggles since they exist on multiple views
@@ -600,33 +571,33 @@ window.addEventListener('load', async () => {
     // --- BYOC Google Drive Sync Visualization ---
     const radioGdrive = document.getElementById('radio-gdrive-sync');
     const loadingOverlay = document.getElementById('gdrive-loading-overlay');
-    
+
     if (radioGdrive && loadingOverlay) {
         radioGdrive.addEventListener('change', (e) => {
             if (e.target.checked) {
                 // Show Loader
                 loadingOverlay.classList.remove('hidden');
-                
+
                 // Simulate OAuth / API Binding Delay (Premium feel)
                 setTimeout(() => {
                     loadingOverlay.classList.add('hidden');
-                    
+
                     // Trigger Success Toast
                     const neoFabBubble = document.getElementById('neo-fab-bubble');
                     if (neoFabBubble) {
                         neoFabBubble.innerHTML = `<i data-lucide="triangle" style="width:14px; height:14px; vertical-align:middle; color:#34A853; margin-right:4px;"></i>Google Drive との暗号化同期を確立しました。`;
                         neoFabBubble.classList.add('show');
                         setTimeout(() => neoFabBubble.classList.remove('show'), 4000);
-                        if(window.lucide) window.lucide.createIcons();
+                        if (window.lucide) window.lucide.createIcons();
                     }
-                    
+
                     // Update header icons globally to reflect Drive
                     const cloudIcons = document.querySelectorAll('.cloud-sync-status');
                     cloudIcons.forEach(icon => {
                         icon.innerHTML = `<i data-lucide="triangle" style="width: 16px; height: 16px; color: #34A853;"></i>`;
-                        if(window.lucide) window.lucide.createIcons();
+                        if (window.lucide) window.lucide.createIcons();
                     });
-                    
+
                 }, 2500);
             }
         });
@@ -634,7 +605,6 @@ window.addEventListener('load', async () => {
 
     // Navigation Logic
     const allViews = [
-        setupView,
         dashView,
         document.getElementById('view-sites'),
         document.getElementById('view-expense'),
@@ -654,7 +624,7 @@ window.addEventListener('load', async () => {
         }
 
         // 強制的にすべてのビューを非表示にする
-        const allViewIds = ['view-setup', 'view-dash', 'view-sites', 'view-expense', 'view-wallet', 'view-settings', 'view-project-detail', 'view-chat'];
+        const allViewIds = ['router-view-setup', 'view-setup', 'view-dash', 'view-sites', 'view-expense', 'view-wallet', 'view-settings', 'view-project-detail', 'view-chat'];
         allViewIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -666,22 +636,118 @@ window.addEventListener('load', async () => {
 
         const targetViewElement = document.getElementById(targetId);
 
-        if (targetId === 'view-sites') {
-            const listContainer = document.getElementById('project-list-container');
-            if (listContainer) {
-                listContainer.classList.remove('hidden');
-                listContainer.style.display = 'grid';
-                listContainer.style.visibility = 'visible';
+        if (targetId === 'view-setup') {
+            const routerAnchor = document.getElementById('router-view-setup');
+            let setupViewDom = document.getElementById('view-setup');
+
+            const showSetupView = () => {
+                setupViewDom = document.getElementById('view-setup');
+                if (setupViewDom) {
+                    setupViewDom.classList.remove('hidden');
+                    setupViewDom.style.display = 'block';
+                    setupViewDom.style.opacity = '1';
+                }
+                if (routerAnchor) {
+                    routerAnchor.classList.remove('hidden');
+                    routerAnchor.style.display = 'block';
+                }
+            };
+
+            if (!setupViewDom && routerAnchor) {
+                fetch('views/setup.html')
+                    .then(r => r.text())
+                    .then(html => {
+                        routerAnchor.innerHTML = html;
+                        return import('../pages/setup.js');
+                    })
+                    .then(module => {
+                        module.initSetupView();
+                        showSetupView();
+                    })
+                    .catch(err => console.error("Failed to load Setup View:", err));
+            } else {
+                showSetupView();
             }
-            if (targetViewElement) {
-                targetViewElement.classList.remove('hidden');
-                targetViewElement.style.display = 'block';
+        } else if (targetId === 'view-dash') {
+            const routerAnchor = document.getElementById('router-view-dash');
+            let dashViewDom = document.getElementById('view-dash');
+
+            const showDashView = () => {
+                dashViewDom = document.getElementById('view-dash');
+                if (dashViewDom) {
+                    dashViewDom.classList.remove('hidden');
+                    dashViewDom.style.display = 'block';
+                    dashViewDom.style.opacity = '1';
+                }
+            };
+
+            if (!dashViewDom && routerAnchor) {
+                fetch('views/home.html')
+                    .then(r => r.text())
+                    .then(html => {
+                        routerAnchor.outerHTML = html;
+                        return import('../pages/home.js');
+                    })
+                    .then(module => {
+                        if (module && module.initHomeView) module.initHomeView();
+                        if (window.bindCockpitInputs) window.bindCockpitInputs();
+                        showDashView();
+                    })
+                    .catch(err => console.error("Failed to load Home View:", err));
+            } else {
+                showDashView();
+            }
+        } else if (targetId === 'view-sites' || targetId === 'view-project-detail') {
+            const routerAnchor = document.getElementById('router-view-sites');
+            let sitesView = document.getElementById('view-sites');
+            let detailView = document.getElementById('view-project-detail');
+
+            const showProjectView = () => {
+                if (targetId === 'view-sites') {
+                    sitesView = document.getElementById('view-sites');
+                    if (sitesView) {
+                        sitesView.classList.remove('hidden');
+                        sitesView.style.display = 'block';
+                        sitesView.style.opacity = '1';
+                    }
+                    const listContainer = document.getElementById('project-list-container');
+                    if (listContainer) {
+                        listContainer.classList.remove('hidden');
+                        listContainer.style.display = 'grid';
+                        listContainer.style.visibility = 'visible';
+                    }
+                } else if (targetId === 'view-project-detail') {
+                    detailView = document.getElementById('view-project-detail');
+                    if (detailView) {
+                        detailView.classList.remove('hidden');
+                        detailView.style.display = 'block';
+                        detailView.style.opacity = '1';
+                    }
+                }
+            };
+
+            if ((!sitesView || !detailView) && routerAnchor) {
+                fetch('views/project.html')
+                    .then(r => r.text())
+                    .then(html => {
+                        routerAnchor.outerHTML = html;
+                        return import('../pages/project.js');
+                    })
+                    .then(module => {
+                        if (module && module.initProjectView) module.initProjectView();
+                        // Optional: Re-bind Lucide icons, though app.js global logic handles it
+                        if (window.lucide) window.lucide.createIcons();
+                        showProjectView();
+                    })
+                    .catch(err => console.error("Failed to load Project View:", err));
+            } else {
+                showProjectView();
             }
         } else if (targetId === 'view-chat') {
             // Strict Chat Layout enforcement & Router Loading
             const routerAnchor = document.getElementById('router-view-chat');
             let chatView = document.getElementById('view-chat');
-            
+
             const showChatView = () => {
                 chatView = document.getElementById('view-chat');
                 if (chatView) {
@@ -702,7 +768,7 @@ window.addEventListener('load', async () => {
                     .then(html => {
                         routerAnchor.outerHTML = html; // Replace router anchor with actual view
                         showChatView();
-                        
+
                         // We also need to re-attach the event listener since the DOM is fresh
                         const newInstructionInput = document.getElementById('main-instruction-input');
                         if (newInstructionInput && window.handleInstruction) {
@@ -717,7 +783,7 @@ window.addEventListener('load', async () => {
                                 }
                             });
                         }
-                        
+
                         // Also reattach mic and camera listeners mapped to the new layout
                         const micBtn = document.getElementById('btn-chat-voice');
                         if (micBtn) {
@@ -764,10 +830,10 @@ window.addEventListener('load', async () => {
                     if (brainBar && brainPct) {
                         brainBar.style.width = '0%';
                         brainPct.textContent = '0%';
-                        
+
                         // Force reflow
                         void brainBar.offsetWidth;
-                        
+
                         brainBar.style.width = '84%';
                         let count = 0;
                         const interval = setInterval(() => {
@@ -811,7 +877,7 @@ window.addEventListener('load', async () => {
         if (targetId === 'view-chat') {
             if (bottomNav) bottomNav.style.display = 'none';
             const chatContainer = document.getElementById('chat-messages');
-            
+
             setTimeout(() => {
                 const inputEl = document.getElementById('chat-input-field');
                 if (inputEl) inputEl.focus();
@@ -833,179 +899,147 @@ window.addEventListener('load', async () => {
     // Expose to window for inline onclick in HTML
     window.switchView = switchView;
 
-    // AI Cockpit Toggle
-    window.toggleCockpit = () => {
-        const cockpit = document.getElementById('neo-cockpit');
-        if (!cockpit) return;
-        
-        if (cockpit.style.display === 'none') {
-            cockpit.style.display = 'block';
-            cockpit.classList.add('active'); // New class to physically push content
-            cockpit.style.opacity = '0';
-            setTimeout(() => cockpit.style.opacity = '1', 10);
-            
-            // Focus textarea securely
-            const ta = document.getElementById('main-instruction-input');
-            if(ta) setTimeout(() => ta.focus(), 200);
-        } else {
-            cockpit.style.opacity = '0';
-            cockpit.classList.remove('active');
-            setTimeout(() => cockpit.style.display = 'none', 300);
-        }
-    };
+    // AI Cockpit Toggle has been moved to pages/home.js
 
-    // Global Neo Tap Action (Jump to Dashboard and open Cockpit)
-    window.openDashToCockpit = () => {
-        window.switchView('view-dash');
-        const cockpit = document.getElementById('neo-cockpit');
-        if (cockpit) {
-            cockpit.style.display = 'block';
-            cockpit.classList.add('active'); // Guarantee class injection
-            cockpit.style.opacity = '1';
-            
-            const ta = document.getElementById('main-instruction-input');
-            if(ta) setTimeout(() => ta.focus(), 200);
-            
-            // Scroll to top
-            const scrollContainer = document.getElementById('app-container') || document.documentElement;
-            scrollContainer.scrollTop = 0;
-        }
-    };
+    window.bindCockpitInputs = () => {
+        const instructionInputs = document.querySelectorAll('#main-instruction-input');
+        const instructionMics = [document.getElementById('main-mic-btn'), document.getElementById('btn-voice')].filter(Boolean);
+        const btnAttachImages = [document.getElementById('btn-attach-image'), document.getElementById('btn-camera')].filter(Boolean);
+        const btnSendInstructions = [document.getElementById('btn-send-instruction'), document.getElementById('btn-send')].filter(Boolean);
+        const ocrUploads = document.querySelectorAll('#ocr-upload');
 
-    const instructionInputs = document.querySelectorAll('#main-instruction-input');
-    const instructionMics = [document.getElementById('main-mic-btn'), document.getElementById('btn-voice')].filter(Boolean);
-    const btnAttachImages = [document.getElementById('btn-attach-image'), document.getElementById('btn-camera')].filter(Boolean);
-    const btnSendInstructions = [document.getElementById('btn-send-instruction'), document.getElementById('btn-send')].filter(Boolean);
-    const ocrUploads = document.querySelectorAll('#ocr-upload');
+        let isProcessingInstruction = false;
 
-    let isProcessingInstruction = false;
-
-    // Helper to get active input
-    const getActiveInput = () => {
-        for (const input of instructionInputs) {
-            // Check if it's visible (offsetParent is not null)
-            if (input.offsetParent !== null) return input;
-        }
-        return instructionInputs[0] || document.createElement('textarea');
-    };
-
-    // Proxy to fix all old references to `instructionInput` across the codebase transparently
-    const instructionInput = new Proxy({}, {
-        get(target, prop) {
-            if (prop === 'addEventListener') {
-                return (event, handler, options) => {
-                    instructionInputs.forEach(input => input.addEventListener(event, handler, options));
-                };
+        // Helper to get active input
+        const getActiveInput = () => {
+            for (const input of instructionInputs) {
+                // Check if it's visible (offsetParent is not null)
+                if (input.offsetParent !== null) return input;
             }
-            const active = getActiveInput();
-            const val = active[prop];
-            if (typeof val === 'function') {
-                return val.bind(active);
-            }
-            return val;
-        },
-        set(target, prop, value) {
-            if (prop === 'value' || prop === 'disabled') {
-                instructionInputs.forEach(input => input[prop] = value);
-            } else {
+            return instructionInputs[0] || document.createElement('textarea');
+        };
+
+        // Proxy to fix all old references to `instructionInput` across the codebase transparently
+        const instructionInput = new Proxy({}, {
+            get(target, prop) {
+                if (prop === 'addEventListener') {
+                    return (event, handler, options) => {
+                        instructionInputs.forEach(input => input.addEventListener(event, handler, options));
+                    };
+                }
                 const active = getActiveInput();
-                active[prop] = value;
-            }
-            return true;
-        }
-    });
-
-    // --- Real-time Local Parsing to populate background inputs ---
-    instructionInputs.forEach(input => {
-        input.addEventListener('input', (e) => {
-            if (!e.target.value) return;
-            // Silent parsing for UI updates
-            const parsed = window.parseCommand(e.target.value);
-            if (parsed) {
-                // UI Auto-Input Preview (The Trinity Thrill)
-                const previewContainer = document.getElementById('trinity-preview');
-                const pTitle = document.getElementById('preview-title');
-                const pLoc = document.getElementById('preview-loc');
-                const pLocBadge = document.getElementById('preview-loc-badge');
-                const pDate = document.getElementById('preview-date');
-                const pDateBadge = document.getElementById('preview-date-badge');
-
-                if (previewContainer && pTitle) {
-                    let hasAny = false;
-
-                    let dispTitle = parsed.title;
-                    if (dispTitle === '新規プロジェクト' || dispTitle === '') {
-                        dispTitle = '-';
-                    } else {
-                        hasAny = true;
-                    }
-                    pTitle.textContent = dispTitle;
-
-                    if (parsed.location) {
-                        pLoc.textContent = parsed.location;
-                        if (pLocBadge) pLocBadge.style.display = 'inline-grid';
-                        hasAny = true;
-                    } else if (pLocBadge) {
-                        pLocBadge.style.display = 'none';
-                    }
-
-                    if (parsed.date) {
-                        pDate.textContent = parsed.date;
-                        if (pDateBadge) pDateBadge.style.display = 'inline-grid';
-                        hasAny = true;
-                    } else if (pDateBadge) {
-                        pDateBadge.style.display = 'none';
-                    }
-
-                    previewContainer.style.opacity = hasAny ? '1' : '0';
+                const val = active[prop];
+                if (typeof val === 'function') {
+                    return val.bind(active);
                 }
-                // Bi-directional binding: Title
-                if (parsed.title && parsed.title !== '新規プロジェクト') {
-                    // Update original UI inputs
-                    const newName = document.getElementById('new-proj-name');
-                    if (newName) newName.value = parsed.title;
-                    const editName = document.getElementById('edit-proj-name');
-                    if (editName) editName.value = parsed.title;
-
-                    // Force the CEO's requested physical ID if it exists anywhere
-                    const ceoName = document.getElementById('project-name-input');
-                    if (ceoName) ceoName.value = parsed.title;
+                return val;
+            },
+            set(target, prop, value) {
+                if (prop === 'value' || prop === 'disabled') {
+                    instructionInputs.forEach(input => input[prop] = value);
+                } else {
+                    const active = getActiveInput();
+                    active[prop] = value;
                 }
-
-                // Bi-directional binding: Location
-                if (parsed.location) {
-                    const newLoc = document.getElementById('new-proj-location');
-                    if (newLoc) newLoc.value = parsed.location;
-                    const editLoc = document.getElementById('edit-proj-location');
-                    if (editLoc) editLoc.value = parsed.location;
-                }
-
-                // Bi-directional binding: Date
-                if (parsed.date) {
-                    const dateStr = parsed.date.replace(/\//g, '-');
-                    // Original inputs
-                    const startInput = document.getElementById('new-proj-start-date');
-                    if (startInput) startInput.value = dateStr;
-                    const deadInput = document.getElementById('edit-proj-deadline');
-                    if (deadInput) deadInput.value = dateStr;
-
-                    // Force the CEO's requested physical ID if it exists anywhere
-                    const ceoDate = document.getElementById('project-date-input');
-                    if (ceoDate) ceoDate.value = dateStr;
-                }
-
-                // Immediate dynamic eradication of '工事完了日' if industry is general/unset
-                const ind = (typeof mockDB !== 'undefined' && mockDB.userConfig) ? mockDB.userConfig.industry : 'general';
-                if (!ind || ind === 'general') {
-                    document.querySelectorAll('label, div, span, p').forEach(el => {
-                        if (el.textContent && el.textContent.includes('工事完了日') && el.children.length === 0) {
-                            el.textContent = el.textContent.replace(/工事完了日/g, '予定日');
-                        }
-                    });
-                }
+                return true;
             }
         });
-    });
+
+        // --- Real-time Local Parsing to populate background inputs ---
+        instructionInputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                if (!e.target.value) return;
+                // Silent parsing for UI updates
+                const parsed = window.parseCommand(e.target.value);
+                if (parsed) {
+                    // UI Auto-Input Preview (The Trinity Thrill)
+                    const previewContainer = document.getElementById('trinity-preview');
+                    const pTitle = document.getElementById('preview-title');
+                    const pLoc = document.getElementById('preview-loc');
+                    const pLocBadge = document.getElementById('preview-loc-badge');
+                    const pDate = document.getElementById('preview-date');
+                    const pDateBadge = document.getElementById('preview-date-badge');
+
+                    if (previewContainer && pTitle) {
+                        let hasAny = false;
+
+                        let dispTitle = parsed.title;
+                        if (dispTitle === '新規プロジェクト' || dispTitle === '') {
+                            dispTitle = '-';
+                        } else {
+                            hasAny = true;
+                        }
+                        pTitle.textContent = dispTitle;
+
+                        if (parsed.location) {
+                            pLoc.textContent = parsed.location;
+                            if (pLocBadge) pLocBadge.style.display = 'inline-grid';
+                            hasAny = true;
+                        } else if (pLocBadge) {
+                            pLocBadge.style.display = 'none';
+                        }
+
+                        if (parsed.date) {
+                            pDate.textContent = parsed.date;
+                            if (pDateBadge) pDateBadge.style.display = 'inline-grid';
+                            hasAny = true;
+                        } else if (pDateBadge) {
+                            pDateBadge.style.display = 'none';
+                        }
+
+                        previewContainer.style.opacity = hasAny ? '1' : '0';
+                    }
+                    // Bi-directional binding: Title
+                    if (parsed.title && parsed.title !== '新規プロジェクト') {
+                        // Update original UI inputs
+                        const newName = document.getElementById('new-proj-name');
+                        if (newName) newName.value = parsed.title;
+                        const editName = document.getElementById('edit-proj-name');
+                        if (editName) editName.value = parsed.title;
+
+                        // Force the CEO's requested physical ID if it exists anywhere
+                        const ceoName = document.getElementById('project-name-input');
+                        if (ceoName) ceoName.value = parsed.title;
+                    }
+
+                    // Bi-directional binding: Location
+                    if (parsed.location) {
+                        const newLoc = document.getElementById('new-proj-location');
+                        if (newLoc) newLoc.value = parsed.location;
+                        const editLoc = document.getElementById('edit-proj-location');
+                        if (editLoc) editLoc.value = parsed.location;
+                    }
+
+                    // Bi-directional binding: Date
+                    if (parsed.date) {
+                        const dateStr = parsed.date.replace(/\//g, '-');
+                        // Original inputs
+                        const startInput = document.getElementById('new-proj-start-date');
+                        if (startInput) startInput.value = dateStr;
+                        const deadInput = document.getElementById('edit-proj-deadline');
+                        if (deadInput) deadInput.value = dateStr;
+
+                        // Force the CEO's requested physical ID if it exists anywhere
+                        const ceoDate = document.getElementById('project-date-input');
+                        if (ceoDate) ceoDate.value = dateStr;
+                    }
+
+                    // Immediate dynamic eradication of '工事完了日' if industry is general/unset
+                    const ind = (typeof mockDB !== 'undefined' && mockDB.userConfig) ? mockDB.userConfig.industry : 'general';
+                    if (!ind || ind === 'general') {
+                        document.querySelectorAll('label, div, span, p').forEach(el => {
+                            if (el.textContent && el.textContent.includes('工事完了日') && el.children.length === 0) {
+                                el.textContent = el.textContent.replace(/工事完了日/g, '予定日');
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    };
+    if (document.getElementById('main-instruction-input')) {
+        window.bindCockpitInputs();
+    }
 
     // --- Tag Relay Dedicated Function ---
     window.createNewProjectFromTags = (rawText = '') => {
@@ -1062,6 +1096,95 @@ window.addEventListener('load', async () => {
             window.switchView('view-dash');
         }
 
+        // --- Send Button Logic ---
+        btnSendInstructions.forEach(btn => {
+            btn.addEventListener('click', () => {
+                console.log('[DEBUG] btnSendInstruction clicked');
+                const input = getActiveInput();
+                if (!input) return;
+                const rawText = input.value;
+
+                if (rawText.trim() === '') return;
+
+                // 送信ボタンの機能強制接続: アクション動詞または日付・場所が含まれていれば、バイパスしてプロジェクト化
+                // 領収書のメタファー（儲かった、交通費）等の場合は handleInstruction (支出登録) へ流すため除外
+                const isExpense = /(儲かった|ゲット|交通費|代|費|タクシー|電車|領収書|レシート)/.test(rawText);
+                const isProject = /(作って|新規|作成|立ち上げて|が入った|決まった|する|はいいた|はいいった|入った|決定|の件)/.test(rawText);
+
+                const pCmd = window.parseCommand(rawText);
+
+                if (!isExpense && (pCmd.date || pCmd.location || isProject)) {
+                    window.createNewProjectFromTags(rawText);
+                } else {
+                    handleInstruction(rawText);
+                }
+            });
+        });
+
+        // OCR Simulation Logic (Removed per user request to purely open file dialogs)
+
+        // --- Voice Recognition Setup (Push-To-Talk & Privacy-First) ---
+        const voiceStatusIndicator = document.getElementById('voice-status-indicator');
+        let recognition = null;
+
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.lang = 'ja-JP';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                instructionMics.forEach(mic => {
+                    mic.classList.add('recording');
+                    mic.style.color = '#FF3B30';
+                });
+                if (voiceStatusIndicator) voiceStatusIndicator.classList.remove('hidden');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                const input = getActiveInput();
+                if (input) {
+                    input.value = transcript;
+                    input.style.height = 'auto';
+                    input.style.height = (input.scrollHeight) + 'px';
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+            };
+
+            recognition.onend = () => {
+                instructionMics.forEach(mic => {
+                    mic.classList.remove('recording');
+                    mic.style.color = 'var(--text-muted)';
+                });
+                if (voiceStatusIndicator) voiceStatusIndicator.classList.add('hidden');
+            };
+        }
+
+        // Push-To-Talk event bindings
+        if (recognition) {
+            const startDictation = (e) => {
+                e.preventDefault(); // Prevent text selection/scrolling
+                try { recognition.start(); } catch (e) { }
+            };
+
+            const stopDictation = (e) => {
+                e.preventDefault();
+                try { recognition.stop(); } catch (e) { }
+            };
+
+            instructionMics.forEach(mic => {
+                mic.addEventListener('mousedown', startDictation);
+                mic.addEventListener('touchstart', startDictation, { passive: false });
+            });
+
+            document.addEventListener('mouseup', stopDictation);
+            document.addEventListener('touchend', stopDictation);
+        }
+
         return true;
     };
 
@@ -1081,9 +1204,9 @@ window.addEventListener('load', async () => {
             console.error("Activity fetch error (fallback to mockDB):", error);
             // エラー時はフォールバックとしてローカルモックから返して後続の処理を止めない
             if (window.mockDB && window.mockDB.transactions) {
-                return window.mockDB.transactions.filter(t => 
-                    t.projectId === projectId && 
-                    !t.is_deleted && 
+                return window.mockDB.transactions.filter(t =>
+                    t.projectId === projectId &&
+                    !t.is_deleted &&
                     (t.type === 'expense' || t.type === 'labor' || t.type === 'work')
                 );
             }
@@ -1096,21 +1219,21 @@ window.addEventListener('load', async () => {
         if (modal) {
             // Lock body scroll
             document.body.style.overflow = 'hidden';
-            
+
             modal.classList.remove('hidden');
             // Reset to Estimate by default, but carry over project name if possible
             window.switchDocTab('estimate');
-            
+
             // Auto-fill project details if inside a project
             const projNameEl = document.getElementById('detail-project-name');
             if (projNameEl && projNameEl.textContent) {
-                 const subjectInput = document.getElementById('doc-subject');
-                 if (subjectInput) subjectInput.value = projNameEl.textContent;
+                const subjectInput = document.getElementById('doc-subject');
+                if (subjectInput) subjectInput.value = projNameEl.textContent;
             }
 
             // Set today's date
             document.getElementById('doc-issue-date').value = new Date().toISOString().split('T')[0];
-            
+
             // Set deadline to next month
             const nextMonth = new Date();
             nextMonth.setMonth(nextMonth.getMonth() + 1);
@@ -1120,14 +1243,14 @@ window.addEventListener('load', async () => {
             const actSec = document.getElementById('activity-reference-section');
             const actList = document.getElementById('activity-reference-list');
             const actToggleBtn = document.getElementById('import-activity-btn');
-            
+
             // Always hide section by default when opening
             if (actSec) actSec.style.display = 'none';
 
             if (actList && actToggleBtn && window.currentOpenProjectId) {
                 // Fetch recent expenses/labor for this project
                 const acts = await window.loadActivities(window.currentOpenProjectId);
-                const recentActs = acts.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 10); // Top 10
+                const recentActs = acts.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10); // Top 10
                 window.projectActivities = recentActs; // Cache globally
 
                 if (recentActs.length > 0) {
@@ -1169,7 +1292,7 @@ window.addEventListener('load', async () => {
         btnEl.style.background = 'var(--accent-neo-blue)';
         btnEl.style.color = '#fff';
         btnEl.style.borderColor = 'var(--accent-neo-blue)';
-        
+
         // Find icons and change their color temporarily
         const icons = btnEl.querySelectorAll('svg');
         const origIconColors = [];
@@ -1195,7 +1318,7 @@ window.addEventListener('load', async () => {
         window.injectActivityIntoLineItem(content, quantity, price);
     };
 
-    window.injectActivityIntoLineItem = function(content, quantity, price) {
+    window.injectActivityIntoLineItem = function (content, quantity, price) {
         const container = document.getElementById('doc-line-items-container');
         if (!container) {
             console.error("Target container #doc-line-items-container not found.");
@@ -1239,21 +1362,21 @@ window.addEventListener('load', async () => {
     // The functions window.switchDocTab, window.updateDocPreview, 
     // window.handleAIDocUpload, and window.generateDocLineHTML 
     // are now handled externally to isolate A4 Document formatting.
-    
+
     // (Core data model variables like window._neoDocMemory remain fully active in doc-engine.js)
 
     // MULTI-LINE SUPPORT: Function to add item rows
     window.addDocLineItem = () => {
         const container = document.getElementById('doc-line-items-container');
         if (!container) return;
-        
+
         container.insertAdjacentHTML('beforeend', window.generateDocLineHTML('', 0, 1, false));
-        
+
         // Auto focus the new text input
         const rows = container.querySelectorAll('.line-item');
         if (rows.length > 0) {
             const newInputs = rows[rows.length - 1].querySelectorAll('input');
-            if(newInputs.length > 0) newInputs[0].focus();
+            if (newInputs.length > 0) newInputs[0].focus();
         }
     };
 
@@ -1283,28 +1406,28 @@ window.addEventListener('load', async () => {
 
         const totalStr = document.getElementById('preview-grand-total')?.textContent || '¥0';
         let msg = `ドキュメント（${window.currentDocType === 'estimate' ? '見積書' : (window.currentDocType === 'invoice' ? '請求書' : '領収書')}）を保存しました！`;
-        
+
         if (window.currentDocType === 'estimate') {
             msg += `\n将来的に「請求書」タブを開くと、この内容(${totalStr})が自動で引き継がれます。`;
         }
-        
+
         alert(msg);
         window.closeDocGenModal();
     };
 
     const originalDocOpen = window.openDocGenModal;
     window.openDocGenModal = () => {
-         const modal = document.getElementById('modal-doc-gen');
-         if(modal) {
-             modal.classList.remove('hidden');
-             window.switchDocTab('estimate');
-             document.getElementById('doc-client-name').value = '';
-             document.getElementById('doc-subject').value = document.getElementById('detail-project-name')?.textContent || '';
-             document.getElementById('doc-issue-date').value = new Date().toISOString().split('T')[0];
-             
-             // Load unbilled activities and push them natively into the invoice
-             const container = document.getElementById('doc-line-items-container');
-             if(container) {
+        const modal = document.getElementById('modal-doc-gen');
+        if (modal) {
+            modal.classList.remove('hidden');
+            window.switchDocTab('estimate');
+            document.getElementById('doc-client-name').value = '';
+            document.getElementById('doc-subject').value = document.getElementById('detail-project-name')?.textContent || '';
+            document.getElementById('doc-issue-date').value = new Date().toISOString().split('T')[0];
+
+            // Load unbilled activities and push them natively into the invoice
+            const container = document.getElementById('doc-line-items-container');
+            if (container) {
                 container.innerHTML = '';
                 // Extract pending transactions
                 let pendingTxs = [];
@@ -1352,7 +1475,7 @@ window.addEventListener('load', async () => {
                                     const pName = item.item_name || '未分類項';
                                     const pPrice = parseInt(item.price || '0', 10);
                                     container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(pName, pPrice, 1, true)); // isAI = true
-                                    
+
                                     // Extreme DOM Assurance
                                     console.assert(container.lastElementChild.querySelector('input.item-name-input').value === pName, "CRITICAL ERROR: AI injected row failed to persist in DOM.");
                                 });
@@ -1366,7 +1489,7 @@ window.addEventListener('load', async () => {
                             }
                             window.updateDocPreview();
 
-                        } catch(err) {
+                        } catch (err) {
                             console.error('[Document AI] Parsing failed', err);
                             // Loud Error UI (No silent fallback per CEO orders)
                             container.innerHTML = `
@@ -1393,130 +1516,40 @@ window.addEventListener('load', async () => {
                     // Default fallback (No transactions)
                     container.innerHTML = window.generateDocLineHTML('一式', 0, 1);
                 }
-             }
-             
-             // Load Bank Info from History
-             const savedBankInfo = localStorage.getItem('neo_bank_info');
-             if (savedBankInfo) {
-                 const bankInput = document.getElementById('doc-bank-info');
-                 if (bankInput) bankInput.value = savedBankInfo;
-             }
+            }
 
-             // Initialize Focus Auto-Scroll (Ultimate Input Feel)
-             if (!window.docGenFocusScrollInitialized) {
-                 const inputs = modal.querySelectorAll('.doc-gen-inputs input, .doc-gen-inputs textarea, .doc-gen-inputs select');
-                 inputs.forEach(el => {
-                     el.addEventListener('focus', function() {
-                         setTimeout(() => {
-                             this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                         }, 300); // Wait for mobile keyboard to appear
-                     });
-                 });
-                 
-                 // Save Bank Info on change
-                 const bankInputEl = document.getElementById('doc-bank-info');
-                 if (bankInputEl) {
-                     bankInputEl.addEventListener('input', (e) => {
-                         localStorage.setItem('neo_bank_info', e.target.value);
-                     });
-                 }
+            // Load Bank Info from History
+            const savedBankInfo = localStorage.getItem('neo_bank_info');
+            if (savedBankInfo) {
+                const bankInput = document.getElementById('doc-bank-info');
+                if (bankInput) bankInput.value = savedBankInfo;
+            }
 
-                 window.docGenFocusScrollInitialized = true;
-             }
+            // Initialize Focus Auto-Scroll (Ultimate Input Feel)
+            if (!window.docGenFocusScrollInitialized) {
+                const inputs = modal.querySelectorAll('.doc-gen-inputs input, .doc-gen-inputs textarea, .doc-gen-inputs select');
+                inputs.forEach(el => {
+                    el.addEventListener('focus', function () {
+                        setTimeout(() => {
+                            this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300); // Wait for mobile keyboard to appear
+                    });
+                });
 
-             window.updateDocPreview();
-         }
+                // Save Bank Info on change
+                const bankInputEl = document.getElementById('doc-bank-info');
+                if (bankInputEl) {
+                    bankInputEl.addEventListener('input', (e) => {
+                        localStorage.setItem('neo_bank_info', e.target.value);
+                    });
+                }
+
+                window.docGenFocusScrollInitialized = true;
+            }
+
+            window.updateDocPreview();
+        }
     };
-
-    // --- Send Button Logic ---
-    btnSendInstructions.forEach(btn => {
-        btn.addEventListener('click', () => {
-            console.log('[DEBUG] btnSendInstruction clicked');
-            const input = getActiveInput();
-            if (!input) return;
-            const rawText = input.value;
-
-            if (rawText.trim() === '') return;
-
-            // 送信ボタンの機能強制接続: アクション動詞または日付・場所が含まれていれば、バイパスしてプロジェクト化
-            // 領収書のメタファー（儲かった、交通費）等の場合は handleInstruction (支出登録) へ流すため除外
-            const isExpense = /(儲かった|ゲット|交通費|代|費|タクシー|電車|領収書|レシート)/.test(rawText);
-            const isProject = /(作って|新規|作成|立ち上げて|が入った|決まった|する|はいいた|はいいった|入った|決定|の件)/.test(rawText);
-
-            const pCmd = window.parseCommand(rawText);
-
-            if (!isExpense && (pCmd.date || pCmd.location || isProject)) {
-                window.createNewProjectFromTags(rawText);
-            } else {
-                handleInstruction(rawText);
-            }
-        });
-    });
-
-    // OCR Simulation Logic (Removed per user request to purely open file dialogs)
-
-    // --- Voice Recognition Setup (Push-To-Talk & Privacy-First) ---
-    const voiceStatusIndicator = document.getElementById('voice-status-indicator');
-    let recognition = null;
-
-    if ('webkitSpeechRecognition' in window) {
-        recognition = new webkitSpeechRecognition();
-        recognition.lang = 'ja-JP';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-
-        recognition.onstart = () => {
-            instructionMics.forEach(mic => {
-                mic.classList.add('recording');
-                mic.style.color = '#FF3B30';
-            });
-            if (voiceStatusIndicator) voiceStatusIndicator.classList.remove('hidden');
-        };
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            const input = getActiveInput();
-            if (input) {
-                input.value = transcript;
-                input.style.height = 'auto';
-                input.style.height = (input.scrollHeight) + 'px';
-            }
-        };
-
-        recognition.onerror = (event) => {
-            console.error('Speech recognition error:', event.error);
-        };
-
-        recognition.onend = () => {
-            instructionMics.forEach(mic => {
-                mic.classList.remove('recording');
-                mic.style.color = 'var(--text-muted)';
-            });
-            if (voiceStatusIndicator) voiceStatusIndicator.classList.add('hidden');
-        };
-    }
-
-    // Push-To-Talk event bindings
-    if (recognition) {
-        const startDictation = (e) => {
-            e.preventDefault(); // Prevent text selection/scrolling
-            try { recognition.start(); } catch (e) { }
-        };
-
-        const stopDictation = (e) => {
-            e.preventDefault();
-            try { recognition.stop(); } catch (e) { }
-        };
-
-        instructionMics.forEach(mic => {
-            mic.addEventListener('mousedown', startDictation);
-            mic.addEventListener('touchstart', startDictation, { passive: false });
-        });
-
-        document.addEventListener('mouseup', stopDictation);
-        document.addEventListener('touchend', stopDictation);
-    }
-
     const triggerNeoSyncGlow = () => {
         const iconsToGlow = document.querySelectorAll('[data-target="view-sites"] i, [data-target="view-wallet"] i');
         iconsToGlow.forEach(icon => {
@@ -1581,7 +1614,7 @@ window.addEventListener('load', async () => {
             if (strAmt.includes('万')) strAmt = strAmt.replace('万', '0000');
             amount = parseInt(strAmt, 10);
         }
-        
+
         let keywordText = text;
         if (amountMatch) keywordText = keywordText.replace(amountMatch[0], '');
         keywordText = keywordText.replace(/円/g, '').replace(/追加して/g, '').replace(/追加/g, '').trim();
@@ -1628,7 +1661,7 @@ window.addEventListener('load', async () => {
 
         // Priority 3: Historical Precedent (Existing DB)
         // Sort descending by ID, but prioritize 'is_user_corrected' Ground Truths
-        const sortedTxs = [...mockDB.transactions].sort((a,b) => {
+        const sortedTxs = [...mockDB.transactions].sort((a, b) => {
             if (a.is_user_corrected && !b.is_user_corrected) return -1;
             if (!a.is_user_corrected && b.is_user_corrected) return 1;
             return b.id - a.id;
@@ -1653,7 +1686,7 @@ window.addEventListener('load', async () => {
     };
 
     const COMPLIANCE_BLACKLIST = [
-        "裏金", "脱税", "粉飾", "マネロン", "キックバック", "マネーロンダリング", 
+        "裏金", "脱税", "粉飾", "マネロン", "キックバック", "マネーロンダリング",
         "架空請求", "横領", "脱法", "裏帳簿",
         "風俗", "アダルト", "エロ", "パパ活", "ギャラ飲み", "キャバクラ", "ソープ"
     ];
@@ -1687,8 +1720,8 @@ window.addEventListener('load', async () => {
                 neoBubble.style.backgroundColor = '#FF3B30';
                 neoBubble.style.color = '#FFF';
                 neoBubble.classList.add('show');
-                setTimeout(() => { 
-                    neoBubble.classList.remove('show'); 
+                setTimeout(() => {
+                    neoBubble.classList.remove('show');
                     neoBubble.style.backgroundColor = '';
                     neoBubble.style.color = '';
                 }, 5000);
@@ -1712,13 +1745,13 @@ window.addEventListener('load', async () => {
         });
     };
 
-    window.onerror = function(msg, url, lineNo, columnNo, error) {
+    window.onerror = function (msg, url, lineNo, columnNo, error) {
         console.error('[Neo Global Error caught]: ', msg, url, lineNo, columnNo, error);
         window.updateSystemStatus('error');
         return false;
     };
 
-    window.addEventListener('unhandledrejection', function(event) {
+    window.addEventListener('unhandledrejection', function (event) {
         console.error('[Neo Promise Rejection caught]: ', event.reason);
         window.updateSystemStatus('error');
     });
@@ -1730,7 +1763,7 @@ window.addEventListener('load', async () => {
             // Pass diagnostic prompt directly to router (ignoring UI state)
             const currentDateTime = new Date().toLocaleString('ja-JP');
             const result = await determineRouteFromIntent(diagnosticPrompt, mockDB.userConfig.industry, "{}", currentDateTime);
-            
+
             let isOk = false;
             const intents = Array.isArray(result) ? result : [result];
             for (const intent of intents) {
@@ -1755,8 +1788,8 @@ window.addEventListener('load', async () => {
                 neoBubble.style.backgroundColor = '#FF3B30';
                 neoBubble.style.color = '#FFF';
                 neoBubble.classList.add('show');
-                setTimeout(() => { 
-                    neoBubble.classList.remove('show'); 
+                setTimeout(() => {
+                    neoBubble.classList.remove('show');
                     neoBubble.style.backgroundColor = '';
                     neoBubble.style.color = '';
                 }, 5000);
@@ -2003,7 +2036,7 @@ window.addEventListener('load', async () => {
         // --- Pagination Logic (Max 10 per page) ---
         const ITEMS_PER_PAGE = 10;
         const totalPages = Math.ceil(projectsToRender.length / ITEMS_PER_PAGE);
-        
+
         // Safety check if currentProjectPage exceeds new totalPages
         if (currentProjectPage > totalPages) {
             currentProjectPage = Math.max(1, totalPages);
@@ -2119,8 +2152,8 @@ window.addEventListener('load', async () => {
             btnPrev.onclick = () => {
                 if (currentProjectPage > 1) {
                     currentProjectPage--;
-                    renderProjects(projectsToRender, false); 
-                    document.querySelector('.content-area').scrollTo({top: 0, behavior: 'smooth'});
+                    renderProjects(projectsToRender, false);
+                    document.querySelector('.content-area').scrollTo({ top: 0, behavior: 'smooth' });
                 }
             };
 
@@ -2137,8 +2170,8 @@ window.addEventListener('load', async () => {
             btnNext.onclick = () => {
                 if (currentProjectPage < totalPages) {
                     currentProjectPage++;
-                    renderProjects(projectsToRender, false); 
-                    document.querySelector('.content-area').scrollTo({top: 0, behavior: 'smooth'});
+                    renderProjects(projectsToRender, false);
+                    document.querySelector('.content-area').scrollTo({ top: 0, behavior: 'smooth' });
                 }
             };
 
@@ -2234,20 +2267,20 @@ window.addEventListener('load', async () => {
                     </div>
                 `;
             });
-            
+
             // --- NEW: AI Accuracy (IQ) Tracker ---
             // Calculate how many times the AI ran vs how many times the user corrected it
             // Assuming most transactions in prototype came from AI/input unless stated
-            const totalPredictions = mockDB.transactions.length; 
+            const totalPredictions = mockDB.transactions.length;
             const totalCorrections = mockDB.transactions.filter(t => t.is_user_corrected && !t.is_deleted).length;
-            
+
             let accuracy = 100;
             if (totalPredictions > 0) {
                 accuracy = Math.round(((totalPredictions - totalCorrections) / totalPredictions) * 100);
             }
-            
+
             const accuracyColor = accuracy >= 95 ? '#10b981' : (accuracy >= 80 ? '#f59e0b' : '#ef4444');
-            
+
             cfContainer.insertAdjacentHTML('beforebegin', `
                 <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 16px; margin-bottom: 24px; padding: 12px 16px; border-radius: 12px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between;">
                     <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
@@ -2282,7 +2315,7 @@ window.addEventListener('load', async () => {
         const proj = mockDB.projects.find(p => p.id === currentOpenProjectId);
         if (proj) {
             proj.note = newText;
-            
+
             if (window.supabase) {
                 try {
                     await window.supabase
@@ -2427,14 +2460,14 @@ window.addEventListener('load', async () => {
                         let amountStr = item.amount ? `¥${item.amount.toLocaleString()}` : '-';
                         let amountColor = 'var(--text-main)';
                         let statusHtml = '<span style="color: #10b981; font-weight: 300;">Successful</span>'; // default
-                        
+
                         let categoryBadgeHtml = '';
                         if (item.category && (item.type === 'expense' || item.type === 'income' || item.type === 'labor')) {
                             // Badge color changes if it's user corrected (Ground Truth)
                             const badgeBg = item.is_user_corrected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(15, 23, 42, 0.05)';
                             const badgeColor = item.is_user_corrected ? '#10b981' : 'var(--text-muted)';
                             const badgeIcon = item.is_user_corrected ? `<i data-lucide="check-circle" style="width:10px; height:10px; margin-right:2px; display:inline-block;"></i>` : '';
-                            
+
                             categoryBadgeHtml = `<span onclick="window.openEditExpenseModal('${item.id}')" style="cursor: pointer; display: inline-block; align-items: center; background: ${badgeBg}; color: ${badgeColor}; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 6px; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">${badgeIcon}${item.category}</span>`;
                         }
 
@@ -2492,48 +2525,48 @@ window.addEventListener('load', async () => {
             window.openEditExpenseModal = (txId) => {
                 const tx = mockDB.transactions.find(t => t.id == txId);
                 if (!tx || (tx.type !== 'expense' && tx.type !== 'income' && tx.type !== 'labor')) return; // Limit to editables
-                
+
                 const idEl = document.getElementById('edit-tx-id');
                 const titleEl = document.getElementById('edit-tx-title');
                 const amountEl = document.getElementById('edit-tx-amount');
                 const catSelect = document.getElementById('edit-tx-category');
                 const modal = document.getElementById('modal-edit-expense');
-                
+
                 if (!modal || !idEl || !titleEl || !amountEl) {
                     console.error('DOM Error: Edit Expense Modal elements not found.');
                     return;
                 }
-                
+
                 idEl.value = tx.id;
                 titleEl.value = tx.title || '';
                 amountEl.value = tx.amount || 0;
-                
+
                 if (catSelect) catSelect.value = tx.category || '雑費';
-                
+
                 modal.classList.remove('hidden');
                 modal.classList.add('show');
             };
-            
+
             window.closeEditExpenseModal = () => {
                 const modal = document.getElementById('modal-edit-expense');
                 if (!modal) return;
-                
+
                 modal.classList.remove('show');
-                
+
                 setTimeout(() => {
                     modal.classList.add('hidden');
                 }, 300);
             };
-            
+
             window.deleteTransaction = async () => {
                 const idEl = document.getElementById('edit-tx-id');
-                if(!idEl || !idEl.value) return;
+                if (!idEl || !idEl.value) return;
                 const txId = idEl.value;
-                
+
                 const tx = mockDB.transactions.find(t => t.id == txId);
-                if(tx) {
+                if (tx) {
                     tx.is_deleted = true; // Local Logical Delete
-                    
+
                     // Persistent Supabase Delete Sync
                     if (window.supabaseClient) {
                         try {
@@ -2546,18 +2579,18 @@ window.addEventListener('load', async () => {
                             });
                             await query;
                             console.log("[Neo AI] Supabase DELETE sync success:", tx.title);
-                        } catch(e) { console.error('Supabase Delete Error:', e); }
+                        } catch (e) { console.error('Supabase Delete Error:', e); }
                     }
                 }
-                
+
                 window.closeEditExpenseModal();
-                
+
                 // Recalculate all totals and re-render UI exactly as requested
                 renderProjects(mockDB.projects);
-                if(currentOpenProjectId) {
+                if (currentOpenProjectId) {
                     window.openProjectDetail(currentOpenProjectId);
                 }
-                
+
                 const neoFabBubble = document.getElementById('neo-fab-bubble');
                 if (neoFabBubble) {
                     neoFabBubble.textContent = `⚡️ 項目を削除して、合計値を再計算したよ。`;
@@ -2565,33 +2598,33 @@ window.addEventListener('load', async () => {
                     setTimeout(() => neoFabBubble.classList.remove('show'), 3000);
                 }
             };
-            
+
             window.saveEditedExpense = async () => {
                 const txId = document.getElementById('edit-tx-id').value;
                 const newTitle = document.getElementById('edit-tx-title').value.trim();
                 const newAmount = document.getElementById('edit-tx-amount').value;
                 const newCategory = document.getElementById('edit-tx-category').value;
-                
+
                 if (!newTitle) {
                     alert('内容を入力してください');
                     return;
                 }
-                
+
                 await window.updateTransaction(Number(txId), {
                     title: newTitle,
                     amount: newAmount,
                     category: newCategory
                 });
-                
+
                 window.closeEditExpenseModal();
-                
+
                 // Re-render the detail view to reflect changes and potentially update Neo's hints
                 window.openProjectDetail(currentOpenProjectId);
             };
 
             // ---- NEO CONFIRMATION GATE LOGIC ----
             window.aiCorrectionLog = JSON.parse(localStorage.getItem('neo_ai_corrections') || '[]');
-            
+
             window.cancelNeoConfirm = () => {
                 document.getElementById('modal-neo-confirm').classList.add('hidden');
                 window.pendingAiDecision = null;
@@ -2603,7 +2636,7 @@ window.addEventListener('load', async () => {
 
             window.saveNeoConfirm = () => {
                 if (!window.pendingAiDecision) return;
-                
+
                 const confirmedTitle = document.getElementById('confirm-tx-title').value;
                 const confirmedAmount = parseInt(document.getElementById('confirm-tx-amount').value, 10) || 0;
                 const confirmedCategory = document.getElementById('confirm-tx-category').value;
@@ -2612,13 +2645,13 @@ window.addEventListener('load', async () => {
                 // 1. Semantic Correction Learning Loop
                 if (confirmedCategory !== originalCategory) {
                     console.log(`[Neo AI Learning] User corrected category: ${originalCategory} -> ${confirmedCategory} for input: "${window.pendingAiDecision.originalInput}"`);
-                    
+
                     // Simple learning: record the correction mapping
                     window.aiCorrectionLog.push({
                         input_snippet: window.pendingAiDecision.originalInput.substring(0, 20),
                         corrected_to: confirmedCategory
                     });
-                    
+
                     // Keep log concise
                     if (window.aiCorrectionLog.length > 20) {
                         window.aiCorrectionLog.shift();
@@ -2672,9 +2705,9 @@ window.addEventListener('load', async () => {
                 try {
                     // Start Secondary AI Data Cleansing to protect PII
                     const pureTerm = await extractPureBusinessTerm(originalInput);
-                    
+
                     if (!pureTerm || pureTerm.length < 2) return;
-                    
+
                     // [REJECTION_PROTOCOL] Check
                     if (pureTerm === "[REJECT]" || pureTerm.includes("[REJECT]")) {
                         console.warn("[Neo Global Agent] Contribution REJECTED to protect PII or filter toxicity. Skipping upload.");
@@ -2945,8 +2978,8 @@ window.addEventListener('load', async () => {
         }
     }
 
-    // Start app
-    checkInitialSetup();
+    // Check initial state (Auth Gatekeeper)
+    initAuthGatekeeper();
     bindProjectClicks();
 
     // Navigation intercepts
@@ -3302,7 +3335,7 @@ window.addEventListener('load', async () => {
 
         if (modalDeleteConfirm) modalDeleteConfirm.classList.remove('show');
         if (modalEditProject) modalEditProject.classList.remove('show');
-        
+
         // Neo Bubble Notification (Undo Snackbar placeholder)
         const neoBubble = document.getElementById('neo-fab-bubble');
         if (neoBubble) {
@@ -3325,19 +3358,19 @@ window.addEventListener('load', async () => {
 
     window.openIncomeModal = () => {
         if (!currentOpenProjectId) return;
-        
+
         const titleEl = document.getElementById('add-income-title');
         const amountEl = document.getElementById('add-income-amount');
         const modal = document.getElementById('modal-add-income');
-        
+
         if (!titleEl || !amountEl || !modal) {
             console.error('DOM Error: Add Income Modal elements not found.');
             return;
         }
-        
+
         titleEl.value = '';
         amountEl.value = '';
-        
+
         modal.classList.remove('hidden');
         modal.classList.add('show');
     };
@@ -3345,9 +3378,9 @@ window.addEventListener('load', async () => {
     window.closeAddIncomeModal = () => {
         const modal = document.getElementById('modal-add-income');
         if (!modal) return;
-        
+
         modal.classList.remove('show');
-        
+
         setTimeout(() => {
             modal.classList.add('hidden');
         }, 300);
@@ -3355,11 +3388,11 @@ window.addEventListener('load', async () => {
 
     window.saveAddIncome = () => {
         if (!currentOpenProjectId) return;
-        
+
         const title = document.getElementById('add-income-title').value.trim();
         const amountStr = document.getElementById('add-income-amount').value;
         const numAmount = parseInt(amountStr.replace(/,/g, ''), 10);
-        
+
         if (!title || isNaN(numAmount)) {
             alert('内容と金額を正しく入力してください。');
             return;
@@ -3376,7 +3409,7 @@ window.addEventListener('load', async () => {
             category: "売上高",
             isBookkeeping: true
         });
-        
+
         window.closeAddIncomeModal();
         // Re-render the UI
         window.openProjectDetail(currentOpenProjectId);
@@ -3386,8 +3419,8 @@ window.addEventListener('load', async () => {
         const file = event.target.files[0];
         if (!file) return;
 
-        console.log('[Neo Compression] File selected:', file.name, (file.size/1024).toFixed(2) + 'KB');
-        
+        console.log('[Neo Compression] File selected:', file.name, (file.size / 1024).toFixed(2) + 'KB');
+
         // UX Thrill: Show spinning loader inside the already open Add Expense Modal
         const btnTrigger = document.getElementById('btn-modal-camera-trigger');
         let originalHtml = '';
@@ -3395,15 +3428,15 @@ window.addEventListener('load', async () => {
             originalHtml = btnTrigger.innerHTML;
             btnTrigger.innerHTML = '<i data-lucide="loader-2" class="spin" style="width: 18px; height: 18px; animation: spin 1s linear infinite;"></i> <span style="animation: neoDeepThought 2.5s ease-in-out infinite; display: inline-block;">Thinking...</span>';
         }
-        if(window.lucide) window.lucide.createIcons();
-        
+        if (window.lucide) window.lucide.createIcons();
+
         // HTML5 Canvas Native Compression Engine
         const img = new Image();
         img.onload = () => {
             const MAX_DIMENSION = 1500; // OCR optimal legibility threshold
             let width = img.width;
             let height = img.height;
-            
+
             // Aspect Ratio constraints
             if (width > height) {
                 if (width > MAX_DIMENSION) {
@@ -3416,44 +3449,44 @@ window.addEventListener('load', async () => {
                     height = MAX_DIMENSION;
                 }
             }
-            
+
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
-            
+
             // High-quality downsampling draw
             ctx.drawImage(img, 0, 0, width, height);
-            
+
             // Serialize to JPG payload (80% yields massive savings with no text degradation)
             const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-            
+
             // In a real app, calculate true Base64 size, but here we estimate
-            const estimatedNewSize = Math.round((compressedDataUrl.length * (3/4)) / 1024);
+            const estimatedNewSize = Math.round((compressedDataUrl.length * (3 / 4)) / 1024);
             console.log(`[Neo Compression] Completed. Output Size ~${estimatedNewSize}KB`);
-            
+
             // Simulate Network / AI transmission delay, then populate fields
             setTimeout(() => {
                 if (btnTrigger) {
                     btnTrigger.innerHTML = '<i data-lucide="check-circle" style="width: 18px; height: 18px; color: #10b981;"></i> レシート自動入力完了';
                 }
-                if(window.lucide) window.lucide.createIcons();
-                
+                if (window.lucide) window.lucide.createIcons();
+
                 // Reset input so the same file can be selected again if needed
                 event.target.value = '';
-                
+
                 // Randomize the mock extract values a bit for realism
                 const amounts = [15400, 3200, 19800, 840, 50000];
                 const stores = ["ホームセンター コーナン", "Cafe Renoir", "Amazon Web Services", "タクシー (GO)", "〇〇建設資材"];
-                
+
                 const titleEl = document.getElementById('add-expense-title');
                 const amountEl = document.getElementById('add-expense-amount');
                 if (titleEl) titleEl.value = stores[Math.floor(Math.random() * stores.length)];
                 if (amountEl) amountEl.value = amounts[Math.floor(Math.random() * amounts.length)];
-                
+
             }, 800);
         };
-        
+
         const reader = new FileReader();
         reader.onload = (e) => {
             img.src = e.target.result;
@@ -3467,11 +3500,11 @@ window.addEventListener('load', async () => {
         const clearBtn = document.getElementById('btn-clear-stamp');
         const previewImg = document.getElementById('stamp-preview-img');
         const placeholderText = document.getElementById('stamp-placeholder-text');
-        
+
         const scaleSlider = document.getElementById('stamp-scale-slider');
         const xSlider = document.getElementById('stamp-x-slider');
         const ySlider = document.getElementById('stamp-y-slider');
-        
+
         const scaleVal = document.getElementById('stamp-scale-val');
         const xVal = document.getElementById('stamp-x-val');
         const yVal = document.getElementById('stamp-y-val');
@@ -3487,9 +3520,9 @@ window.addEventListener('load', async () => {
                 const scale = scaleSlider.value;
                 const x = xSlider.value;
                 const y = ySlider.value;
-                
+
                 previewImg.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-                
+
                 if (scaleVal) scaleVal.textContent = `${Number(scale).toFixed(1)}x`;
                 if (xVal) xVal.textContent = `${x}px`;
                 if (yVal) yVal.textContent = `${y}px`;
@@ -3523,9 +3556,9 @@ window.addEventListener('load', async () => {
                     previewImg.src = b64;
                     previewImg.style.display = 'block';
                     if (placeholderText) placeholderText.style.display = 'none';
-                    
+
                     localStorage.setItem('neo_company_stamp_data', b64);
-                    
+
                     // Reset sliders for new image
                     if (scaleSlider) scaleSlider.value = "1.0";
                     if (xSlider) xSlider.value = "0";
@@ -3543,7 +3576,7 @@ window.addEventListener('load', async () => {
                     localStorage.removeItem('neo_company_stamp_scale');
                     localStorage.removeItem('neo_company_stamp_x');
                     localStorage.removeItem('neo_company_stamp_y');
-                    
+
                     if (previewImg) {
                         previewImg.src = '';
                         previewImg.style.display = 'none';
@@ -3567,25 +3600,25 @@ window.addEventListener('load', async () => {
 
     window.openAddExpenseModal = () => {
         if (!currentOpenProjectId) return;
-        
+
         const modal = document.getElementById('modal-add-expense');
         const titleEl = document.getElementById('add-expense-title');
         const amountEl = document.getElementById('add-expense-amount');
         const dateEl = document.getElementById('add-expense-date');
         const btnTrigger = document.getElementById('btn-modal-camera-trigger');
-        
+
         if (!modal) {
             console.error('DOM Error: Add Expense Modal elements not found.');
             return;
         }
-        
+
         // Reset fields
-        if(titleEl) titleEl.value = '';
-        if(amountEl) amountEl.value = '';
-        if(dateEl) dateEl.value = new Date().toISOString().split('T')[0]; // Default to today
-        if(btnTrigger) btnTrigger.innerHTML = '<i data-lucide="camera" style="width: 18px; height: 18px; color: var(--accent-neo-blue);"></i> レシート撮影で自動入力';
-        if(window.lucide) window.lucide.createIcons();
-        
+        if (titleEl) titleEl.value = '';
+        if (amountEl) amountEl.value = '';
+        if (dateEl) dateEl.value = new Date().toISOString().split('T')[0]; // Default to today
+        if (btnTrigger) btnTrigger.innerHTML = '<i data-lucide="camera" style="width: 18px; height: 18px; color: var(--accent-neo-blue);"></i> レシート撮影で自動入力';
+        if (window.lucide) window.lucide.createIcons();
+
         modal.classList.remove('hidden');
         modal.classList.add('show');
     };
@@ -3593,9 +3626,9 @@ window.addEventListener('load', async () => {
     window.closeAddExpenseModal = () => {
         const modal = document.getElementById('modal-add-expense');
         if (!modal) return;
-        
+
         modal.classList.remove('show');
-        
+
         setTimeout(() => {
             modal.classList.add('hidden');
         }, 300);
@@ -3603,13 +3636,13 @@ window.addEventListener('load', async () => {
 
     window.saveAddExpense = () => {
         if (!currentOpenProjectId) return;
-        
+
         const title = document.getElementById('add-expense-title').value.trim();
         const amountStr = document.getElementById('add-expense-amount').value;
         const numAmount = parseInt(amountStr.replace(/,/g, ''), 10);
         const inputDate = document.getElementById('add-expense-date').value || new Date().toISOString().split('T')[0];
         const formattedDate = inputDate.replace(/-/g, '/'); // Match YYYY/MM/DD standard in mockDB
-        
+
         if (!title || isNaN(numAmount)) {
             alert('内容と金額を正しく入力してください。');
             return;
@@ -3626,9 +3659,9 @@ window.addEventListener('load', async () => {
             category: "未分類 (AI確認中)", // Can trigger AI parsing in background or default mapped
             isBookkeeping: true
         });
-        
+
         window.closeAddExpenseModal();
-        
+
         // Trigger Neo subtle toast
         const neoFabBubble = document.getElementById('neo-fab-bubble');
         if (neoFabBubble) {
@@ -3638,10 +3671,10 @@ window.addEventListener('load', async () => {
                 neoFabBubble.classList.remove('show');
             }, 3000);
         }
-        
+
         // Re-render completely so Wallet global totals update
         renderProjects(mockDB.projects);
-        
+
         // Re-open exactly the current project to refresh the timeline
         window.openProjectDetail(currentOpenProjectId);
     };
@@ -3796,24 +3829,24 @@ window.addEventListener('load', async () => {
     if (sharedDocPayload) {
         try {
             const docData = JSON.parse(decodeURIComponent(atob(sharedDocPayload)));
-            
+
             // Populate the preview with docData values manually
             window.currentDocType = docData.type || 'estimate';
-            
+
             // Re-use updateDocPreview but override inputs first
             const elClient = document.getElementById('doc-client-name');
-            if(elClient) elClient.value = docData.client || '';
+            if (elClient) elClient.value = docData.client || '';
             const elDate = document.getElementById('doc-issue-date');
-            if(elDate) elDate.value = docData.date || '';
+            if (elDate) elDate.value = docData.date || '';
             const elDeadline = document.getElementById('doc-deadline-date');
-            if(elDeadline) elDeadline.value = docData.deadline || '';
+            if (elDeadline) elDeadline.value = docData.deadline || '';
             const elSubj = document.getElementById('doc-subject');
-            if(elSubj) elSubj.value = docData.subject || '';
+            if (elSubj) elSubj.value = docData.subject || '';
             const elMemo = document.getElementById('doc-receipt-memo');
-            if(elMemo) elMemo.value = docData.memo || '';
+            if (elMemo) elMemo.value = docData.memo || '';
             const elBank = document.getElementById('doc-bank-info');
-            if(elBank) elBank.value = docData.bank || '';
-            
+            if (elBank) elBank.value = docData.bank || '';
+
             // Handle items
             const itemsContainer = document.getElementById('doc-line-items-container');
             if (itemsContainer && docData.items && docData.items.length > 0) {
@@ -3835,7 +3868,7 @@ window.addEventListener('load', async () => {
 
             // Hide the wrapper so behind the modal is clean
             const appWrap = document.querySelector('.app-wrapper');
-            if(appWrap) appWrap.style.display = 'none';
+            if (appWrap) appWrap.style.display = 'none';
 
             // Fire the standard renderer safely
             setTimeout(() => {
@@ -3849,21 +3882,21 @@ window.addEventListener('load', async () => {
                 const previewModal = document.getElementById('modal-doc-preview');
                 if (previewModal) {
                     previewModal.classList.remove('hidden');
-                    
+
                     // Hide standard actions, show shared actions
                     const btnSavePdf = document.getElementById('btn-preview-save-pdf');
-                    if(btnSavePdf) btnSavePdf.classList.add('hidden');
+                    if (btnSavePdf) btnSavePdf.classList.add('hidden');
                     const btnEdit = document.getElementById('btn-preview-edit');
-                    if(btnEdit) btnEdit.style.display = 'none'; // Use display none since hidden class might not stick due to inline styles
-                    
+                    if (btnEdit) btnEdit.style.display = 'none'; // Use display none since hidden class might not stick due to inline styles
+
                     // Determine User vs Guest dynamically based on industry or mockDB
                     const isNeoUser = localStorage.getItem('fini_setup_complete') === 'true';
                     if (isNeoUser) {
                         const btnSaveNeo = document.getElementById('btn-shared-save-neo');
-                        if(btnSaveNeo) btnSaveNeo.classList.remove('hidden');
+                        if (btnSaveNeo) btnSaveNeo.classList.remove('hidden');
                     } else {
                         const btnSharePdf = document.getElementById('btn-shared-save-pdf');
-                        if(btnSharePdf) btnSharePdf.classList.remove('hidden');
+                        if (btnSharePdf) btnSharePdf.classList.remove('hidden');
                     }
                 }
             }, 100);
@@ -3872,23 +3905,23 @@ window.addEventListener('load', async () => {
         }
     }
 
-    window.importSharedDoc = function() {
+    window.importSharedDoc = function () {
         alert("Neo+にデータをインポートしました！プロジェクト画面に戻ります。");
         // Strip URL param and reload to pure dashboard
         window.location.href = window.location.origin + window.location.pathname;
     };
 
     // --- Field King: Wireless Print ---
-    window.printModalGrid = function() {
+    window.printModalGrid = function () {
         const mainApp = document.querySelector('.app-container');
         const bottomNav = document.getElementById('bottom-nav');
         const modalPreview = document.getElementById('modal-receipt-grid');
         const stickyFooter = modalPreview ? modalPreview.querySelector('#grid-floating-footer') : null;
         const previewHeader = modalPreview ? modalPreview.querySelector('#grid-floating-header') : null;
-        
+
         if (mainApp) mainApp.style.display = 'none';
         if (bottomNav) bottomNav.style.display = 'none';
-        
+
         if (modalPreview) {
             modalPreview.style.position = 'relative';
             modalPreview.style.overflow = 'visible';
@@ -3899,10 +3932,10 @@ window.addEventListener('load', async () => {
 
         setTimeout(() => {
             window.print();
-            
+
             if (mainApp) mainApp.style.display = '';
             if (bottomNav) bottomNav.style.display = '';
-            
+
             if (modalPreview) {
                 modalPreview.style.position = 'fixed';
                 modalPreview.style.overflow = 'hidden';
@@ -3913,7 +3946,7 @@ window.addEventListener('load', async () => {
         }, 300);
     };
 
-    window.printModalDoc = function() {
+    window.printModalDoc = function () {
         // Temporarily hide the app container and nav to isolate the modal for printing
         const mainApp = document.querySelector('.app-container');
         const bottomNav = document.getElementById('bottom-nav');
@@ -3921,10 +3954,10 @@ window.addEventListener('load', async () => {
         const stickyFooter = modalPreview ? modalPreview.querySelector('div[style*="position: absolute; bottom: 0;"]') : null;
         const previewHeader = modalPreview ? modalPreview.querySelector('div[style*="border-bottom: 1px solid"]') : null;
         const paperScaleContainer = document.querySelector('.doc-gen-preview-container > div');
-        
+
         if (mainApp) mainApp.style.display = 'none';
         if (bottomNav) bottomNav.style.display = 'none';
-        
+
         // Prepare Modal for pure A4 printing layout
         if (modalPreview) {
             modalPreview.style.position = 'relative';
@@ -3933,14 +3966,14 @@ window.addEventListener('load', async () => {
         }
         if (stickyFooter) stickyFooter.style.display = 'none';
         if (previewHeader) previewHeader.style.display = 'none';
-        
+
         setTimeout(() => {
             window.print();
-            
+
             // Restore UI
             if (mainApp) mainApp.style.display = '';
             if (bottomNav) bottomNav.style.display = '';
-            
+
             if (modalPreview) {
                 modalPreview.style.position = 'fixed';
                 modalPreview.style.overflow = 'hidden';
@@ -3948,7 +3981,7 @@ window.addEventListener('load', async () => {
             }
             if (stickyFooter) stickyFooter.style.display = 'grid';
             if (previewHeader) previewHeader.style.display = 'grid';
-            
+
         }, 300);
     };
 
@@ -3958,7 +3991,7 @@ window.addEventListener('load', async () => {
         const previewWrapper = document.getElementById(wrapperId);
         const paperTarget = document.getElementById(paperId);
         const sliderInput = document.getElementById(sliderId);
-        
+
         if (previewWrapper && paperTarget) {
             // Calculate Perfect Fit Scale dynamically with Professional Margins
             const calculateFitScale = () => {
@@ -3968,7 +4001,7 @@ window.addEventListener('load', async () => {
             let currentZoom = calculateFitScale();
             let baseZoom = currentZoom;
             let lastDist = 0;
-            
+
             const updateLayout = () => {
                 if (sliderInput) sliderInput.value = currentZoom;
                 if (currentZoom === 1.0) {
@@ -3976,16 +4009,16 @@ window.addEventListener('load', async () => {
                     paperTarget.style.marginBottom = '0px';
                 } else {
                     paperTarget.style.transform = `scale(${currentZoom})`;
-                    paperTarget.style.marginBottom = '0px'; 
+                    paperTarget.style.marginBottom = '0px';
                 }
             };
 
             // Apply initial perfect fit
             updateLayout();
-            
+
             // Recalculate on window resize
             window.addEventListener('resize', () => {
-                if (currentZoom <= calculateFitScale() * 1.05) { 
+                if (currentZoom <= calculateFitScale() * 1.05) {
                     currentZoom = calculateFitScale();
                     updateLayout();
                 }
@@ -4035,14 +4068,14 @@ window.addEventListener('load', async () => {
                 if (e.target === sliderInput || (sliderInput && sliderInput.contains(e.target))) return;
 
                 if (e.touches.length === 2) {
-                    e.preventDefault(); 
+                    e.preventDefault();
                     const dist = Math.hypot(
                         e.touches[0].clientX - e.touches[1].clientX,
                         e.touches[0].clientY - e.touches[1].clientY
                     );
                     const delta = dist / lastDist;
                     const minZoom = calculateFitScale();
-                    currentZoom = Math.min(Math.max(minZoom, baseZoom * delta), 3.0); 
+                    currentZoom = Math.min(Math.max(minZoom, baseZoom * delta), 3.0);
                     updateLayout();
                 }
                 // Removed 1-finger isPanning block to allow 100% native iOS Safari scrolling interactions
@@ -4060,7 +4093,7 @@ window.addEventListener('load', async () => {
 
     // Setup for Estimate Document
     setupInteractiveZoom('modal-doc-preview', 'doc-preview-paper', 'zoom-slider-doc', 'preview-floating-header', 'preview-floating-footer');
-    
+
     // Setup for Receipt Grid
     setupInteractiveZoom('modal-receipt-grid', 'a4-print-container', 'zoom-slider-grid', 'grid-floating-header', 'grid-floating-footer');
 
@@ -4078,13 +4111,13 @@ window.addEventListener('load', async () => {
                 console.warn("Supabase client not loaded");
                 return;
             }
-            
+
             // --- CEO Demo Bypass for Zero Console Errors ---
             if (window.supabaseClient.supabaseUrl && window.supabaseClient.supabaseUrl.includes('nvnwnefqdsaecczpemkc')) {
                 console.log("[Neo Boot] Static Mode: Skipping Supabase fetch to maintain clean console.");
                 return; // Early return to prevent 404 errors during demo
             }
-            
+
             // Fetch Projects
             const { data: projData, error: projErr } = await window.supabaseClient.from('projects').select('*').order('id', { ascending: false });
             if (!projErr && projData) {
@@ -4120,7 +4153,7 @@ window.addEventListener('load', async () => {
                     id: d.id, projectId: d.project_id, type: d.type, title: d.title, amount: parseFloat(d.amount) || 0, date: d.date, url: d.url
                 }));
             }
-            
+
             // Fetch Global Lexicon (Crowdsourced Knowledge - Top 500)
             const { data: lexData, error: lexErr } = await window.supabaseClient.from('neo_global_lexicon').select('*').order('frequency', { ascending: false }).limit(500);
             if (!lexErr && lexData) {
@@ -4129,7 +4162,7 @@ window.addEventListener('load', async () => {
             } else {
                 window.globalLexicon = [];
             }
-            
+
             // Re-render dashboard
             if (typeof renderProjects === 'function') {
                 renderProjects(window.mockDB.projects);
@@ -4142,7 +4175,7 @@ window.addEventListener('load', async () => {
             console.error("Supabase init failed", e);
         }
     };
-    
+
     // Call DB Init
     initSupabaseData();
 
@@ -4150,7 +4183,7 @@ window.addEventListener('load', async () => {
     window.runCEOAudit = () => {
         let logs = JSON.parse(localStorage.getItem('neo_security_logs') || '[]');
         const unviewedLogs = logs.filter(log => !log.viewed);
-        
+
         if (unviewedLogs.length > 0) {
             console.warn(`[Neo Security Audit] WARNING: CEO, ${unviewedLogs.length} hostile attempts were blocked while you were offline.`);
             unviewedLogs.forEach(log => {
@@ -4221,7 +4254,7 @@ window.addEventListener('load', async () => {
         try {
             console.log(`[RAG Engine] Generating embeddings for: "${userQueryText}"`);
             console.log(`[RAG Engine] Retrieving relevant laws via pgvector HNSW index...`);
-            
+
             // Mock Response based on query
             let contextString = "";
             let citations = [];
@@ -4284,7 +4317,7 @@ window.addEventListener('load', async () => {
             // Build Premium Citation UI elements
             let citationsHtml = '';
             if (citations && citations.length > 0) {
-            citationsHtml = `
+                citationsHtml = `
                 <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(29, 155, 240, 0.3); display: block; gap: 4px;">
                 <span style="font-size: 11px; font-weight: 600; color: #10b981; letter-spacing: 0.05em; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px;">
                     <i data-lucide="book-check" style="width:12px; height:12px;"></i> AI ACCOUNTANT CITED SOURCES:
@@ -4334,7 +4367,7 @@ window.addEventListener('load', async () => {
     // are now handled externally to prevent DOM looping and improve modularity.
     // Stubs are provided below for backward compatibility during transition.
 
-    window.updateChatCharCounter = function(inputElement) {
+    window.updateChatCharCounter = function (inputElement) {
         // console.warn("Legacy window.updateChatCharCounter called. Use neo-brain.js for new logic.");
         const counter = document.getElementById('chat-char-counter');
         if (counter) {
@@ -4345,7 +4378,7 @@ window.addEventListener('load', async () => {
         }
     };
 
-    window.sendChatMessage = async function() {
+    window.sendChatMessage = async function () {
         console.warn("Legacy window.sendChatMessage called. Logic is handled by neo-brain.js");
     };
 
