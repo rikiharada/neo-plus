@@ -45,9 +45,9 @@
 
 [data-theme="dark"] {
   /* Minimal Dark Mode - Pitch Black */
-  --bg-color: #000000;
-  /* Pitch black */
-  --text-main: #E7E9EA;
+  --bg-color: #0a0a14;
+  /* Pitch black with slight blue hue */
+  --text-main: #FFFFFF;
   /* Light text for dark mode */
   --text-muted: #71767B;
   /* Muted text for dark mode */

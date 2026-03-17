@@ -252,12 +252,8 @@ window.neoBrainDefrag();
 
 // Make initialization robust for iOS Safari
 window.addEventListener('load', async () => {
-    // Restore session-segregated Chat DOM if exists
-    const savedChatDOM = sessionStorage.getItem('neo_chat_dom');
-    if (savedChatDOM) {
-        const cContainer = document.getElementById('chat-messages');
-        if (cContainer) { cContainer.innerHTML = savedChatDOM; }
-    }
+    // Session-segregated Chat DOM disabled for minimal UI
+    
     // Initialize i18n
     await window.i18n.loadLocale('ja'); // Load default 'ja' locale
 
@@ -1714,15 +1710,6 @@ window.addEventListener('load', async () => {
         // Restore size preference if reloading dash directly
         const storedSize = document.getElementById('select-font-size').value;
         if (storedSize === 'huge') applyFontSize('120%');
-
-        // Initial First Action Greeting (CEO Request)
-        setTimeout(() => {
-            const bubble = document.getElementById('neo-fab-bubble');
-            if (bubble) {
-                bubble.textContent = 'CEO、今日の現場の動きを教えて。';
-                bubble.classList.add('show');
-            }
-        }, 500);
     };
 
     // Database hoisted globally
@@ -4091,9 +4078,6 @@ window.addEventListener('load', async () => {
         const loadingId = "loading-" + Date.now();
         const loadingHtml = `
             <div id="${loadingId}" style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px; margin-top: 12px; opacity: 0.7;">
-                <div class="neo-avatar" style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    <img src="img/neo_avatar.jpg" alt="Neo" style="width: 100%; height: 100%; object-fit: cover;">
-                </div>
                 <div class="chat-bubble neo">
                     <i data-lucide="search" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> 判例と法令を検索・分析中...
                 </div>
@@ -4132,9 +4116,6 @@ window.addEventListener('load', async () => {
 
             const neoHtml = `
                 <div style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px; margin-top: 12px;">
-                    <div class="neo-avatar" style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                        <img src="img/neo_avatar.jpg" alt="Neo" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
                     <div class="chat-bubble neo">
                         ${aiResponseText}
                         ${citationsHtml}

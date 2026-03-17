@@ -731,3 +731,33 @@
 ::1 - - [17/Mar/2026 23:36:49] "GET /views/chat.html HTTP/1.1" 200 -
 ::1 - - [17/Mar/2026 23:36:49] "GET /pages/chat.js HTTP/1.1" 200 -
 ::1 - - [17/Mar/2026 23:37:11] "GET /pages/account-settings.js HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:42:33] "GET / HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:42:33] code 404, message File not found
+::1 - - [17/Mar/2026 23:42:33] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 -
+::1 - - [17/Mar/2026 23:42:33] "GET /js/app.js?v=NEO_SAFE_11 HTTP/1.1" 200 -
+::1 - - [17/Mar/2026 23:42:33] "GET /css/components.css?v=FINAL_FORCE_RECOVERY_31 HTTP/1.1" 200 -
+::1 - - [17/Mar/2026 23:42:33] "GET /pages/chat.js?v=ROUTER_1 HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:42:33] "GET /pages/setup.js HTTP/1.1" 200 -
+::1 - - [17/Mar/2026 23:42:33] "GET /lib/api/geminiClient.js HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:42:35] "GET /views/chat.html HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:42:35] "GET /pages/chat.js HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:37] "GET / HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:37] "GET /css/layout.css?v=FINAL_FORCE_RECOVERY_31 HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:37] "GET /lib/cloud/googleDrive.js HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:37] "GET /css/components.css?v=FINAL_FORCE_RECOVERY_31 HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:37] "GET /js/gemini.js?v=NEO_SAFE_11 HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:37] "GET /js/neo-brain.js?v=NEO_SAFE_11 HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:37] "GET /js/app.js?v=NEO_SAFE_11 HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:37] code 404, message File not found
+::1 - - [17/Mar/2026 23:47:37] "GET /pages/chat.js?v=ROUTER_1 HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:37] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 -
+::1 - - [17/Mar/2026 23:47:38] "GET /lib/components.js HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:38] "GET /lib/export/pdfGenerator.js HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:38] "GET /pages/setup.js HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:38] "GET /lib/api/geminiClient.js HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:38] "GET /lib/auth/googleDriveClient.js HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:39] "GET /views/chat.html HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:39] "GET /pages/chat.js HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:58] "GET / HTTP/1.1" 304 -
+::1 - - [17/Mar/2026 23:47:58] code 404, message File not found
+::1 - - [17/Mar/2026 23:47:58] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 -
