@@ -28,7 +28,6 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
-          thinkingConfig: { thinking_level: config?.thinking_level || 'balanced' },
           temperature: config?.temperature || 0.7,
           maxOutputTokens: config?.max_output_tokens || 400
         }
