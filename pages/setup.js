@@ -190,7 +190,7 @@ export function initSetupView() {
                 console.log("[NeoGatekeeper] Development bypass activated. Logging in as CEO.");
                 if (errorMsg) errorMsg.style.display = 'none';
                 newBtnLogin.textContent = "Bypass 成功";
-                handleAuthState({ user: { email: 'ceo@example.com', id: 'dev-bypass-id' } });
+                handleAuthState({ user: { email: 'ceo@example.com', id: '00000000-0000-0000-0000-000000000000' } });
                 return;
             }
 
