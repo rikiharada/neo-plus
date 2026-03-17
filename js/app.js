@@ -682,16 +682,24 @@ window.addEventListener('load', async () => {
         }
 
         // Scroll Logic & Dynamic Bottom Nav Injection
-        if (targetId === 'view-expense' || targetId === 'view-chat') {
+        if (targetId === 'view-expense') {
             const neoBottomNav = document.querySelector('.neo-bottom-nav');
             if (neoBottomNav) neoBottomNav.style.display = 'none';
             setTimeout(() => {
-                const chatContainer = document.getElementById('expense-chat-container') || document.getElementById('chat-messages');
+                const chatContainer = document.getElementById('expense-chat-container');
                 if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
             }, 100);
         } else if (targetId !== 'view-invoice' && targetId !== 'view-setup') {
             const neoBottomNav = document.querySelector('.neo-bottom-nav');
             if (neoBottomNav) neoBottomNav.style.display = '';
+            
+            // Scroll logic for chat
+            if (targetId === 'view-chat') {
+                setTimeout(() => {
+                    const chatContainer = document.getElementById('chat-messages');
+                    if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 100);
+            }
             
             // Map legacy view IDs to new semantic names
             const viewMap = {

@@ -11,7 +11,7 @@ export function appendChatMessage(sender, htmlContent) {
 
     const row = document.createElement('div');
     if (sender === 'neo') {
-        row.className = 'message-bubble neo cyber-panel';
+        row.className = 'message-bubble neo';
     } else {
         row.className = 'message-bubble ceo';
     }

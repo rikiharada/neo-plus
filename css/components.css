@@ -464,7 +464,6 @@ button:active {
 
 .chat-bubble.neo {
     align-self: start;
-    border: 1.2px solid var(--btn-primary-border);
     border-left: 3px solid var(--accent-neo-yellow);
     color: var(--text-main);
     border-bottom-left-radius: 4px;
