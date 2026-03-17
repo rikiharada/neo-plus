@@ -106,8 +106,29 @@ window.GlobalStore = {
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'activities', filter: `user_id=eq.${this.state.user.id}` }, (payload) => {
                     console.log('[GlobalStore] Realtime Activity Change received!', payload);
                     fetchInitialData();
-                }).subscribe();
-        } catch(e) { console.warn('Supabase realtime disabled'); }
+                }).subscribe((status, err) => {
+                    const statusEl = document.getElementById('neo-core-status');
+                    if (status === 'SUBSCRIBED') {
+                        if (statusEl) {
+                            statusEl.textContent = 'AI Core Active';
+                            statusEl.style.color = 'var(--text-muted)';
+                        }
+                    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
+                        console.warn('[GlobalStore] Supabase realtime disabled/error', err || status);
+                        if (statusEl) {
+                            statusEl.textContent = 'オフライン中';
+                            statusEl.style.color = '#ef4444';
+                        }
+                    }
+                });
+        } catch(e) { 
+            console.warn('[GlobalStore] Supabase realtime crashed', e); 
+            const statusEl = document.getElementById('neo-core-status');
+            if (statusEl) {
+                statusEl.textContent = 'オフライン中';
+                statusEl.style.color = '#ef4444';
+            }
+        }
     }
 };
 
