@@ -1,4 +1,7 @@
-// --- Neo-Sync v2.0 Global Data Model ---
+import { createProjectCard, createTransactionRow, createNeoButton, renderBottomNav } from '../lib/components.js';
+import { uploadPdfToDrive } from '../lib/cloud/googleDrive.js';
+import { initHomeView } from '../pages/home.js';
+import { initSetupView } from '../pages/setup.js';
 // Neo's Pride Validation: Prevents inappropriate user names
 window.validateUserName = function (name) {
     if (!name || typeof name !== 'string') return false;
@@ -25,59 +28,62 @@ window.mockDB = window.mockDB || {
 };
 
 // Global DB Helpers for Supabase Sync
+window.persistLocalBody = function() {
+    localStorage.setItem('neo_local_body_activities', JSON.stringify(window.mockDB.activities || []));
+    localStorage.setItem('neo_local_body_projects', JSON.stringify(window.mockDB.projects || []));
+};
+
+window.loadLocalBody = function() {
+    try {
+        const storedActs = localStorage.getItem('neo_local_body_activities');
+        const storedProjs = localStorage.getItem('neo_local_body_projects');
+        if (storedActs) window.mockDB.activities = JSON.parse(storedActs);
+        if (storedProjs) window.mockDB.projects = JSON.parse(storedProjs);
+    } catch(e){}
+};
+
+// Call on boot
+window.loadLocalBody();
+
 window.insertProject = async (proj) => {
     window.mockDB.projects.unshift(proj);
+    window.persistLocalBody();
+    
     if (window.supabaseClient) {
-        try {
-            await window.supabaseClient.from('projects').insert([{
-                name: proj.name,
-                customer_name: proj.customerName || null,
-                location: proj.location || null,
-                note: proj.note || null,
-                category: proj.category || 'other',
-                color: proj.color || '#8E8E93',
-                unit: proj.unit || null,
-                has_unpaid: proj.hasUnpaid || false,
-                revenue: proj.revenue || 0,
-                status: proj.status || 'active',
-                client_name: proj.clientName || null,
-                payment_deadline: proj.paymentDeadline || null,
-                bank_info: proj.bankInfo || null,
-                last_updated: proj.lastUpdated || null,
-                currency: proj.currency || 'JPY'
-            }]);
-        } catch (e) { console.error('Supabase Error:', e); }
+        // Brain Sync: Background Async (Fire & Forget), do not block UI
+        window.supabaseClient.from('projects').insert([{
+            name: proj.name,
+            category: proj.category || 'other',
+            color: proj.color || '#8E8E93',
+            status: proj.status || 'active'
+        }]).then(() => console.log('Brain Sync OK')).catch(() => console.log('Brain Sync Skipped (Body kept intact)'));
     }
+    return Promise.resolve(proj);
 };
 
 window.insertTransaction = async (tx) => {
-    window.mockDB.transactions.push(tx);
-    if (!window.supabaseClient) return Promise.resolve(tx);
+    if(!window.mockDB.activities) window.mockDB.activities = [];
+    window.mockDB.activities.push(tx);
+    window.persistLocalBody();
 
-    try {
-        const { data, error } = await window.supabaseClient.from('activities').insert([{
+    if (window.supabaseClient) {
+        // Brain Sync: Background Async (Fire & Forget)
+        window.supabaseClient.from('activities').insert([{
             project_id: tx.projectId,
             type: tx.type,
             category: tx.category,
             title: tx.title,
             amount: Number(tx.amount) || 0,
-            date: new Date().toISOString(), // Strict Supabase ISO compliance
-            receipt_url: tx.receiptUrl || null,
+            date: new Date().toISOString(),
             is_bookkeeping: tx.isBookkeeping || false
-        }]);
-
-        if (error) throw error;
-        console.log("Supabase insertTransaction success:", tx.title, "is_bookkeeping:", tx.isBookkeeping);
-        return data || tx;
-    } catch (e) {
-        console.error('Supabase Error:', e);
-        throw e; // Bubble to correctly prevent false success UI
+        }]).then(() => console.log('Brain Sync OK')).catch(() => console.log('Brain Sync Skipped'));
     }
+    return Promise.resolve(tx);
 };
 
 window.updateTransaction = async (txId, updates) => {
     // Local Update
-    const tx = window.mockDB.transactions.find(t => t.id === txId);
+    const tx = window.mockDB.activities.find(t => t.id === txId);
     if (!tx) return;
 
     // Merge updates
@@ -281,112 +287,9 @@ window.addEventListener('load', async () => {
     let currentOpenProjectId = null;
     let currentProjectPage = 1;
 
-    // --- Phase 5: Auth Gatekeeper Initialization ---
-    const initAuthGatekeeper = async () => {
-        const viewAuth = document.getElementById('view-auth');
-        const appContainer = document.getElementById('app-container');
-
-        if (!window.supabaseClient) {
-            console.error("Supabase Client is not initialized.");
-            return;
-        }
-
-        const handleAuthState = (session) => {
-            if (session?.user) {
-                // Authenticated Route
-                window.GlobalStore.updateState({ user: session.user, session: session });
-                if (window.GlobalStore.initRealtimeSync) {
-                    window.GlobalStore.initRealtimeSync();
-                }
-
-                if (viewAuth) {
-                    viewAuth.classList.add('hidden');
-                    viewAuth.style.display = 'none';
-                }
-                if (appContainer) {
-                    appContainer.style.display = 'block';
-                }
-
-                window.showDash();
-
-                const uiAvatar = document.querySelector('.user-info-avatar-text');
-                if (uiAvatar) {
-                    uiAvatar.textContent = session.user.email ? session.user.email.charAt(0).toUpperCase() : 'A';
-                }
-            } else {
-                // Unauthorized Route -> Gatekeeper
-                window.GlobalStore.user = null;
-                window.GlobalStore.session = null;
-
-                if (appContainer) {
-                    appContainer.style.display = 'none';
-                }
-                if (viewAuth) {
-                    viewAuth.classList.remove('hidden');
-                    viewAuth.style.display = 'grid';
-                }
-            }
-        };
-
-        // 1. Initial Check
-        const { data: { session } } = await window.supabaseClient.auth.getSession();
-        handleAuthState(session);
-
-        // 2. Continuous Listener
-        window.supabaseClient.auth.onAuthStateChange((_event, currentSession) => {
-            handleAuthState(currentSession);
-        });
-
-        // 3. Login Button Binding
-        const btnLogin = document.getElementById('btn-auth-login');
-        if (btnLogin) {
-            btnLogin.addEventListener('click', async () => {
-                const email = document.getElementById('auth-email')?.value;
-                const password = document.getElementById('auth-password')?.value;
-                const errorMsg = document.getElementById('auth-error-msg');
-                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
-                // Development Auto-Login Bypass
-                if (!email && !password && isLocalhost) {
-                    console.log("[NeoGatekeeper] Development bypass activated. Logging in as CEO.");
-                    if (errorMsg) errorMsg.style.display = 'none';
-                    btnLogin.textContent = "Bypass 成功";
-                    handleAuthState({ user: { email: 'ceo@example.com', id: 'dev-bypass-id' } });
-                    return;
-                }
-
-                if (!email || !password) {
-                    if (errorMsg) {
-                        errorMsg.textContent = "メールとパスワードを入力してください";
-                        errorMsg.style.display = 'block';
-                    }
-                    return;
-                }
-
-                btnLogin.disabled = true;
-                btnLogin.textContent = "認証中...";
-
-                const { error } = await window.supabaseClient.auth.signInWithPassword({
-                    email,
-                    password,
-                });
-
-                if (error) {
-                    if (errorMsg) {
-                        errorMsg.textContent = "ログインに失敗しました: " + error.message;
-                        errorMsg.style.display = 'block';
-                    }
-                    btnLogin.disabled = false;
-                    btnLogin.textContent = "ログイン";
-                } else {
-                    if (errorMsg) errorMsg.style.display = 'none';
-                    btnLogin.textContent = "ログイン成功";
-                }
-            });
-        }
-    };
-
-
+    // --- Phase 5 & 12: Auth Gatekeeper & Setup Initialization ---
+    // Extracted entirely to pages/setup.js to enforce Trinity Architecture separation
+    initSetupView();
 
     // --- Global Profit Calculation ---
     window.updateGlobalProfitDisplay = () => {
@@ -403,8 +306,8 @@ window.addEventListener('load', async () => {
         }
 
         let totalExpenses = 0;
-        if (window.mockDB.transactions) {
-            window.mockDB.transactions.forEach(t => {
+        if (window.mockDB.activities) {
+            window.mockDB.activities.forEach(t => {
                 if (t.type === 'expense') totalExpenses += t.amount;
                 if (t.type === 'sales') totalRevenue += t.amount;
             });
@@ -440,38 +343,11 @@ window.addEventListener('load', async () => {
     };
 
     window.showDash = () => {
-        // Hide the router container for setup
-        const routerSetup = document.getElementById('router-view-setup');
-        if (routerSetup) {
-            routerSetup.classList.add('hidden');
-            routerSetup.style.display = 'none';
+        // Defer to the centralized router
+        if (window.switchView) {
+            window.switchView('view-dash');
         }
 
-        if (dashView) {
-            dashView.classList.remove('hidden');
-            dashView.style.display = 'grid';
-        }
-
-        // Animate neo container coming in
-        setTimeout(() => {
-            if (neoDashContainer) {
-                neoDashContainer.classList.add('active');
-            }
-            if (neo) neo.speak('neo_startup');
-        }, 100);
-
-        if (bottomNav) {
-            bottomNav.classList.remove('hidden');
-            bottomNav.style.display = 'grid';
-        }
-
-        applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
-
-        // Refresh UI
-        if (typeof renderProjects === 'function') {
-            renderProjects(mockDB.projects);
-        }
-        window.updateGlobalProfitDisplay();
 
         // 常に最新の設定を反映
         const userIndustry = (typeof mockDB !== 'undefined' && mockDB.userConfig) ? mockDB.userConfig.industry : 'general';
@@ -621,18 +497,18 @@ window.addEventListener('load', async () => {
         document.getElementById('view-project-detail'),
         document.getElementById('view-chat')
     ];
-    const bottomNav = document.getElementById('bottom-nav');
+    const bottomNav = document.querySelector('.neo-bottom-nav');
     const navItems = document.querySelectorAll('.nav-item');
 
     const switchView = (targetId) => {
-        // 鉄壁のガード: inline-expense の場合は絶対に画面遷移させない
+        // 鉄壁のガード
         if (targetId === 'inline-expense') {
             console.log("Blocked switchView due to inline-expense routing.");
             return;
         }
 
         // 強制的にすべてのビューを非表示にする
-        const allViewIds = ['view-dash', 'view-sites', 'view-expense', 'view-wallet', 'view-settings', 'view-project-detail', 'view-chat'];
+        const allViewIds = ['view-dash', 'view-sites', 'view-expense', 'view-wallet', 'view-settings', 'view-project-detail', 'view-chat', 'view-account'];
         allViewIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -642,153 +518,122 @@ window.addEventListener('load', async () => {
             }
         });
 
-        const targetViewElement = document.getElementById(targetId);
+        // Helper: Generically fetch and inject a view
+        const loadView = (viewName, targetContainerId, expectedViewId, jsModulePath, initFunction) => {
+            const routerAnchor = document.getElementById(targetContainerId);
+            let viewDom = document.getElementById(expectedViewId);
 
-        if (targetId === 'view-dash') {
-            const routerAnchor = document.getElementById('router-view-dash');
-            let dashViewDom = document.getElementById('view-dash');
-
-            const showDashView = () => {
-                dashViewDom = document.getElementById('view-dash');
-                if (dashViewDom) {
-                    dashViewDom.classList.remove('hidden');
-                    dashViewDom.style.display = 'block';
-                    dashViewDom.style.opacity = '1';
+            const showView = () => {
+                viewDom = document.getElementById(expectedViewId);
+                // Also check if the routerAnchor itself acquired the ID
+                if (!viewDom && routerAnchor && routerAnchor.id === expectedViewId) {
+                    viewDom = routerAnchor;
+                }
+                if (viewDom) {
+                    viewDom.classList.remove('hidden');
+                    // Special case for chat which needs flex
+                    viewDom.style.display = (expectedViewId === 'view-chat') ? 'flex' : 'block';
+                    viewDom.style.opacity = '1';
                 }
             };
 
-            if (!dashViewDom && routerAnchor) {
-                fetch('views/home.html')
+            if (!viewDom && routerAnchor) {
+                fetch(`views/${viewName}.html`)
                     .then(r => r.text())
                     .then(html => {
-                        routerAnchor.outerHTML = html;
-                        return import('../pages/home.js');
+                        // CEO Directive: innerHTML + ID 再付与
+                        routerAnchor.innerHTML = html;
+                        
+                        // IDを再付与 (内容物が自身のIDを持たない場合をケア)
+                        if (!document.getElementById(expectedViewId)) {
+                             // Inject the ID directly into the anchor to preserve selection reference
+                             routerAnchor.id = expectedViewId;
+                             routerAnchor.classList.add('view');
+                        }
+
+                        if (jsModulePath) {
+                            return import(jsModulePath);
+                        }
                     })
                     .then(module => {
-                        if (module && module.initHomeView) module.initHomeView();
-                        if (window.bindCockpitInputs) window.bindCockpitInputs();
-                        showDashView();
-                    })
-                    .catch(err => console.error("Failed to load Home View:", err));
-            } else {
-                showDashView();
-            }
-        } else if (targetId === 'view-sites' || targetId === 'view-project-detail') {
-            const routerAnchor = document.getElementById('router-view-sites');
-            let sitesView = document.getElementById('view-sites');
-            let detailView = document.getElementById('view-project-detail');
-
-            const showProjectView = () => {
-                if (targetId === 'view-sites') {
-                    sitesView = document.getElementById('view-sites');
-                    if (sitesView) {
-                        sitesView.classList.remove('hidden');
-                        sitesView.style.display = 'block';
-                        sitesView.style.opacity = '1';
-                    }
-                    const listContainer = document.getElementById('project-list-container');
-                    if (listContainer) {
-                        listContainer.classList.remove('hidden');
-                        listContainer.style.display = 'grid';
-                        listContainer.style.visibility = 'visible';
-                    }
-                } else if (targetId === 'view-project-detail') {
-                    detailView = document.getElementById('view-project-detail');
-                    if (detailView) {
-                        detailView.classList.remove('hidden');
-                        detailView.style.display = 'block';
-                        detailView.style.opacity = '1';
-                    }
-                }
-            };
-
-            if ((!sitesView || !detailView) && routerAnchor) {
-                fetch('views/project.html')
-                    .then(r => r.text())
-                    .then(html => {
-                        routerAnchor.outerHTML = html;
-                        return import('../pages/project.js');
-                    })
-                    .then(module => {
-                        if (module && module.initProjectView) module.initProjectView();
-                        // Optional: Re-bind Lucide icons, though app.js global logic handles it
+                        if (module && initFunction && module[initFunction]) {
+                            module[initFunction]();
+                        }
+                        // Global binds
+                        if (window.bindCockpitInputs && expectedViewId === 'view-dash') window.bindCockpitInputs();
                         if (window.lucide) window.lucide.createIcons();
-                        showProjectView();
-                    })
-                    .catch(err => console.error("Failed to load Project View:", err));
-            } else {
-                showProjectView();
-            }
-        } else if (targetId === 'view-chat') {
-            // Strict Chat Layout enforcement & Router Loading
-            const routerAnchor = document.getElementById('router-view-chat');
-            let chatView = document.getElementById('view-chat');
+                        
+                        showView();
 
-            const showChatView = () => {
-                chatView = document.getElementById('view-chat');
-                if (chatView) {
-                    chatView.classList.remove('hidden');
-                    chatView.style.display = 'flex'; // Uses flex for strict bottom anchoring
-                    chatView.style.flexDirection = 'column';
-                    chatView.style.height = '100vh';
-                    chatView.style.overflow = 'hidden';
+                        // Dispatch loaded event for special view handlers
+                        if (expectedViewId === 'view-chat') {
+                           // rebind enter keys
+                           const newInstructionInput = document.getElementById('main-instruction-input');
+                           if (newInstructionInput && window.handleInstruction) {
+                               newInstructionInput.addEventListener('keydown', (e) => {
+                                   if (e.isComposing || e.keyCode === 229) return;
+                                   if (e.key === 'Enter') {
+                                       if (e.shiftKey) return;
+                                       e.preventDefault();
+                                       if (window.createNewProjectFromTags && window.createNewProjectFromTags()) return;
+                                       const textValue = e.target.value.trim();
+                                       if (textValue) window.handleInstruction(textValue);
+                                   }
+                               });
+                           }
+                        }
+                    })
+                    .catch(err => console.error(`Router Error: Failed to load ${viewName} view`, err));
+            } else {
+                showView();
+            }
+        };
+
+        // Switch Logic based on ID
+        switch (targetId) {
+            case 'view-dash':
+                loadView('home', 'router-view-dash', 'view-dash', '../pages/home.js', 'initHomeView');
+                break;
+            case 'view-sites':
+                loadView('project', 'router-view-sites', 'view-sites', '../pages/project.js', 'initProjectView');
+                break;
+            case 'view-project-detail':
+                // Handled implicitly within the project view domain, re-route to project base
+                loadView('project', 'router-view-sites', 'view-sites', '../pages/project.js', 'initProjectView');
+                // Force detail view logic after load
+                const pDetail = document.getElementById('view-project-detail');
+                if (pDetail) {
+                    pDetail.classList.remove('hidden');
+                    pDetail.style.display = 'block';
+                    pDetail.style.opacity = '1';
                 }
-                // Ensure Cockpit from dash doesn't bleed
+                break;
+            case 'view-chat':
+                // Reset Cockpit if present
                 const dashCockpit = document.getElementById('neo-cockpit');
                 if (dashCockpit) dashCockpit.style.display = 'none';
-            };
-
-            if (!chatView && routerAnchor) {
-                fetch('views/chat.html')
-                    .then(r => r.text())
-                    .then(html => {
-                        routerAnchor.outerHTML = html; // Replace router anchor with actual view
-                        showChatView();
-
-                        // We also need to re-attach the event listener since the DOM is fresh
-                        const newInstructionInput = document.getElementById('main-instruction-input');
-                        if (newInstructionInput && window.handleInstruction) {
-                            newInstructionInput.addEventListener('keydown', (e) => {
-                                if (e.isComposing || e.keyCode === 229) return;
-                                if (e.key === 'Enter') {
-                                    if (e.shiftKey) return;
-                                    e.preventDefault();
-                                    if (window.createNewProjectFromTags && window.createNewProjectFromTags()) return;
-                                    const textValue = e.target.value.trim();
-                                    if (textValue) window.handleInstruction(textValue);
-                                }
-                            });
-                        }
-
-                        // Also reattach mic and camera listeners mapped to the new layout
-                        const micBtn = document.getElementById('btn-chat-voice');
-                        if (micBtn) {
-                            micBtn.addEventListener('click', (e) => {
-                                e.preventDefault();
-                            });
-                        }
-
-                        // Attach Send Button listener mapped from old app.js logic
-                        const sendBtn = document.getElementById('btn-send');
-                        if (sendBtn && window.handleInstruction && newInstructionInput) {
-                            sendBtn.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                if (window.createNewProjectFromTags && window.createNewProjectFromTags()) return;
-                                const textValue = newInstructionInput.value.trim();
-                                if (textValue) window.handleInstruction(textValue);
-                            });
-                        }
-                    })
-                    .catch(e => console.error("Router Error: Failed to load chat view", e));
-            } else {
-                showChatView();
-            }
-        } else if (targetViewElement) {
-            targetViewElement.classList.remove('hidden');
-            targetViewElement.style.display = 'block';
+                loadView('chat', 'router-view-chat', 'view-chat', '../pages/chat.js', null);
+                break;
+            case 'view-settings':
+            case 'view-account':
+                loadView('account', 'router-view-settings', 'view-settings', '../pages/account-settings.js', 'initAccountSettings');
+                break;
+            case 'view-wallet':
+                loadView('wallet', 'router-view-wallet', 'view-wallet', '../pages/wallet-render.js', 'initWalletView');
+                break;
+            default:
+                // Pre-loaded views like expense
+                const tg = document.getElementById(targetId);
+                if (tg) {
+                    tg.classList.remove('hidden');
+                    tg.style.display = 'block';
+                }
+                break;
         }
 
-        if (targetViewElement) {
+        const targetViewElement = document.getElementById(targetId) || document.getElementById('router-view-settings');
+
+        if (targetViewElement && !targetViewElement.classList.contains('hidden')) {
             targetViewElement.style.opacity = '0';
             // Trigger reflow
             void targetViewElement.offsetWidth;
@@ -806,10 +651,7 @@ window.addEventListener('load', async () => {
                     if (brainBar && brainPct) {
                         brainBar.style.width = '0%';
                         brainPct.textContent = '0%';
-
-                        // Force reflow
                         void brainBar.offsetWidth;
-
                         brainBar.style.width = '84%';
                         let count = 0;
                         const interval = setInterval(() => {
@@ -827,7 +669,7 @@ window.addEventListener('load', async () => {
 
         // Update Nav active state
         navItems.forEach(item => {
-            if (item.getAttribute('data-target') === targetId) {
+            if (item.getAttribute('data-target') === targetId || (targetId === 'view-account' && item.getAttribute('data-target') === 'view-settings')) {
                 item.classList.add('active');
             } else {
                 item.classList.remove('active');
@@ -839,36 +681,28 @@ window.addEventListener('load', async () => {
             window.i18n.updateDOM();
         }
 
-        // Scroll to bottom if Expense chat
-        if (targetId === 'view-expense') {
-            const chatContainer = document.getElementById('expense-chat-container');
-            if (chatContainer) {
-                setTimeout(() => {
-                    document.getElementById('app-container').scrollTop = document.getElementById('app-container').scrollHeight;
-                }, 100);
-            }
-        }
-
-        // Setup N+ AI Core Chat
-        if (targetId === 'view-chat') {
-            if (bottomNav) bottomNav.style.display = 'none';
-            const chatContainer = document.getElementById('chat-messages');
-
+        // Scroll Logic & Dynamic Bottom Nav Injection
+        if (targetId === 'view-expense' || targetId === 'view-chat') {
+            const neoBottomNav = document.querySelector('.neo-bottom-nav');
+            if (neoBottomNav) neoBottomNav.style.display = 'none';
             setTimeout(() => {
-                const inputEl = document.getElementById('chat-input-field');
-                if (inputEl) inputEl.focus();
+                const chatContainer = document.getElementById('expense-chat-container') || document.getElementById('chat-messages');
                 if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
             }, 100);
         } else if (targetId !== 'view-invoice' && targetId !== 'view-setup') {
-            if (bottomNav) {
-                bottomNav.classList.remove('hidden');
-                bottomNav.style.display = 'grid';
-            }
-        }
-
-        // Ensure Lucide icons are rendered for newly displayed elements across views
-        if (window.lucide) {
-            window.lucide.createIcons();
+            const neoBottomNav = document.querySelector('.neo-bottom-nav');
+            if (neoBottomNav) neoBottomNav.style.display = '';
+            
+            // Map legacy view IDs to new semantic names
+            const viewMap = {
+                'view-dash': 'home',
+                'view-sites': 'projects',
+                'view-wallet': 'wallet',
+                'view-settings': 'settings',
+                'view-account': 'settings' // Alias
+            };
+            const semanticName = viewMap[targetId] || 'chat';
+            renderBottomNav(semanticName);
         }
     }; // close switchView()
 
@@ -1179,8 +1013,8 @@ window.addEventListener('load', async () => {
         } catch (error) {
             console.error("Activity fetch error (fallback to mockDB):", error);
             // エラー時はフォールバックとしてローカルモックから返して後続の処理を止めない
-            if (window.mockDB && window.mockDB.transactions) {
-                return window.mockDB.transactions.filter(t =>
+            if (window.mockDB && window.mockDB.activities) {
+                return window.mockDB.activities.filter(t =>
                     t.projectId === projectId &&
                     !t.is_deleted &&
                     (t.type === 'expense' || t.type === 'labor' || t.type === 'work')
@@ -1369,7 +1203,7 @@ window.addEventListener('load', async () => {
         if (window.switchView) window.switchView('view-dash');
     };
 
-    window.saveDocument = () => {
+    window.saveDocument = async () => {
         let subtotal = 0;
         document.querySelectorAll('.item-price-input').forEach(el => subtotal += parseInt(el.value || '0', 10));
 
@@ -1382,6 +1216,76 @@ window.addEventListener('load', async () => {
 
         const totalStr = document.getElementById('preview-grand-total')?.textContent || '¥0';
         let msg = `ドキュメント（${window.currentDocType === 'estimate' ? '見積書' : (window.currentDocType === 'invoice' ? '請求書' : '領収書')}）を保存しました！`;
+
+        // Local UI Handlers for CEO snippet
+        const updateNeoStatus = (statusMsg) => {
+            const neoBubble = document.getElementById('neo-fab-bubble');
+            if (neoBubble) {
+                neoBubble.textContent = "⚡️ " + statusMsg;
+                neoBubble.classList.add('show');
+                setTimeout(() => { neoBubble.classList.remove('show'); }, 5000);
+            }
+        };
+
+        const saveUrlToSupabase = async (url) => {
+            if (!window.supabaseClient) return;
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            if (!session) return;
+            try {
+                await window.supabaseClient
+                    .from('profiles')
+                    .update({ cloud_pointer_url: url }) // Just the pointer
+                    .eq('id', session.user.id);
+                console.log("[NeoCloud] Pointer safely saved to Supabase.");
+            } catch(e) { console.error(e); }
+        };
+
+        // CEO Riki's Action
+        const handleSaveToCloud = async (blob) => {
+            // Fallback to btn-assistant-toggle if 'neo-pulse' ID does not exist securely in the DOM yet
+            const pulseTarget = document.getElementById('neo-pulse') || document.getElementById('btn-assistant-toggle');
+            
+            await uploadPdfToDrive(blob, `Neo_Scan_Doc_${Date.now()}.pdf`, {
+                onStart: () => {
+                    if (pulseTarget) pulseTarget.classList.add('neo-pulse-sync'); // Utilizing the sync animation we built
+                    updateNeoStatus("Syncing with your brain's cloud...");
+                },
+                onSuccess: (url) => {
+                    if (pulseTarget) pulseTarget.classList.remove('neo-pulse-sync');
+                    updateNeoStatus("Sync Completed. Secure URL established.");
+                    saveUrlToSupabase(url); // ポインタのみ保存
+                },
+                onError: () => {
+                    if (pulseTarget) pulseTarget.classList.remove('neo-pulse-sync');
+                    updateNeoStatus("Sync Interrupted. Please re-authorize.");
+                }
+            });
+        };
+
+        // Generate PDF Blob via html2pdf and intercept the result
+        const containerToPrint = document.getElementById('doc-preview-paper');
+        
+        if (window.html2pdf && containerToPrint) {
+            // Give visual feedback before freezing thread
+            updateNeoStatus("Generating PDF for sync...");
+            const opt = {
+                margin:       0,
+                filename:     `NeoDoc_${Date.now()}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' }
+            };
+            
+            try {
+                const pdfBlob = await window.html2pdf().set(opt).from(containerToPrint).output('blob');
+                
+                // If the user has Drive configured or clicked, execute the cloud flow asynchronously
+                // The CEO wants this triggered on save.
+                handleSaveToCloud(pdfBlob); 
+            } catch(err) {
+                console.error("PDF generation failed:", err);
+            }
+        }
 
         if (window.currentDocType === 'estimate') {
             msg += `\n将来的に「請求書」タブを開くと、この内容(${totalStr})が自動で引き継がれます。`;
@@ -1407,8 +1311,8 @@ window.addEventListener('load', async () => {
                 container.innerHTML = '';
                 // Extract pending transactions
                 let pendingTxs = [];
-                if (window.mockDB && window.mockDB.transactions && window.currentOpenProjectId) {
-                    pendingTxs = window.mockDB.transactions.filter(t => t.projectId === window.currentOpenProjectId && !t.is_deleted);
+                if (window.mockDB && window.mockDB.activities && window.currentOpenProjectId) {
+                    pendingTxs = window.mockDB.activities.filter(t => t.projectId === window.currentOpenProjectId && !t.is_deleted);
                 }
 
                 if (pendingTxs.length > 0) {
@@ -1637,7 +1541,7 @@ window.addEventListener('load', async () => {
 
         // Priority 3: Historical Precedent (Existing DB)
         // Sort descending by ID, but prioritize 'is_user_corrected' Ground Truths
-        const sortedTxs = [...mockDB.transactions].sort((a, b) => {
+        const sortedTxs = [...mockDB.activities].sort((a, b) => {
             if (a.is_user_corrected && !b.is_user_corrected) return -1;
             if (!a.is_user_corrected && b.is_user_corrected) return 1;
             return b.id - a.id;
@@ -1787,7 +1691,8 @@ window.addEventListener('load', async () => {
 
     const showSetup = () => {
         switchView('view-setup');
-        if (bottomNav) bottomNav.classList.add('hidden');
+        const bn = document.querySelector('.neo-bottom-nav');
+        if (bn) bn.style.display = 'none';
 
         // Neo Singleton: Do not hide neoFab
 
@@ -1795,7 +1700,8 @@ window.addEventListener('load', async () => {
 
     const showDash = () => {
         switchView('view-dash');
-        if (bottomNav) bottomNav.classList.remove('hidden');
+        const bn = document.querySelector('.neo-bottom-nav');
+        if (bn) bn.style.display = '';
 
         // Restore size preference if reloading dash directly
         const storedSize = document.getElementById('select-font-size').value;
@@ -1971,8 +1877,8 @@ window.addEventListener('load', async () => {
             sortedFiltered.sort((a, b) => new Date(b.lastUpdated || b.id) - new Date(a.lastUpdated || a.id));
         } else if (filterType === 'cost-desc') {
             sortedFiltered.sort((a, b) => {
-                const costA = mockDB.transactions.filter(t => t.projectId === a.id && !t.is_deleted && t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-                const costB = mockDB.transactions.filter(t => t.projectId === b.id && !t.is_deleted && t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+                const costA = mockDB.activities.filter(t => t.projectId === a.id && !t.is_deleted && t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+                const costB = mockDB.activities.filter(t => t.projectId === b.id && !t.is_deleted && t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
                 return costB - costA;
             });
         }
@@ -2025,96 +1931,25 @@ window.addEventListener('load', async () => {
         pagedProjects.forEach(proj => {
             // Calculate Profit Balance
             const mockRevenue = proj.revenue || 1000000;
-            const expenses = mockDB.transactions.filter(t => t.projectId === proj.id && !t.is_deleted && t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
-            const labor = mockDB.transactions.filter(t => t.projectId === proj.id && !t.is_deleted && t.type === 'labor').reduce((acc, curr) => acc + curr.amount, 0); // Mock logic
+            const expenses = mockDB.activities.filter(t => t.projectId === proj.id && !t.is_deleted && t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+            const labor = mockDB.activities.filter(t => t.projectId === proj.id && !t.is_deleted && t.type === 'labor').reduce((acc, curr) => acc + curr.amount, 0); // Mock logic
 
             const totalCost = expenses + labor;
             const projectProfit = mockRevenue - totalCost;
 
             totalAgencyProfit += projectProfit;
 
-            // Bank Account Folder Item
-            const item = document.createElement('div');
-            item.className = 'project-list-item';
-            item.style.position = 'relative';
-            item.style.display = 'grid';
-            item.style.alignItems = 'stretch';
-            item.style.overflow = 'hidden';
+            // Componentized Neo-Sync v2.0 Project Card Generation
+            const card = createProjectCard(proj);
 
-            // Translate status
-            let statusText = '稼働中';
-            if (proj.status === 'planning') {
-                statusText = '準備中';
-            } else if (proj.status === 'completed') {
-                statusText = '完了';
-            }
-
-            if (proj.hasUnpaid) {
-                statusText = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background-color:var(--accent-neo-blue);margin-right:4px;"></span>未入金あり`;
-                item.classList.add('is-unpaid');
-            }
-
-            // Determine color tag based on category
-            const catColors = {
-                it: '#3b82f6',
-                transportation: '#f59e0b',
-                accounting: '#8b5cf6',
-                construction: '#10b981',
-                design: '#ec4899',
-                other: '#6b7280'
-            };
-            const cColor = proj.color || catColors[proj.category] || '#9ca3af';
-
-            // Format cost
+            // Inherit the Total Cost display logic to keep Dashboard metrics intact
             const displayCost = `コスト: ¥${totalCost.toLocaleString()}`;
+            const costBadge = document.createElement('div');
+            costBadge.style.cssText = 'position: absolute; top: 16px; right: 16px; font-size: 11px; padding: 4px 8px; font-weight: 500; background: rgba(0,0,0,0.05); color: var(--text-muted); border-radius: 12px;';
+            costBadge.textContent = displayCost;
+            card.appendChild(costBadge);
 
-            // Notification Check (Unpaid or fake Unissued for demo)
-            const hasNotification = proj.hasUnpaid || Math.random() > 0.7; // Replace random with actual draft logic when documents expand
-            const notificationDot = hasNotification ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background-color:#ef4444;margin-left:4px;box-shadow: 0 0 6px rgba(239,68,68,0.6);" title="未処理タスクあり"></span>` : '';
-
-            // Get actual document count
-            const docCount = (typeof mockDB !== 'undefined' && mockDB.documents)
-                ? mockDB.documents.filter(d => d.projectId === proj.id).length
-                : 0;
-
-            // Dynamic deadline label based on industry
-            const industry = (typeof mockDB !== 'undefined' && mockDB.userConfig) ? mockDB.userConfig.industry : 'general';
-            let deadlineLabel = '予定日'; // Completely override Industry config per CEO order
-
-            item.innerHTML = `
-                <div style="position: absolute; top: 0; bottom: 0; left: 0; width: 4px; border-radius: 16px 0 0 16px; background-color: ${cColor}; box-shadow: 2px 0 8px rgba(0,0,0,0.1);"></div>
-                <div class="project-list-item-cover" style="background-color: var(--btn-secondary-border); border-radius: 12px; margin-left: 8px; display: grid; place-items: center; color: var(--text-muted); font-size: 10px;">
-                    <div class="project-list-item-balance" style="font-size: 11px; padding: 4px 8px; font-weight: 500; background: rgba(0,0,0,0.6); color: #fff; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        ${displayCost}
-                    </div>
-                </div>
-                <div class="project-list-item-info" style="margin-left: 8px;">
-                    <h3 class="project-list-item-title" style="margin-bottom: 6px;">${proj.name}</h3>
-                    <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 10px; color: var(--text-color);">
-                        <span style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px;">
-                            <i data-lucide="map-pin" style="width: 15px; height: 15px; color: #f87171;"></i> ${proj.location !== '-' && proj.location ? proj.location : '場所設定なし'}
-                        </span>
-                        <span style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; font-weight: 500;">
-                            <i data-lucide="calendar" style="width: 13px; height: 13px;"></i>${deadlineLabel}: ${proj.deadline || proj.startDate || '未設定'}
-                        </span>
-                    </div>
-                    <div class="project-list-item-meta" style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: start;  gap: 8px;">
-                        <span class="project-list-item-badge">${statusText}</span>
-                        <span class="project-list-item-docs" style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; background: rgba(241, 245, 249, 0.8); padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; color: #475569;">
-                            <i data-lucide="file-text" style="width: 13px; height: 13px; margin-right: 4px;"></i>書類 x ${docCount}${notificationDot}
-                        </span>
-                        <span class="project-list-item-badge" style="background: rgba(15, 23, 42, 0.05); color: var(--text-muted); opacity: 0.9;">
-                            <i data-lucide="history" style="width: 12px; height: 12px;"></i>更新: ${proj.lastUpdated || '-'}
-                        </span>
-                    </div>
-                </div>
-            `;
-
-            item.addEventListener('click', () => {
-                window.openProjectDetail(proj.id);
-            });
-
-            container.appendChild(item);
+            container.appendChild(card);
         });
 
         // --- Render Pagination Controls ---
@@ -2191,7 +2026,7 @@ window.addEventListener('load', async () => {
         });
 
         // Add all expenses
-        mockDB.transactions.forEach(t => {
+        mockDB.activities.forEach(t => {
             if (t.type === 'expense' || t.type === 'labor') {
                 globalExpenses += t.amount;
             }
@@ -2247,8 +2082,8 @@ window.addEventListener('load', async () => {
             // --- NEW: AI Accuracy (IQ) Tracker ---
             // Calculate how many times the AI ran vs how many times the user corrected it
             // Assuming most transactions in prototype came from AI/input unless stated
-            const totalPredictions = mockDB.transactions.length;
-            const totalCorrections = mockDB.transactions.filter(t => t.is_user_corrected && !t.is_deleted).length;
+            const totalPredictions = mockDB.activities.length;
+            const totalCorrections = mockDB.activities.filter(t => t.is_user_corrected && !t.is_deleted).length;
 
             let accuracy = 100;
             if (totalPredictions > 0) {
@@ -2331,10 +2166,10 @@ window.addEventListener('load', async () => {
 
             // Calc financials
             // Expenses: Any transaction that isn't explicitly income
-            const expenses = mockDB.transactions.filter(t => t.projectId === projectId && !t.is_deleted && t.type !== 'income').reduce((acc, curr) => acc + curr.amount, 0);
+            const expenses = mockDB.activities.filter(t => t.projectId === projectId && !t.is_deleted && t.type !== 'income').reduce((acc, curr) => acc + curr.amount, 0);
 
             // Incomes: Manual income transactions + Document invoices
-            const incomesFromTx = mockDB.transactions.filter(t => t.projectId === projectId && !t.is_deleted && t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+            const incomesFromTx = mockDB.activities.filter(t => t.projectId === projectId && !t.is_deleted && t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
             const invoices = mockDB.documents.filter(d => d.projectId === projectId && d.type === 'invoice');
             const invoiceSum = invoices.length > 0 ? invoices.reduce((acc, curr) => acc + curr.amount, 0) : 0;
 
@@ -2414,7 +2249,7 @@ window.addEventListener('load', async () => {
                     tlContainer.insertAdjacentHTML('beforeend', alertHtml);
                 }
 
-                combined = [...mockDB.transactions.filter(t => t.projectId === projectId && !t.is_deleted), ...mockDB.documents.filter(d => d.projectId === projectId)];
+                combined = [...mockDB.activities.filter(t => t.projectId === projectId && !t.is_deleted), ...mockDB.documents.filter(d => d.projectId === projectId)];
                 // Sort descending (basic string comparison for mock dates)
                 combined.sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -2422,63 +2257,33 @@ window.addEventListener('load', async () => {
                     tlContainer.innerHTML += '<div style="width: 100%; text-align: center;"><p style="color: var(--text-muted); font-size: 13px; padding: 20px 0; margin: 0;">履歴はありません。</p></div>';
                 } else {
                     combined.forEach(item => {
-                        const el = document.createElement('div');
-                        el.className = 'activity-list-item';
-                        // Inline styling for the passbook item
-                        el.style.display = 'grid';
-                        el.style.alignItems = 'center';
-                        el.style.padding = '12px 0';
-                        el.style.borderBottom = '1px solid var(--btn-secondary-border)';
-                        el.style.gap = '12px';
-
-                        let iconHtml = '';
-                        let title = item.title || item.desc;
-                        let amountStr = item.amount ? `¥${item.amount.toLocaleString()}` : '-';
-                        let amountColor = 'var(--text-main)';
-                        let statusHtml = '<span style="color: #10b981; font-weight: 300;">Successful</span>'; // default
-
-                        let categoryBadgeHtml = '';
-                        if (item.category && (item.type === 'expense' || item.type === 'income' || item.type === 'labor')) {
-                            // Badge color changes if it's user corrected (Ground Truth)
-                            const badgeBg = item.is_user_corrected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(15, 23, 42, 0.05)';
-                            const badgeColor = item.is_user_corrected ? '#10b981' : 'var(--text-muted)';
-                            const badgeIcon = item.is_user_corrected ? `<i data-lucide="check-circle" style="width:10px; height:10px; margin-right:2px; display:inline-block;"></i>` : '';
-
-                            categoryBadgeHtml = `<span onclick="window.openEditExpenseModal('${item.id}')" style="cursor: pointer; display: inline-block; align-items: center; background: ${badgeBg}; color: ${badgeColor}; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 6px; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">${badgeIcon}${item.category}</span>`;
-                        }
-
-                        if (item.type === 'invoice' || item.type === 'income') {
-                            // Plus icon for deposits/income/invoice
-                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); display: grid; place-items: center; color: #60a5fa;"><i data-lucide="plus" style="width: 18px; height: 18px; stroke-width: 2.5px;"></i></div>`;
-                            amountColor = '#60a5fa'; /* Blue */
-                            amountStr = `+${amountStr}`;
-                        } else if (item.type === 'expense' || item.type === 'receipt' || item.type === 'labor') {
-                            // Minus icon for expense
-                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); display: grid; place-items: center; color: #f87171;"><i data-lucide="minus" style="width: 18px; height: 18px; stroke-width: 2.5px;"></i></div>`;
-                            amountColor = '#f87171'; /* Red */
-                            amountStr = `-${amountStr}`;
-                            // Example of a warning status for some expenses
-                            if (item.amount > 50000) statusHtml = '<span style="color: #f59e0b; font-weight: 300;">確認待ち</span>';
+                        // Use unified Transaction Row factory
+                        // Documents use a generic form, Transactions use the full form
+                        if (!item.amount && !item.category) {
+                           // It's a document. For now, keep a simple item or map it to the row factory
+                           // Mocking a document shape for the generic row factory
+                           const docTx = {
+                               id: item.id,
+                               title: item.title,
+                               date: item.date,
+                               amount: 0,
+                               type: 'document',
+                               category: '書類'
+                           };
+                           const row = createTransactionRow(docTx, true);
+                           tlContainer.appendChild(row);
                         } else {
-                            // Square icon for generic documents
-                            iconHtml = `<div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); display: grid; place-items: center; color: #8b5cf6;"><i data-lucide="file-text" style="width: 16px; height: 16px; stroke-width: 1.5px;"></i></div>`;
+                           // It's a standard transaction
+                           const row = createTransactionRow(item, true, (tx) => {
+                               // Ensure we only open the modal for editables
+                               if (tx.type === 'expense' || tx.type === 'income' || tx.type === 'labor') {
+                                   window.openEditExpenseModal(tx.id);
+                               }
+                           });
+                           // To match the original timeline CSS hook used for filtering
+                           row.classList.add('activity-list-item'); 
+                           tlContainer.appendChild(row);
                         }
-
-                        el.innerHTML = `
-                            ${iconHtml}
-                            <div style=" min-width: 0; overflow: hidden; display: block; gap: 2px; cursor: pointer;" onclick="if(event.target.tagName !== 'SPAN') window.openEditExpenseModal('${item.id}')">
-                                <div style="font-size: 14px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.01em;">${title}${categoryBadgeHtml}</div>
-                                <div style="font-size: 11px; color: var(--text-muted); display: grid; grid-auto-flow: column; gap: 6px; align-items: center;">
-                                    <span>${item.date}</span>
-                                    <span>•</span>
-                                    ${statusHtml}
-                                </div>
-                            </div>
-                            <div style="font-size: 15px; font-weight: 700; color: ${amountColor}; text-align: right; letter-spacing: -0.02em;">
-                                ${amountStr}
-                            </div>
-                        `;
-                        tlContainer.appendChild(el);
                     });
                 }
             }
@@ -2499,7 +2304,7 @@ window.addEventListener('load', async () => {
 
             // Custom Expense Edit Modal Logic
             window.openEditExpenseModal = (txId) => {
-                const tx = mockDB.transactions.find(t => t.id == txId);
+                const tx = mockDB.activities.find(t => t.id == txId);
                 if (!tx || (tx.type !== 'expense' && tx.type !== 'income' && tx.type !== 'labor')) return; // Limit to editables
 
                 const idEl = document.getElementById('edit-tx-id');
@@ -2539,7 +2344,7 @@ window.addEventListener('load', async () => {
                 if (!idEl || !idEl.value) return;
                 const txId = idEl.value;
 
-                const tx = mockDB.transactions.find(t => t.id == txId);
+                const tx = mockDB.activities.find(t => t.id == txId);
                 if (tx) {
                     tx.is_deleted = true; // Local Logical Delete
 
@@ -2924,7 +2729,7 @@ window.addEventListener('load', async () => {
                                     amount: Math.floor(Math.random() * 20000) + 1000,
                                     date: new Date().toLocaleDateString('ja-JP').replace(/\//g, '/')
                                 };
-                                mockDB.transactions.unshift(newTx);
+                                mockDB.activities.unshift(newTx);
                                 renderProjects(mockDB.projects); // update wallet and lists
                             }
                         }
@@ -2954,8 +2759,7 @@ window.addEventListener('load', async () => {
         }
     }
 
-    // Check initial state (Auth Gatekeeper)
-    initAuthGatekeeper();
+    // Check initial state (Setup Gatekeeper is now initialized at the top of the file)
     bindProjectClicks();
 
     // Navigation intercepts
@@ -3890,7 +3694,7 @@ window.addEventListener('load', async () => {
     // --- Field King: Wireless Print ---
     window.printModalGrid = function () {
         const mainApp = document.querySelector('.app-container');
-        const bottomNav = document.getElementById('bottom-nav');
+        const bottomNav = document.querySelector('.neo-bottom-nav');
         const modalPreview = document.getElementById('modal-receipt-grid');
         const stickyFooter = modalPreview ? modalPreview.querySelector('#grid-floating-footer') : null;
         const previewHeader = modalPreview ? modalPreview.querySelector('#grid-floating-header') : null;
@@ -3925,7 +3729,7 @@ window.addEventListener('load', async () => {
     window.printModalDoc = function () {
         // Temporarily hide the app container and nav to isolate the modal for printing
         const mainApp = document.querySelector('.app-container');
-        const bottomNav = document.getElementById('bottom-nav');
+        const bottomNav = document.querySelector('.neo-bottom-nav');
         const modalPreview = document.getElementById('modal-doc-preview');
         const stickyFooter = modalPreview ? modalPreview.querySelector('div[style*="position: absolute; bottom: 0;"]') : null;
         const previewHeader = modalPreview ? modalPreview.querySelector('div[style*="border-bottom: 1px solid"]') : null;

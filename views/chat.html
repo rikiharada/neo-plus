@@ -16,15 +16,10 @@
             <div class="content-area" style="padding: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; position: relative;">
                 
                 <!-- Scrollable Message Area -->
-                <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 20px 20px 20px 20px; display: flex; flex-direction: column; gap: 24px;">
+                <div id="chat-messages" class="chat-scroll-area">
                     <!-- Initial Greeting (Neo - Left) -->
-                    <div class="chat-message-row neo-message-row" style="display: flex; gap: 12px; align-items: flex-end; margin-bottom: 12px;">
-                        <div class="avatar-wrapper">
-                            <img src="img/neo_avatar.jpg" class="avatar-circle" alt="Neo">
-                        </div>
-                        <div id="neo-initial-chat-greeting" class="chat-bubble neo first-message" style="font-size: 15px; font-family: var(--font-sans);">
-                            <!-- Populated randomly by JS -->
-                        </div>
+                    <div id="neo-initial-chat-greeting" class="message-bubble neo cyber-panel first-message">
+                        <!-- Populated randomly by JS -->
                     </div>
                 </div>
 

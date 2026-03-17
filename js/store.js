@@ -10,8 +10,9 @@ window.GlobalStore = {
     state: {
         user: null,
         session: null,
-        transactions: [],
-        projects: []
+        activities: [],
+        projects: [],
+        isLoading: false
     },
     listeners: [],
     
@@ -22,6 +23,12 @@ window.GlobalStore = {
     updateState(updates) {
         this.state = { ...this.state, ...updates };
         this.notify();
+    },
+    
+    setLoading(loading) {
+        if (this.state.isLoading !== loading) {
+            this.updateState({ isLoading: loading });
+        }
     },
     
     subscribe(listener) {
@@ -40,41 +47,67 @@ window.GlobalStore = {
 
         console.log("[GlobalStore] Initializing Supabase Realtime Sync...");
 
-        // Initial Data Fetch
+        // Body-First Architecture Data Fetch
         const fetchInitialData = async () => {
             if (!this.state.user) return;
-            const [txRes, projRes] = await Promise.all([
-                window.supabaseClient.from('transactions').select('*').eq('user_id', this.state.user.id).order('date', { ascending: false }),
-                window.supabaseClient.from('projects').select('*').eq('user_id', this.state.user.id).order('created_at', { ascending: false })
-            ]);
             
-            this.updateState({
-                transactions: txRes.data || [],
-                projects: projRes.data || []
-            });
+            // 1. INSTANT HYDRATION: Local Body Storage priority
+            try {
+                const storedActs = localStorage.getItem('neo_local_body_activities');
+                const storedProjs = localStorage.getItem('neo_local_body_projects');
+                let hydratedState = { activities: [], projects: [] };
+                
+                if (storedActs) hydratedState.activities = JSON.parse(storedActs);
+                if (storedProjs) hydratedState.projects = JSON.parse(storedProjs);
+                
+                if (hydratedState.activities.length > 0 || hydratedState.projects.length > 0) {
+                    console.log("[GlobalStore] SWR: Hydrating from Local Body instantly");
+                    this.updateState(hydratedState);
+                } else if (window.mockDB) {
+                    console.log("[GlobalStore] SWR: Fallback to MockDB template");
+                    this.updateState({ activities: window.mockDB.activities || [], projects: window.mockDB.projects || [] });
+                }
+            } catch (e) {
+                console.log("Local Body read error", e);
+            }
+
+            // 2. BACKGROUND BRAIN SYNC (Fire & Forget)
+            const revalidateBrain = async () => {
+                if(!window.supabaseClient) return;
+                try {
+                    const [txRes, projRes] = await Promise.all([
+                        window.supabaseClient.from('activities').select('*').eq('user_id', this.state.user.id).order('date', { ascending: false }),
+                        window.supabaseClient.from('projects').select('*').eq('user_id', this.state.user.id).order('created_at', { ascending: false })
+                    ]);
+                    
+                    if (txRes.error) throw txRes.error;
+                    if (projRes.error) throw projRes.error;
+
+                    const freshActivities = txRes.data || [];
+                    const freshProjects = projRes.data || [];
+                    
+                    if (freshActivities.length > 0 || freshProjects.length > 0) {
+                        console.log("[GlobalStore] Brain Sync: Data merged safely.");
+                        // Optional: Merge Strategy could go here, but for Genesis, Local Body is primary.
+                    }
+                } catch (e) {
+                    console.warn("[GlobalStore] Brain Sync Unavailable:", e.message);
+                }
+            };
+            
+            revalidateBrain(); // Fire and forget, no UI blocking
         };
 
         await fetchInitialData();
 
-        // Realtime Subscriptions
-        const channels = window.supabaseClient.channel('custom-all-channel')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${this.state.user.id}` },
-                (payload) => {
-                    console.log('[GlobalStore] Realtime Transaction Change received!', payload);
-                    fetchInitialData(); // Re-fetch for simplicity and consistency, or patch state directly
-                }
-            )
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'projects', filter: `user_id=eq.${this.state.user.id}` },
-                (payload) => {
-                    console.log('[GlobalStore] Realtime Project Change received!', payload);
+        // Realtime Subscriptions (Optional Brain feature)
+        try {
+            const channels = window.supabaseClient.channel('custom-all-channel')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'activities', filter: `user_id=eq.${this.state.user.id}` }, (payload) => {
+                    console.log('[GlobalStore] Realtime Activity Change received!', payload);
                     fetchInitialData();
-                }
-            )
-            .subscribe();
+                }).subscribe();
+        } catch(e) { console.warn('Supabase realtime disabled'); }
     }
 };
 

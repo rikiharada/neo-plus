@@ -1,0 +1,128 @@
+<div class="content-area" style="padding: var(--spacing-lg);">
+    <div class="settings-group" style="margin-bottom: var(--spacing-xl); text-align: left;">
+        <h3 style="font-size: var(--text-small); color: var(--text-muted); font-weight: 600; margin-bottom: var(--spacing-sm);">Neo+ 分散型クラウド連携 (BYOC)</h3>
+        <div style="background: #f9fafb; border: 1.2px solid var(--btn-primary-border); border-radius: 12px; padding: var(--spacing-md); font-size: 13px; color: var(--text-main); margin-bottom: var(--spacing-md); line-height: 1.5;">
+            <p style="margin: 0 0 8px 0;"><strong>データについて</strong></p>
+            <p style="margin: 0; color: var(--text-muted);">Neo+は自社サーバーを持ちません。あなたのiPhone/Macの中やクラウドにデータを直接、暗号化して保存します。機密データ（金額・顧客リスト）は100%あなたのものです。</p>
+        </div>
+
+        <label style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
+            <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                <i data-lucide="cloud" style="width: 20px; height: 20px; color: #007AFF;"></i>
+                <span style="font-size: 14px; font-weight: 500;">Apple iCloud</span>
+            </div>
+            <input type="radio" name="cloudSync" value="icloud" checked style="accent-color: var(--accent-neo-blue);">
+        </label>
+        
+        <label id="label-gdrive-sync" style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer; position: relative;">
+            <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                <i data-lucide="triangle" style="width: 20px; height: 20px; color: #34A853;"></i>
+                <span style="font-size: 14px; font-weight: 500;">Google Drive</span>
+            </div>
+            <input type="radio" name="cloudSync" value="gdrive" id="radio-gdrive-sync" style="accent-color: var(--accent-neo-blue);">
+
+            <!-- BYOC Dynamic Loading Overlay -->
+            <div id="gdrive-loading-overlay" class="hidden" style="position: absolute; top:0; left:0; right:0; bottom:0; background: var(--bg-color); display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; z-index: 10;">
+                <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                    <i data-lucide="loader-2" class="spin" style="width: 20px; height: 20px; color: #34A853; animation: spin 1s linear infinite;"></i>
+                    <span style="font-size: 14px; font-weight: 500; color: #34A853;">Google Drive に接続中...</span>
+                </div>
+            </div>
+        </label>
+
+        <label style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
+            <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                <i data-lucide="box" style="width: 20px; height: 20px; color: #0061FF;"></i>
+                <span style="font-size: 14px; font-weight: 500;">Dropbox</span>
+            </div>
+            <input type="radio" name="cloudSync" value="dropbox" style="accent-color: var(--accent-neo-blue);">
+        </label>
+    </div>
+
+    <div class="settings-group" style="margin-bottom: var(--spacing-xl); text-align: left;">
+        <h3 style="font-size: var(--text-small); color: var(--text-muted); font-weight: 600; margin-bottom: var(--spacing-sm);">表示設定</h3>
+        <label style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer;">
+            <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                <i data-lucide="sun" class="icon-sun" style="width: 20px; height: 20px; color: #f59e0b;"></i>
+                <i data-lucide="moon" class="icon-moon" style="width: 20px; height: 20px; color: #6366f1; display: none;"></i>
+                <span style="font-size: 14px; font-weight: 500;">ダークモード切替</span>
+            </div>
+            <button class="theme-toggle" style="background:none; border:none; cursor:pointer; color: var(--text-muted);">
+                <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+            </button>
+        </label>
+        
+        <label style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #EFF3F4;">
+            <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                <i data-lucide="eye" style="width: 20px; height: 20px; color: #3b82f6;"></i>
+                <span style="font-size: 14px; font-weight: 500;">文字サイズ設定</span>
+            </div>
+            <select id="select-font-size" style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 12px;">
+                <option value="normal">標準</option>
+                <option value="huge">特大ロゴ用</option>
+            </select>
+        </label>
+    </div>
+
+    <div class="settings-group" style="margin-bottom: var(--spacing-xl); text-align: left;">
+        <h3 style="font-size: var(--text-small); color: var(--text-muted); font-weight: 600; margin-bottom: var(--spacing-sm);">AI ドキュメント・カスタマイズ</h3>
+        <div style="background: #fff; border: 1.5px solid var(--btn-primary-border); border-radius: 12px; padding: 16px; margin-bottom: var(--spacing-md); box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+            
+            <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                    <i data-lucide="stamp" style="width: 20px; height: 20px; color: var(--accent-neo-red);"></i>
+                    <span style="font-size: 14px; font-weight: 600;">電子社印・角印</span>
+                </div>
+                <!-- Mini Toggle Switch -->
+                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                    <input type="checkbox" id="toggle-stamp-overlay" checked style="opacity: 0; width: 0; height: 0;">
+                    <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
+                    <span class="slider-knob" style="position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%;"></span>
+                </label>
+            </div>
+            
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px 0;">請求書や見積書に自動で社印を合成します（背景透過PNG推奨）。</p>
+            
+            <div id="stamp-upload-area" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; background: #f8fafc; transition: all 0.2s;">
+                <i data-lucide="image-plus" style="width: 24px; height: 24px; color: #94a3b8; margin-bottom: 8px;"></i>
+                <div style="font-size: 13px; font-weight: 500; color: #475569;">タップして画像を選択</div>
+                <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">PNG, JPG (MAX 2MB)</div>
+                <input type="file" id="stamp-file-input" accept="image/*" style="display: none;">
+                
+                <!-- Preview Image (Hidden initially) -->
+                 <img id="stamp-preview-img" src="" alt="Stamp Preview" style="display: none; max-width: 100px; max-height: 100px; margin: 12px auto 0; border: 1px solid #e2e8f0; border-radius: 4px;">
+            </div>
+
+            <!-- Position Adjustments (only visible when stamp exists/toggled) -->
+            <div id="stamp-adjust-controls" style="margin-top: 16px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+                <div style="font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 8px;">合成位置の微調整</div>
+                
+                <label style="display: block; gap: 6px; margin-bottom: 12px;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center;">
+                        <span>左右位置 (X offset)</span>
+                        <span id="stamp-x-val" style="color: var(--accent-neo-blue);">0px</span>
+                    </div>
+                    <input type="range" id="stamp-x-slider" min="-100" max="100" step="1" value="0" style="accent-color: var(--accent-neo-blue);">
+                </label>
+                <label style="display: block; gap: 6px;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center;">
+                        <span>上下位置 (Y offset)</span>
+                        <span id="stamp-y-val" style="color: var(--accent-neo-blue);">0px</span>
+                    </div>
+                    <input type="range" id="stamp-y-slider" min="-100" max="100" step="1" value="0" style="accent-color: var(--accent-neo-blue);">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-group" style="margin-bottom: var(--spacing-xl); text-align: center; margin-top: 60px;">
+        <div style="font-size: 10px; font-weight: 300; color: var(--text-muted); opacity: 0.4; letter-spacing: 0.05em; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+            Neo+ System - Dedicated Node / ¥499 monthly (Billed Annually)
+        </div>
+    </div>
+    <div class="settings-group">
+        <button class="btn-huge btn-secondary" onclick="window.resetSetup()">
+            ♻️ アプリ初期化 (Reset)
+        </button>
+    </div>
+</div>

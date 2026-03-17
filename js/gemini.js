@@ -3,7 +3,7 @@
  * Handles dynamic routing based on free-form text input.
  */
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3-flash-preview';
 const TIER_1_KEY = 'AIzaSyDlsYWXwU12EOu9b8ylMwYpIBG_NpdJFq4'; // New Dedicated AI Studio Engine Key
 
 const NEO_CORE_IDENTITY_PROMPT = `
@@ -29,7 +29,7 @@ All protocols (ABSOLUTE_ETHICS, ANTI_SPECULATION, ZERO_TOLERANCE_SEXUAL, NG_WORD
 
 // Retrieve API key
 function getGeminiApiKey() {
-    let key = typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_GEMINI_API_KEY ? process.env.NEXT_PUBLIC_GEMINI_API_KEY : TIER_1_KEY;
+    let key = TIER_1_KEY; // API Keys should be injected securely at build time or via backend proxy in production
 
     // CEO Audit: Prove API Key is loaded
     console.log("[Neo Security] API Key loaded:", (key && key !== 'WAITING_FOR_CEO_API_KEY') ? "Yes" : "No");
@@ -148,7 +148,7 @@ Source: 個人的な支出の否認ルール
         }
     } catch (e) { console.error(e); }
 
-    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + TIER_1_KEY;
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=" + TIER_1_KEY;
 
     const promptText = `
 [STRICT SYSTEM RULE]
@@ -300,6 +300,7 @@ Example Query: [{"action": "QUERY_KNOWLEDGE", "answer": "現在稼働中のプ�
                     }
                 ],
                 generationConfig: {
+                    thinking_level: "balanced",
                     temperature: 0.1, // Low temperature for deterministic output
                     maxOutputTokens: 4096,
                     stopSequences: ["]\n", "]`"] // JSON配列が閉じた時点で強制終了
@@ -372,7 +373,7 @@ async function extractPureBusinessTerm(userInput) {
     const apiKey = getGeminiApiKey();
     if (!apiKey) return null;
 
-    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + TIER_1_KEY;
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=" + TIER_1_KEY;
 
     const promptText = `
 You are a strict data-cleansing bot for an accounting app.
@@ -429,6 +430,7 @@ User Input: "${userInput}"
                     }
                 ],
                 generationConfig: {
+                    thinking_level: "balanced",
                     temperature: 0.1,
                     maxOutputTokens: 20
                 }
@@ -463,7 +465,7 @@ async function parseReceiptRecords(transactions, userOccupation = "general") {
         return [];
     }
 
-    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + TIER_1_KEY;
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=" + TIER_1_KEY;
 
     const promptText = `
 You are an expert Japanese accountant.
@@ -521,6 +523,7 @@ Example Output:
                     }
                 ],
                 generationConfig: {
+                    thinking_level: "balanced",
                     temperature: 0.1
                 }
             })
@@ -561,7 +564,7 @@ window.generateGeminiResponse = async function (userInput, context = "chat_room"
     const apiKey = getGeminiApiKey();
     if (!apiKey) return "APIキーが設定されていません。";
 
-    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + TIER_1_KEY;
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=" + TIER_1_KEY;
 
     // --- RAG: Retrieving vectors from Supabase (FP/Tax PDFs) ---
     let ragContext = "";
@@ -763,6 +766,7 @@ ${(() => {
                     }
                 ],
                 generationConfig: {
+                    thinking_level: "balanced",
                     temperature: 0.4,
                     maxOutputTokens: 4096
                 }
@@ -801,7 +805,7 @@ window.extractNeoCoreSoul = async function (historyText) {
     const apiKey = getGeminiApiKey();
     if (!apiKey) return "";
 
-    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + TIER_1_KEY;
+    const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=" + TIER_1_KEY;
 
     const extractionPrompt = `
 あなたはNeoの自己圧縮モジュールです。以下の「過去の会話ログ」を分析し、Neoが今後の会話で絶対に忘れてはならない『システムプロンプト用の魂（要約テキスト）』を作成してください。
@@ -843,6 +847,7 @@ ${historyText}
                     }
                 ],
                 generationConfig: {
+                    thinking_level: "balanced",
                     temperature: 0.1, // Keep it highly deterministic
                     maxOutputTokens: 500
                 }

@@ -1,0 +1,189 @@
+<!-- Full Screen Document Generator Modal (Scrolling Form) -->
+<div id="modal-doc-gen" class="modal-overlay hidden" style="z-index: 10000 !important; background: #f8fafc; display: block; width: 100vw; max-width: 100%; position: fixed; top: 0; left: 0; bottom: 0; right: 0; overflow-y: scroll !important; -webkit-overflow-scrolling: touch; padding: 0; margin: 0;">
+    <style>
+        #modal-doc-gen:not(.hidden) {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+    </style>
+
+    <!-- TOP SECTION: HEADER & TABS -->
+    <div style=" background: #fff; border-bottom: 1px solid #cbd5e1; z-index: 10; padding-top: calc(env(safe-area-inset-top) + 16px);">
+        <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; padding: 0 20px; margin-bottom: 16px; width: 100%; box-sizing: border-box;">
+            <div style="font-weight: 800; font-size: 20px; margin: 0; padding: 0; color: #0f172a; letter-spacing: -0.02em;">書類作成</div>
+            <button onclick="window.closeDocGenModal()" style="background: rgba(15, 23, 42, 0.05); border: none; width: 32px; height: 32px; border-radius: 16px; display: grid; place-items: center; color: #0f172a; margin: 0; padding: 0; transition: background 0.2s;">
+                <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+        </div>
+        <!-- TABS container matching the 20px line exactly -->
+        <div style="padding: 0 20px 16px 20px; width: 100%; box-sizing: border-box; margin: 0;">
+            <div style="display: grid; grid-auto-flow: column;  background: #f1f5f9; border-radius: 8px; padding: 4px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; margin: 0; width: 100%; box-sizing: border-box;">
+                <style>
+                    /* Hide scrollbar for Chrome, Safari and Opera */
+                    div::-webkit-scrollbar {
+                        display: none;
+                    }
+                </style>
+                <button id="tab-doc-estimate" onclick="window.switchDocTab('estimate')" style="background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: none; border-radius: 6px; padding: 8px 0; margin: 0;  min-width: 60px; font-size: 13px; font-weight: 600; color: #0f172a;">見積書</button>
+                <button id="tab-doc-invoice" onclick="window.switchDocTab('invoice')" style="background: transparent; border: none; padding: 8px 0; margin: 0;  min-width: 60px; font-size: 13px; font-weight: 600; color: #64748b;">請求書</button>
+                <button id="tab-doc-delivery" onclick="window.switchDocTab('delivery')" style="background: transparent; border: none; padding: 8px 0; margin: 0;  min-width: 60px; font-size: 13px; font-weight: 600; color: #64748b;">納品書</button>
+                <button id="tab-doc-receipt" onclick="window.switchDocTab('receipt')" style="background: transparent; border: none; padding: 8px 0; margin: 0;  min-width: 60px; font-size: 13px; font-weight: 600; color: #64748b;">領収書</button>
+                <button id="tab-doc-expense" onclick="window.switchDocTab('expense')" style="background: transparent; border: none; padding: 8px 0; margin: 0;  min-width: 60px; font-size: 13px; font-weight: 600; color: #64748b;">経費</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN SECTION: INPUT FORMS (Scrollable) -->
+    <div class="doc-gen-inputs-wrapper" style="width: 100%; margin: 0; padding: 16px 20px 140px 20px; box-sizing: border-box; background: transparent;">
+        <div class="doc-gen-inputs" style="width: 100%; margin: 0; padding: 0; display: block; gap: 0;">
+
+            <div style="width: 100%; margin: 0 0 16px 0; padding: 0;">
+                <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0 0 8px 0; padding: 0; display: block; width: 100%;">取引先 / 宛名</label>
+                <input type="text" id="doc-client-name" class="form-control" placeholder="株式会社〇〇 御中" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+            </div>
+
+            <div style="display: grid; grid-auto-flow: column; gap: 12px; width: 100%; margin: 0 0 16px 0; padding: 0;">
+                <div style=" margin: 0; padding: 0;">
+                    <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0 0 8px 0; padding: 0; display: block; width: 100%;">発行日</label>
+                    <input type="date" id="doc-issue-date" class="form-control" onchange="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                </div>
+                <div style=" margin: 0; padding: 0;" id="doc-deadline-container">
+                    <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0 0 8px 0; padding: 0; display: block; width: 100%;" id="doc-deadline-label">有効期限</label>
+                    <input type="date" id="doc-deadline-date" class="form-control" onchange="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                </div>
+            </div>
+
+            <div style="width: 100%; margin: 0 0 16px 0; padding: 0;">
+                <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0 0 8px 0; padding: 0; display: block; width: 100%;">件名 / プロジェクト名</label>
+                <input type="text" id="doc-subject" class="form-control" placeholder="〇〇工事一式として" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+            </div>
+
+            <!-- CONDITIONAL: Receipt Inputs -->
+            <div id="doc-receipt-inputs" style="display: none; width: 100%; margin: 0 0 16px 0; padding: 0;">
+                <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0 0 8px 0; padding: 0; display: block; width: 100%;">但し書き</label>
+                <input type="text" id="doc-receipt-memo" class="form-control" placeholder="お品代として" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0 0 16px 0; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+
+                <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0 0 8px 0; padding: 0; display: block; width: 100%;">決済方法</label>
+                <select id="doc-payment-method" class="form-control" onchange="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; appearance: auto; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                    <option value="cash">現金</option>
+                    <option value="bank">銀行振込</option>
+                    <option value="credit">クレジットカード</option>
+                </select>
+            </div>
+
+            <!-- CONDITIONAL: Bank Info (Invoice) -->
+            <div id="doc-bank-inputs" style="display: none; width: 100%; margin: 0 0 16px 0; padding: 0;">
+                <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0 0 8px 0; padding: 0; display: block; width: 100%;">振込先口座</label>
+                <textarea id="doc-bank-info" class="form-control" oninput="window.updateDocPreview()" rows="3" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 14px; font-size: 15px; line-height: 1.5; border: 1.5px solid #cbd5e1; border-radius: 12px; resize: none; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">〇〇銀行 〇〇支店
+普通 1234567
+カ）ネオプラス</textarea>
+            </div>
+
+            <div style="width: 100%; margin: 0 0 24px 0; padding: 0;">
+                <input type="file" id="doc-ai-upload" accept="image/*" style="display: none;" onchange="window.handleAIDocUpload(event)">
+            </div>
+
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div class="section-label" style="font-weight: bold; color: #333; margin-bottom: 0;">明細（金額）</div>
+                <button id="import-activity-btn" style="font-size: 11px; padding: 6px 10px; border-radius: 6px; border: 1.5px solid #cbd5e1; background: #fff; color: #475569; font-weight: 600; cursor: pointer; display: none; transition: 0.2s;" onclick="const sec = document.getElementById('activity-reference-section'); sec.style.display = sec.style.display === 'none' ? 'block' : 'none';">
+                    ＋ プロジェクト記録から引用
+                </button>
+            </div>
+
+            <!-- NEW: AI / Activity Reference Section -->
+            <div id="activity-reference-section" style="display: none; width: 100%; margin: 0 0 16px 0; padding: 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; box-sizing: border-box;">
+                <div id="activity-reference-list" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: -8px; scrollbar-width: none; -ms-overflow-style: none;">
+                    <!-- Dynamically populated chips -->
+                </div>
+                <style>
+                    #activity-reference-list::-webkit-scrollbar {
+                        display: none;
+                    }
+                </style>
+            </div>
+            
+            <div id="doc-line-items-container" class="line-items-container" style="display: block; gap: 0; width: 100%; margin: 0; padding: 0;">
+                <!-- Dynamic Item Row Template -->
+                <div class="line-item">
+                    <div class="input-group">
+                        <label>内容</label>
+                        <input type="text" class="form-control item-name-input" placeholder="内容を入力" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a;">
+                    </div>
+                    <div class="input-group qty">
+                        <label>数量</label>
+                        <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="1" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
+                    </div>
+                    <div class="input-group price" style="position: relative; width: 100%;">
+                        <label>単価</label>
+                        <input type="text" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="0" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 24px 12px 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #fff; color: #0f172a;">
+                        <span style="position: absolute; right: 8px; top: 38px; font-size: 12px; color: #94a3b8; pointer-events: none;">円</span>
+                    </div>
+                    <button type="button" class="delete-button" onclick="this.closest('.line-item').remove(); window.updateDocPreview();">×</button>
+                </div>
+            </div>
+            <div class="add-line-wrapper" style="text-align: center; margin-top: 10px;">
+                <button id="add-item-btn" onclick="window.addDocLineItem()" style="border: none; background: none; color: #666; cursor: pointer;">
+                    ＋ 行を追加
+                </button>
+            </div>
+
+            <div class="receipt-scan-wrapper">
+                <button onclick="document.getElementById('doc-ai-upload').click()" id="btn-doc-scan-inline" class="scan-btn" style="background: rgba(29, 155, 240, 0.1); border: none; color: var(--accent-neo-blue); font-size: 14px; font-weight: 700; padding: 10px 18px; border-radius: 8px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 6px; transition: background 0.2s;">
+                    <span class="icon">📸</span> レシート読取 (AI)
+                </button>
+            </div>
+
+            <!-- HUGE TOTAL AMOUNT -->
+            <div style="text-align: center; margin: 0; padding: 24px 0 0 0; width: 100%; display: block; align-items: center; justify-content: center; gap: 8px; border-top: 1px dashed #cbd5e1;">
+                <div style="font-weight: 600; font-size: 13px; color: #64748b; margin: 0; padding: 0;">消費税(10%): <span id="doc-tax-calc">¥0</span></div>
+                <div style="color: #0f172a; font-size: 16px; font-weight: 700; margin: 0; padding: 0; display: grid; grid-auto-flow: column; align-items: baseline; justify-content: center;">
+                    合計 <span id="doc-total-calc" style="font-size: clamp(1.5rem, 5vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em; margin-left: 12px;">¥0</span>
+                </div>
+            </div>
+
+            <!-- ADVANCED SETTINGS TOGGLES -->
+            <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0; display: block; gap: 16px;">
+                <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                        <i data-lucide="qr-code" style="width: 18px; height: 18px; color: #475569;"></i>
+                        <span style="font-size: 14px; font-weight: 700; color: #0f172a;">QRコード</span>
+                    </div>
+                    <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="doc-toggle-qr" checked onchange="window.updateDocPreview()" style="opacity: 0; width: 0; height: 0;">
+                        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #10b981; transition: .4s; border-radius: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);"></span>
+                        <span id="doc-toggle-qr-knob" style="position: absolute; height: 20px; width: 20px; left: 22px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>
+                    </label>
+                </div>
+                <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-top: 20px;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                        <i data-lucide="printer" style="width: 18px; height: 18px; color: #475569;"></i>
+                        <span style="font-size: 14px; font-weight: 700; color: #0f172a;">用紙サイズ</span>
+                    </div>
+                    <select id="doc-paper-size" onchange="window.updateDocPreview()" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 14px; font-weight: 600; color: #0f172a; outline: none; appearance: auto;">
+                        <option value="A4">A4 (標準)</option>
+                        <option value="B5">B5 (小型)</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; margin-top: 16px;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                        <i data-lucide="percent" style="width: 18px; height: 18px; color: #475569;"></i>
+                        <span style="font-size: 14px; font-weight: 700; color: #0f172a;">消費税率</span>
+                    </div>
+                    <select id="doc-tax-rate" onchange="window.updateDocPreview()" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 14px; font-weight: 600; color: #0f172a; outline: none; appearance: auto;">
+                        <option value="0.1">10%</option>
+                        <option value="0.08">8%</option>
+                        <option value="0">0% (非課税)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- BOTTOM SECTION: CONFIRM BUTTON -->
+            <div style="width: 100%; padding: 20px 0; margin: 0; box-sizing: border-box; display: flex; justify-content: center;">
+                <button onclick="document.getElementById('modal-doc-preview').classList.remove('hidden')" style="display: block; width: 90%; margin: 30px auto; background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; border: none; border-radius: 12px; padding: 18px; font-size: 16px; font-weight: 700; text-align: center; box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25), inset 0 2px 4px rgba(255,255,255,0.15); transition: transform 0.2s, box-shadow 0.2s;">
+                    プレビュー →
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

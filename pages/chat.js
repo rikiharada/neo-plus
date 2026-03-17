@@ -1,38 +1,22 @@
 import { supabase } from '../lib/supabase-client.js';
+import { routeIntent } from '../lib/core/intentRouter.js';
+import { insertTransaction } from '../lib/data/transactionHandler.js';
+import { generateAndUploadPDF } from '../lib/export/pdfGenerator.js';
+import { getNeoResponse } from '../lib/api/geminiClient.js';
+
 
 export function appendChatMessage(sender, htmlContent) {
     const chatMessages = document.getElementById('chat-messages');
     if (!chatMessages) return null;
 
     const row = document.createElement('div');
-    row.className = `chat-message-row ${sender === 'neo' ? 'neo-message-row' : 'user-message-row'}`;
-    row.style.display = 'flex';
-    row.style.gap = '12px';
-    row.style.alignItems = 'flex-end';
-    row.style.marginBottom = '12px';
-    if (sender === 'user') {
-        row.style.justifyContent = 'flex-end';
-    }
-
-    let innerHTML = '';
     if (sender === 'neo') {
-        innerHTML += `
-            <div class="avatar-wrapper">
-                <img src="img/neo_avatar.jpg" class="avatar-circle" alt="Neo" style="width: 32px; height: 32px; border-radius: 50%;">
-            </div>
-            <div class="chat-bubble neo" style="font-size: 14px; font-family: var(--font-sans); background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); padding: 12px 16px; border-radius: 16px; border-bottom-left-radius: 4px; color: var(--text-main); max-width: 85%;">
-                ${htmlContent}
-            </div>
-        `;
+        row.className = 'message-bubble neo cyber-panel';
     } else {
-        innerHTML += `
-            <div class="chat-bubble user" style="font-size: 14px; font-family: var(--font-sans); background: var(--accent-neo-blue); color: #fff; padding: 12px 16px; border-radius: 16px; border-bottom-right-radius: 4px; max-width: 85%;">
-                ${htmlContent}
-            </div>
-        `;
+        row.className = 'message-bubble ceo';
     }
-
-    row.innerHTML = innerHTML;
+    
+    row.innerHTML = htmlContent;
     chatMessages.appendChild(row);
     
     setTimeout(() => {
@@ -370,7 +354,7 @@ export async function handleInstruction(text, hasImage = false) {
         // Fallback for conversational (UNKNOWN) intents
         if (intents.length === 1 && (intents[0].action === 'UNKNOWN' || intents[0].action === 'COMPLIANCE_VIOLATION' || !intents[0].action)) {
             try {
-                const conversationalReply = await window.generateGeminiResponse(text, "chat_room");
+                const conversationalReply = await getNeoResponse(text);
                 const replyText = typeof conversationalReply === 'string' ? conversationalReply : (conversationalReply.text || "応答がありませんでした。");
                 intents = [{ action: "QUERY_KNOWLEDGE", answer: replyText }];
             } catch (fallbackError) {

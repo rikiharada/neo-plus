@@ -98,4 +98,131 @@ export function initSetupView() {
 
     // Initial check
     validateSetupGatekeeper();
+
+    // ----------------------------------------------------------------------
+    // Part 2: Authentication Gatekeeper (Migrated from app.js)
+    // ----------------------------------------------------------------------
+    console.log('[Setup] Initializing Auth Gatekeeper');
+    const viewAuth = document.getElementById('view-auth');
+    const appContainer = document.getElementById('app-container');
+
+    const handleAuthState = (session) => {
+        if (session?.user) {
+            // Authenticated Route
+            window.GlobalStore.updateState({ user: session.user, session: session });
+            if (window.GlobalStore.initRealtimeSync && window.supabaseClient) {
+                window.GlobalStore.initRealtimeSync();
+            }
+
+            if (viewAuth) {
+                viewAuth.classList.add('hidden');
+                viewAuth.style.display = 'none';
+            }
+            if (appContainer) {
+                appContainer.style.display = 'block';
+            }
+
+            // Vercel SPA Deep Link Routing Guard
+            const path = window.location.pathname;
+            
+            if (path === '/account' || path === '/settings') {
+                if (window.switchView) window.switchView('view-settings');
+            } else if (path === '/cockpit' || path === '/chat') {
+                if (window.switchView) window.switchView('view-chat');
+            } else {
+                if (window.showDash) {
+                    window.showDash();
+                } else if (window.switchView) {
+                    window.switchView('view-dash');
+                }
+            }
+
+            const uiAvatar = document.querySelector('.user-info-avatar-text');
+            if (uiAvatar) {
+                uiAvatar.textContent = session.user.email ? session.user.email.charAt(0).toUpperCase() : 'A';
+            }
+        } else {
+            // Unauthorized Route -> Gatekeeper
+            window.GlobalStore.user = null;
+            window.GlobalStore.session = null;
+
+            if (appContainer) {
+                appContainer.style.display = 'none';
+            }
+            if (viewAuth) {
+                viewAuth.classList.remove('hidden');
+                viewAuth.style.display = 'grid';
+            }
+        }
+    };
+
+    // 1. Initial Check Strategy (Brain/Body Decouple)
+    if (window.supabaseClient) {
+        window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+            handleAuthState(session);
+        }).catch(err => {
+            console.warn("Brain (Supabase) Unreachable. Falling back to Local Body Mode.", err);
+            handleAuthState({ user: { email: 'ceo@local.neo', id: 'local-body-id' } });
+        });
+
+        // 2. Continuous Listener
+        window.supabaseClient.auth.onAuthStateChange((_event, currentSession) => {
+            handleAuthState(currentSession);
+        });
+    } else {
+        console.warn("Brain (Supabase) Client missing. Booting in Body-Only Local Mode.");
+        handleAuthState({ user: { email: 'ceo@local.neo', id: 'local-body-id' } });
+    }
+
+    // 3. Login Button Binding
+    const btnLogin = document.getElementById('btn-auth-login');
+    if (btnLogin) {
+        // Prevent duplicate bindings
+        const newBtnLogin = btnLogin.cloneNode(true);
+        btnLogin.parentNode.replaceChild(newBtnLogin, btnLogin);
+
+        newBtnLogin.addEventListener('click', async () => {
+            const email = document.getElementById('auth-email')?.value;
+            const password = document.getElementById('auth-password')?.value;
+            const errorMsg = document.getElementById('auth-error-msg');
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+            // Development Auto-Login Bypass (Enabled for preview/dev)
+            if (!email && !password) {
+                console.log("[NeoGatekeeper] Development bypass activated. Logging in as CEO.");
+                if (errorMsg) errorMsg.style.display = 'none';
+                newBtnLogin.textContent = "Bypass 成功";
+                handleAuthState({ user: { email: 'ceo@example.com', id: 'dev-bypass-id' } });
+                return;
+            }
+
+            if (!email || !password) {
+                if (errorMsg) {
+                    errorMsg.textContent = "メールとパスワードを入力してください";
+                    errorMsg.style.display = 'block';
+                }
+                return;
+            }
+
+            newBtnLogin.disabled = true;
+            newBtnLogin.textContent = "認証中...";
+
+            const { error } = await window.supabaseClient.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                if (errorMsg) {
+                    errorMsg.textContent = "ログインに失敗しました: " + error.message;
+                    errorMsg.style.display = 'block';
+                }
+                newBtnLogin.disabled = false;
+                newBtnLogin.textContent = "ログイン";
+            } else {
+                if (errorMsg) errorMsg.style.display = 'none';
+                newBtnLogin.textContent = "ログイン成功";
+            }
+        });
+    }
 }

@@ -16,3 +16,4 @@ chat_input_test*.png
 dist/
 build/
 .env
+.env*.local

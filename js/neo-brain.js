@@ -23,7 +23,7 @@ window.neoIntellectualMetabolism = window.neoIntellectualMetabolism || async fun
         const chatContainer = document.getElementById('chat-messages');
         if (!chatContainer) return;
 
-        const messages = chatContainer.querySelectorAll('.chat-message-row');
+        const messages = chatContainer.querySelectorAll('.message-bubble');
         
         if (messages.length > 15) {
             console.log("[Neo Core] Conversation cache limit reached. Initiating AI Soul Compression...");
@@ -75,13 +75,9 @@ window.neoIntellectualMetabolism = window.neoIntellectualMetabolism || async fun
             if (firstMsg) chatContainer.appendChild(firstMsg);
             
             const wipeNotice = document.createElement('div');
-            wipeNotice.className = 'chat-message-row neo-message-row';
-            wipeNotice.style.display = 'flex';
-            wipeNotice.style.gap = '12px';
-            wipeNotice.style.alignItems = 'center';
-            wipeNotice.style.marginBottom = '12px';
-            wipeNotice.style.justifyContent = 'center';
-            wipeNotice.innerHTML = `<span style="font-size: 11px; display: inline-block; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: bold; letter-spacing: 0.05em;">[SYSTEM] 揮発性メモリの洗浄と『魂』の圧縮が完了しました。</span>`;
+            wipeNotice.className = 'message-bubble neo'; // Uses Neo style for system 
+            wipeNotice.style.alignSelf = 'center'; // Override
+            wipeNotice.innerHTML = `<span style="font-size: 11px; display: inline-block; color: #10b981; font-weight: bold; letter-spacing: 0.05em;">[SYSTEM] 揮発性メモリの洗浄と『魂』の圧縮が完了しました。</span>`;
             chatContainer.appendChild(wipeNotice);
 
             if (lastMsg1) chatContainer.appendChild(lastMsg1);
@@ -105,23 +101,9 @@ window.sendChatMessage = async function() {
 
     // User message bubble
     const userRow = document.createElement('div');
-    userRow.className = 'chat-message-row user-message-row';
-    userRow.style.display = 'flex';
-    userRow.style.flexDirection = 'row-reverse';
-    userRow.style.gap = '12px';
-    userRow.style.alignItems = 'flex-end';
-    userRow.style.marginBottom = '12px';
-
-    userRow.innerHTML = `
-        <div style="flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: #333; display: grid; place-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">
-            <i data-lucide="user" style="color: white; width: 16px; height: 16px;"></i>
-        </div>
-        <div class="chat-bubble right-bubble" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px 20px 4px 20px; padding: 14px 18px; max-width: 80%; color: var(--text-main); font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
-            ${text}
-        </div>
-    `;
+    userRow.className = 'message-bubble ceo';
+    userRow.textContent = text;
     messagesContainer.appendChild(userRow);
-    if(window.lucide) window.lucide.createIcons({root: userRow});
 
     setTimeout(() => {
         userRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -130,30 +112,19 @@ window.sendChatMessage = async function() {
 
     // AI placeholder bubble
     const neoRow = document.createElement('div');
-    neoRow.className = 'chat-message-row neo-message-row';
-    neoRow.style.display = 'flex';
-    neoRow.style.gap = '12px';
-    neoRow.style.alignItems = 'flex-end';
-    neoRow.style.marginBottom = '12px';
-
-    neoRow.innerHTML = `
-        <div class="avatar-wrapper">
-            <img src="img/neo_avatar.jpg" class="avatar-circle" alt="Neo">
-        </div>
-        <div class="chat-bubble neo" style="max-width: 80%; font-size: 15px; line-height: 1.5; font-family: var(--font-sans); word-break: break-word;">
-            <span class="typing-indicator" style="animation: neoDeepThought 2.5s ease-in-out infinite; opacity: 0.6; display: inline-block;">Thinking...</span>
-        </div>
-    `;
+    neoRow.className = 'message-bubble neo';
+    neoRow.innerHTML = `<span class="typing-indicator" style="animation: neoDeepThought 2.5s ease-in-out infinite; opacity: 0.6; display: inline-block;">Thinking...</span>`;
     messagesContainer.appendChild(neoRow);
     setTimeout(() => {
         neoRow.scrollIntoView({ behavior: 'smooth', block: 'end' });
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }, 50);
 
-    const neoBubbleText = neoRow.querySelector('.chat-bubble');
+    const neoBubbleText = neoRow;
 
     if (window.isNeoSpeaking) return;
     window.isNeoSpeaking = true;
+    window.GlobalStore.setLoading(true); // Phase 11: Chat Pulse Integration
 
     try {
         let history = JSON.parse(sessionStorage.getItem('neo_chat_history') || '[]');
@@ -211,7 +182,9 @@ window.sendChatMessage = async function() {
             if (i >= fullResponseText.length) {
                 clearInterval(streamInterval);
                 window.isNeoSpeaking = false;
-                
+                window.GlobalStore.setLoading(false); // End Chat Pulse
+                if (window.showNeoToast) window.showNeoToast('success', 'Neoからの回答が完了しました');
+
                 neoBubbleText.innerHTML = fullResponseText.replace(/\\n/g, '<br>').replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
                 
                 const safeTopic = encodeURIComponent(text.substring(0, 40));
@@ -237,7 +210,9 @@ window.sendChatMessage = async function() {
     } catch (error) {
         neoBubbleText.innerHTML = `<span style="color: #f87171;">エラーが発生しました。接続を確認してください。</span>`;
         console.error("Chat Error:", error);
+        if (window.showNeoToast) window.showNeoToast('error', 'AIモデルへの接続に失敗しました');
         window.isNeoSpeaking = false;
+        window.GlobalStore.setLoading(false);
     }
 };
 

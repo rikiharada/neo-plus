@@ -464,7 +464,6 @@ button:active {
 
 .chat-bubble.neo {
     align-self: start;
-    background-color: var(--btn-primary-bg);
     border: 1.2px solid var(--btn-primary-border);
     border-left: 3px solid var(--accent-neo-yellow);
     color: var(--text-main);
@@ -603,6 +602,57 @@ button:active {
     transition: filter 0.3s ease;
 }
 
+/* Phase 10: Elegant Toast Notification UI */
+.neo-toast-container {
+    position: fixed;
+    top: env(safe-area-inset-top, 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    display: grid;
+    gap: 8px;
+    z-index: 10000;
+    pointer-events: none;
+    width: 90%;
+    max-width: 400px;
+}
+
+.neo-toast {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+}
+
+.neo-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.neo-toast.success .toast-icon {
+    color: var(--accent-neo-blue);
+}
+
+.neo-toast.error .toast-icon {
+    color: #ef4444; /* Standard deep red for error */
+}
+
+.neo-toast-content {
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+}
 /* Dashboard specific centering bubble */
 .dashboard-bubble {
     pointer-events: auto;
@@ -688,6 +738,51 @@ button:active {
 
 .neo-bounce {
     animation: bounce 0.6s cubic-bezier(0.280, 0.840, 0.420, 1) both;
+}
+
+/* Phase 10: Smooth Pulse Animation for Global Loading */
+@keyframes neo-pulse {
+    0% {
+        box-shadow: 0 0 15px rgba(0, 122, 255, 0.4);
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(0, 122, 255, 0.8), inset 0 0 10px rgba(0, 122, 255, 0.5);
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(0, 122, 255, 0.4);
+        transform: scale(1);
+        opacity: 0.9;
+    }
+}
+
+.neo-loading {
+    animation: neo-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+    pointer-events: none; /* Prevent clicks while strictly loading */
+    filter: brightness(1.2);
+}
+
+/* Zero-Server Cloud Sync Connected Pulse (Cyberpunk Neon Glow) */
+@keyframes neo-pulse-sync {
+    0% {
+        box-shadow: 0 0 5px rgba(0, 229, 255, 0.4), 0 0 10px rgba(0, 229, 255, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(0, 229, 255, 0.9), 0 0 40px rgba(0, 229, 255, 0.5), inset 0 0 10px rgba(0, 229, 255, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(0, 229, 255, 0.4), 0 0 10px rgba(0, 229, 255, 0.2);
+    }
+}
+
+.neo-pulse-sync {
+    animation: neo-pulse-sync 2s cubic-bezier(0.25, 0.1, 0.25, 1) infinite !important;
+    border-color: #00e5ff !important;
+    background: rgba(0, 229, 255, 0.05) !important;
+    transition: all 0.3s ease;
 }
 
 /* Dark mode enhancements */

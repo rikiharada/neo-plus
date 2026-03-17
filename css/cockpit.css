@@ -1,0 +1,14 @@
+body {
+  background: #0a0a0a;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #00ffcc;
+  text-shadow: 0 0 4px #00ffcc;
+  animation: float 8s infinite alternate ease-in-out;
+}
+.cyber-panel {
+  border: 2px solid #ff00aa;
+  box-shadow: 0 0 20px #ff00aa;
+  backdrop-filter: blur(8px);
+}
+@keyframes float { 0%{transform:translateY(-4px)} 100%{transform:translateY(4px)} }
