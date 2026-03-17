@@ -13,6 +13,8 @@ window.validateUserName = function (name) {
 
 // Global User State Foundation is now located in js/store.js
 
+window.uploadPdfToDrive = uploadPdfToDrive;
+
 window.mockDB = window.mockDB || {
     userConfig: {
         cloudProvider: localStorage.getItem('neo_cloud') || "icloud",
@@ -207,9 +209,10 @@ window.createProject = window.createProject || function (title, pDate, pLoc) {
     if (!window.mockDB || !window.mockDB.projects) {
         window.mockDB = window.mockDB || { projects: [], transactions: [], documents: [] };
         if (!window.mockDB.projects) window.mockDB.projects = [];
+    }
+
     window.insertProject(newProj);
     window.currentOpenProjectId = newProjId;
-    window.uploadPdfToDrive = uploadPdfToDrive;
 
     // 即時UI更新
     if (typeof renderProjects === 'function') {
