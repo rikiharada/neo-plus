@@ -538,7 +538,7 @@ window.addEventListener('load', async () => {
             };
 
             if (!viewDom && routerAnchor) {
-                fetch(`views/${viewName}.html`)
+                fetch(`/views/${viewName}.html`)
                     .then(r => r.text())
                     .then(html => {
                         // CEO Directive: innerHTML + ID 再付与

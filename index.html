@@ -139,31 +139,8 @@
             <!-- EXPENSE & AI VIEW -->
             <div id="view-expense" class="view hidden" style="padding-top: 24px;">
 
-                <div class="content-area chat-container" id="expense-chat-container">
-                    <!-- Chat history mock -->
-                    <div class="chat-bubble neo" data-i18n="ai_chat_initial_msg">
-                        どうしたの？ 経費の相談？ それともプロジェクトの記録？
-                    </div>
-
-                    <!-- Quick Replies -->
-                    <div class="quick-replies">
-                        <button class="btn-quick-reply" data-i18n="quick_reply_1">経費で落ちるか聞きたい</button>
-                        <button class="btn-quick-reply" data-i18n="quick_reply_2">人工（プロジェクト）の記録</button>
-                        <button class="btn-quick-reply" data-i18n="quick_reply_3">その他相談</button>
-                    </div>
-                </div>
-
-                <!-- Smart Selector Overlay (Hidden by default) -->
-                <div id="smart-selector-overlay" class="smart-selector hidden">
-                    <div class="smart-selector-header">
-                        <span style="font-size: 13px; color: var(--text-muted);">AI Suggestion</span>
-                        <button id="btn-close-selector"
-                            style="background:none; border:none; color:var(--text-muted); cursor:pointer;"><i
-                                data-lucide="x" style="width: 16px; height: 16px;"></i></button>
-                    </div>
-                    <div class="smart-selector-options" id="smart-selector-options">
-                        <!-- Options injected via JS -->
-                    </div>
+                <div class="content-area chat-container" id="expense-chat-container" style="display: none;">
+                    <!-- Deprecated. Unified into views/chat.html -->
                 </div>
 
                 <div class="chat-input-area"

@@ -130,10 +130,8 @@ export function initSetupView() {
             } else if (path === '/cockpit' || path === '/chat') {
                 if (window.switchView) window.switchView('view-chat');
             } else {
-                if (window.showDash) {
-                    window.showDash();
-                } else if (window.switchView) {
-                    window.switchView('view-dash');
+                if (window.switchView) {
+                    window.switchView('view-chat');
                 }
             }
 
