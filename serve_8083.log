@@ -127,3 +127,135 @@
  HTTP  3/17/2026 11:34:53 PM ::1 Returned 200 in 0 ms
  HTTP  3/17/2026 11:34:54 PM ::1 GET /views/home.html
  HTTP  3/17/2026 11:34:54 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /chat
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 3 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /css/index.css?v=FINAL_FORCE_RECOVERY_31
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 2 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /css/layout.css?v=FINAL_FORCE_RECOVERY_31
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /css/components.css?v=FINAL_FORCE_RECOVERY_31
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /js/supabase-config.js?v=neo-99-RECOVERY14
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /js/fastclick.min.js?v=FINAL_FORCE_RECOVERY_30
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /lib/utils.js
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 2 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /lib/cloud/googleDrive.js
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 3 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /js/store.js?v=NEO_SAFE_11
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /js/gemini.js?v=NEO_SAFE_11
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 3 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 2 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /js/neo-brain.js?v=NEO_SAFE_11
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /js/doc-engine.js?v=NEO_SAFE_11
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /js/i18n.js?v=neo-99-RECOVERY11
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /js/app.js?v=NEO_SAFE_11
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:12 PM ::1 GET /pages/chat.js?v=ROUTER_1
+ HTTP  3/17/2026 11:38:12 PM ::1 Returned 200 in 2 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /js/StaticLexicon.js?v=2.6.5
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /js/industries.js?v=2.6.5
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /js/GoldenKnowledge.js
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /lib/components.js
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /pages/home.js
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /pages/setup.js
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /lib/supabase-client.js
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /lib/core/intentRouter.js
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /lib/data/transactionHandler.js
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /lib/export/pdfGenerator.js
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /lib/api/geminiClient.js
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /lib/auth/googleDriveClient.js
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /locales/ja.json
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /views/chat.html
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /pages/chat.js
+ HTTP  3/17/2026 11:38:13 PM ::1 GET /img/neo_avatar.jpg
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:13 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:17 PM ::1 GET /views/home.html
+ HTTP  3/17/2026 11:38:17 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /chat
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 2 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /css/index.css?v=FINAL_FORCE_RECOVERY_31
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /css/layout.css?v=FINAL_FORCE_RECOVERY_31
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /css/components.css?v=FINAL_FORCE_RECOVERY_31
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/supabase-config.js?v=neo-99-RECOVERY14
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/fastclick.min.js?v=FINAL_FORCE_RECOVERY_30
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /lib/utils.js
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /lib/cloud/googleDrive.js
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 2 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/store.js?v=NEO_SAFE_11
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/gemini.js?v=NEO_SAFE_11
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/neo-brain.js?v=NEO_SAFE_11
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/doc-engine.js?v=NEO_SAFE_11
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/i18n.js?v=neo-99-RECOVERY11
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/app.js?v=NEO_SAFE_11
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 3 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 2 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 2 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /pages/chat.js?v=ROUTER_1
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 4 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/StaticLexicon.js?v=2.6.5
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/industries.js?v=2.6.5
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /js/GoldenKnowledge.js
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /lib/components.js
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /pages/home.js
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /pages/setup.js
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /lib/supabase-client.js
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /lib/core/intentRouter.js
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /lib/data/transactionHandler.js
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 2 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 2 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /lib/export/pdfGenerator.js
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /lib/api/geminiClient.js
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /lib/auth/googleDriveClient.js
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /locales/ja.json
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /views/chat.html
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /pages/chat.js
+ HTTP  3/17/2026 11:38:44 PM ::1 GET /img/neo_avatar.jpg
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:44 PM ::1 Returned 200 in 0 ms
+ HTTP  3/17/2026 11:38:45 PM ::1 GET /views/project.html
+ HTTP  3/17/2026 11:38:45 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:45 PM ::1 GET /pages/project.js
+ HTTP  3/17/2026 11:38:45 PM ::1 Returned 200 in 1 ms
+ HTTP  3/17/2026 11:38:49 PM ::1 GET /views/home.html
+ HTTP  3/17/2026 11:38:49 PM ::1 Returned 200 in 0 ms

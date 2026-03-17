@@ -456,16 +456,17 @@ button:active {
 
 .chat-bubble.user {
     align-self: end;
-    background-color: var(--btn-primary-bg);
-    border: 1.2px solid var(--btn-primary-border);
-    color: var(--text-main);
+    background-color: #007AFF !important;
+    border: none !important;
+    color: #FFFFFF !important;
     border-bottom-right-radius: 4px;
 }
 
 .chat-bubble.neo {
     align-self: start;
-    border-left: 3px solid var(--accent-neo-yellow);
-    color: var(--text-main);
+    border-left: none !important;
+    background-color: #F2F2F7 !important;
+    color: #1C1C1E !important;
     border-bottom-left-radius: 4px;
 }
 

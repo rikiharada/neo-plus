@@ -210,7 +210,7 @@ window.createProject = window.createProject || function (title, pDate, pLoc) {
     }
 
     window.insertProject(newProj);
-    currentOpenProjectId = newProjId;
+    window.currentOpenProjectId = newProjId;
 
     // 即時UI更新
     if (typeof renderProjects === 'function') {
@@ -284,8 +284,8 @@ window.addEventListener('load', async () => {
     const neoDashContainer = document.getElementById('neo-dash-container');
 
     let neo;
-    let currentOpenProjectId = null;
-    let currentProjectPage = 1;
+    window.currentOpenProjectId = null;
+    window.currentProjectPage = 1;
 
     // --- Phase 5 & 12: Auth Gatekeeper & Setup Initialization ---
     // Extracted entirely to pages/setup.js to enforce Trinity Architecture separation
@@ -4077,8 +4077,10 @@ window.addEventListener('load', async () => {
 
         // Render User Message
         const userHtml = `
-            <div class="chat-bubble-user" style="margin-bottom: 8px;">
-                ${msg}
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; margin-top: 12px;">
+                <div class="chat-bubble user">
+                    ${msg}
+                </div>
             </div>
         `;
         nplusChatContainer.insertAdjacentHTML('beforeend', userHtml);
@@ -4087,9 +4089,16 @@ window.addEventListener('load', async () => {
 
         // Show "Analyzing Laws..." indicator
         const loadingId = "loading-" + Date.now();
-        const loadingHtml = `<div id="${loadingId}" class="chat-bubble-neo" style="margin-bottom: 8px; opacity: 0.7;">
-            <i data-lucide="search" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> 判例と法令を検索・分析中...
-        </div>`;
+        const loadingHtml = `
+            <div id="${loadingId}" style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px; margin-top: 12px; opacity: 0.7;">
+                <div class="neo-avatar" style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <img src="img/neo_avatar.jpg" alt="Neo" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div class="chat-bubble neo">
+                    <i data-lucide="search" style="width:14px; height:14px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> 判例と法令を検索・分析中...
+                </div>
+            </div>
+        `;
         nplusChatContainer.insertAdjacentHTML('beforeend', loadingHtml);
         if (window.lucide) window.lucide.createIcons();
         nplusChatContainer.scrollTop = nplusChatContainer.scrollHeight;
@@ -4122,9 +4131,14 @@ window.addEventListener('load', async () => {
             }
 
             const neoHtml = `
-                <div class="chat-bubble-neo" style="margin-bottom: 8px;">
-                    ${aiResponseText}
-                    ${citationsHtml}
+                <div style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px; margin-top: 12px;">
+                    <div class="neo-avatar" style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <img src="img/neo_avatar.jpg" alt="Neo" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div class="chat-bubble neo">
+                        ${aiResponseText}
+                        ${citationsHtml}
+                    </div>
                 </div>
             `;
             nplusChatContainer.insertAdjacentHTML('beforeend', neoHtml);
