@@ -875,23 +875,23 @@ window.parseInputToData = async function (text) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
     const promptText = `
-You are a strict data extraction AI for a Japanese accounting system.
-Extract the transaction details from the user's input.
+You are a strict data extraction AI for a Japanese project and accounting system.
+Analyze the user's input and extract BOTH project creation intents AND expense tracking intents.
 Output ONLY a raw JSON array of objects. No markdown, no prose, no backticks.
-If you cannot determine the category, use "雑費".
+If the input is a question (e.g. "経費で落ちる？", "どう思う？", "教えて"), output a CONSULT action.
 
-[UNIVERSAL LANGUAGE TRANSLATION RULE]
-If the input is in English or any language other than Japanese (e.g., "Taxi fare 2000", "Uber $15"), you MUST mentally translate the item into Japanese and output BOTH the "title" and the "category" in Japanese ONLY (e.g., title: "タクシー", category: "旅費交通費"). Never output English in the final JSON.
+[UNIVERSAL TRANSLATION RULE]
+If the input is in another language, translate the parsed values to Japanese.
 
-Format:
-[
-  {
-    "action": "ADD_EXPENSE",
-    "title": "Main keyword in Japanese (e.g. ホームセンター, 領収書, タクシー)",
-    "amount": <number>,
-    "category": "Japanese Accounting Category (e.g. 消耗品費, 旅費交通費)"
-  }
-]
+Action Formats:
+1. CREATE_PROJECT: When the user implies starting or managing a project/site/document.
+   {"action": "CREATE_PROJECT", "project_name": "Project name (e.g. ドラマ撮影, 渋谷A邸)", "location": "Location if mentioned (e.g. 銀座, 渋谷)", "date": "Date if mentioned"}
+
+2. ADD_EXPENSE: When the user mentions spending money.
+   {"action": "ADD_EXPENSE", "title": "Expense item (e.g. 交通費, 人件費, マキタ)", "amount": <number>, "category": "Japanese Accounting Category (e.g. 旅費交通費, 外注工賃, 消耗品費)"}
+
+3. CONSULT: When the user asks a question needing advice.
+   {"action": "CONSULT"}
 
 Input: ${text}
 `;
@@ -904,8 +904,9 @@ Input: ${text}
                 contents: [{ parts: [{ text: promptText }] }],
                 generationConfig: {
                     temperature: 0.1,
-                    maxOutputTokens: 200 // Low token footprint
+                    maxOutputTokens: 1500 
                 }
+
             })
         });
 

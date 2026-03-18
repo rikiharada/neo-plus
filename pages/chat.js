@@ -163,7 +163,10 @@ export async function handleInstruction(text, hasImage = false) {
         const commandData = window.parseCommand ? window.parseCommand(text) : {};
         const hasActionVerb = /(作って|新規|作成|立ち上げて|が入った|決まった|する|はいいた|はいいった|入った|決定|儲かった|ゲット)/.test(text);
         
-        if (commandData && (commandData.date || commandData.location || hasActionVerb)) {
+        // Prevent aggressive local hijack if the query contains multiple actions/expenses
+        const isComplexProjectQuery = text.includes('、') || text.includes('。') || (text.match(/[0-9,０-９]+/g) || []).length > 1;
+
+        if (!isComplexProjectQuery && commandData && (commandData.date || commandData.location || hasActionVerb)) {
             const newProjInfo = window.createProject ? window.createProject(commandData.title, commandData.date, commandData.location) : {name: commandData.title};
 
             const neoBubble = document.getElementById('neo-fab-bubble');
@@ -325,27 +328,53 @@ export async function handleInstruction(text, hasImage = false) {
             } else if (intentType === "ENTRY" || intentType === "ACTION") {
                 let parsedItems = null;
 
-                if (typeof window.parseLocallyWithKnowledge === 'function') {
-                    parsedItems = await window.parseLocallyWithKnowledge(text);
-                } else if (typeof window.parseLocally === 'function') {
-                    parsedItems = window.parseLocally(text);
+                // Bypass local parser for complex multi-intent queries (e.g., punctuation or multiple numbers)
+                const isComplexQuery = text.includes('、') || text.includes('。') || (text.match(/[0-9,０-９]+/g) || []).length > 1;
+
+                if (!isComplexQuery) {
+                    if (typeof window.parseLocallyWithKnowledge === 'function') {
+                        parsedItems = await window.parseLocallyWithKnowledge(text);
+                    } else if (typeof window.parseLocally === 'function') {
+                        parsedItems = window.parseLocally(text);
+                    }
                 }
 
                 if (parsedItems && Array.isArray(parsedItems) && parsedItems.length > 0) {
                     intents = parsedItems;
                     isSilentWorkflow = true;
                 } else {
-                    window.switchView('view-chat');
-                    appendChatMessage('user', text);
-                    appendChatMessage('neo', '<i class="lucide lucide-loader" style="animation: spin 1s linear infinite;"></i> 考え中...');
-                    
-                    const stateMemory = JSON.stringify({ active_projects: window.mockDB.projects.slice(0,5) });
-                    try {
-                        const geminiResult = await window.determineRouteFromIntent(text, window.mockDB.userConfig.industry, stateMemory, new Date().toLocaleString('ja-JP'));
-                        intents = Array.isArray(geminiResult) ? geminiResult : [geminiResult];
-                    } catch (aiError) {
-                        alert("通信エラーが発生しました。");
-                        return;
+                    // Try the Silent AI Core (parseInputToData) if local parsing failed
+                    let aiParsed = null;
+                    if (typeof window.parseInputToData === 'function') {
+                        aiParsed = await window.parseInputToData(text);
+                    }
+
+                    if (aiParsed && Array.isArray(aiParsed) && aiParsed.length > 0) {
+                        console.log("[DEBUG] parseInputToData returned:", aiParsed);
+                        const hasConsult = aiParsed.some(a => a.action === 'CONSULT' || a.action === 'UNKNOWN');
+                        if (!hasConsult) {
+                            intents = aiParsed;
+                            isSilentWorkflow = true;
+                        } else {
+                            window.switchView('view-chat');
+                            appendChatMessage('user', text);
+                            appendChatMessage('neo', '<i class="lucide lucide-loader" style="animation: spin 1s linear infinite;"></i> 考え中...');
+                            intents = aiParsed;
+                        }
+                    } else {
+                        // Total fallback to heavy Chat engine
+                        window.switchView('view-chat');
+                        appendChatMessage('user', text);
+                        appendChatMessage('neo', '<i class="lucide lucide-loader" style="animation: spin 1s linear infinite;"></i> 考え中...');
+                        
+                        const stateMemory = JSON.stringify({ active_projects: window.mockDB.projects.slice(0,5) });
+                        try {
+                            const geminiResult = await window.determineRouteFromIntent(text, window.mockDB.userConfig.industry, stateMemory, new Date().toLocaleString('ja-JP'));
+                            intents = Array.isArray(geminiResult) ? geminiResult : [geminiResult];
+                        } catch (aiError) {
+                            alert("通信エラーが発生しました。");
+                            return;
+                        }
                     }
                 }
             }
@@ -375,10 +404,10 @@ export async function handleInstruction(text, hasImage = false) {
                 const newProjectName = intent.project_name || "名称未設定プロジェクト";
                 const newProjId = Date.now();
                 const newProj = {
-                    id: newProjId, name: newProjectName, customerName: "-", location: "-", note: "",
+                    id: newProjId, name: newProjectName, customerName: "-", location: intent.location || "-", note: "",
                     category: "other", color: "#007AFF", unit: "-", hasUnpaid: false, revenue: 0,
                     status: 'active', clientName: "", paymentDeadline: "", bankInfo: "",
-                    lastUpdated: new Date().toLocaleDateString('ja-JP').replace(/\//g, '/')
+                    lastUpdated: intent.date || new Date().toLocaleDateString('ja-JP').replace(/\//g, '/')
                 };
                 window.insertProject(newProj);
                 window.currentOpenProjectId = newProjId;
@@ -394,7 +423,7 @@ export async function handleInstruction(text, hasImage = false) {
                 if (isSilentWorkflow) {
                     if (instructionInput) instructionInput.value = '';
                     if (isChatViewActive()) appendChatMessage('neo', `プロジェクト「${newProjectName}」を作成しました🔥`);
-                    return; 
+                    // removed early return to allow subsequent actions
                 }
 
             } else if (action === "ADD_EXPENSE") {
@@ -449,7 +478,7 @@ export async function handleInstruction(text, hasImage = false) {
                              setTimeout(() => neoBubble.classList.remove('show'), 4000);
                          }
                          if (isChatViewActive()) appendChatMessage('neo', `「${newTransactionDraft.title}」を ${newTransactionDraft.category} で記帳しておきました🔥`);
-                         return; 
+                         // removed early return to allow subsequent actions
                      } catch (e) {
                          console.error("Silent Auto-save failed", e);
                      }
