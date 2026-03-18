@@ -76,8 +76,8 @@ window.GlobalStore = {
                 if(!window.supabaseClient) return;
                 try {
                     const [txRes, projRes] = await Promise.all([
-                        window.supabaseClient.from('activities').select('*').eq('user_id', this.state.user.id).order('date', { ascending: false }),
-                        window.supabaseClient.from('projects').select('*').eq('user_id', this.state.user.id).order('created_at', { ascending: false })
+                        window.supabaseClient.from('activities').select('*').order('date', { ascending: false }),
+                        window.supabaseClient.from('projects').select('*').order('created_at', { ascending: false })
                     ]);
                     
                     if (txRes.error) throw txRes.error;
@@ -103,7 +103,7 @@ window.GlobalStore = {
         // Realtime Subscriptions (Optional Brain feature)
         try {
             const channels = window.supabaseClient.channel('custom-all-channel')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'activities', filter: `user_id=eq.${this.state.user.id}` }, (payload) => {
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, (payload) => {
                     console.log('[GlobalStore] Realtime Activity Change received!', payload);
                     fetchInitialData();
                 }).subscribe((status, err) => {

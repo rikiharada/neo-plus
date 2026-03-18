@@ -3889,11 +3889,8 @@ window.addEventListener('load', async () => {
                 return;
             }
 
-            // --- CEO Demo Bypass for Zero Console Errors ---
-            if (window.supabaseClient.supabaseUrl && window.supabaseClient.supabaseUrl.includes('nvnwnefqdsaecczpemkc')) {
-                console.log("[Neo Boot] Static Mode: Skipping Supabase fetch to maintain clean console.");
-                return; // Early return to prevent 404 errors during demo
-            }
+            // --- CEO Demo Bypass Removed ---
+            // Natively requesting data from Supabase backend
 
             // Fetch Projects
             const { data: projData, error: projErr } = await window.supabaseClient.from('projects').select('*').order('id', { ascending: false });
