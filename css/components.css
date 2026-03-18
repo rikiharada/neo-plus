@@ -456,18 +456,20 @@ button:active {
 
 .chat-bubble.user {
     align-self: end;
-    background-color: transparent !important;
-    border: 1px solid var(--accent-neo-blue) !important;
-    color: var(--text-main) !important;
+    background-color: var(--accent-neo-blue, #1D9BF0) !important;
+    border: none !important;
+    color: #ffffff !important;
     border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(29, 155, 240, 0.35);
 }
 
 .chat-bubble.neo {
     align-self: start;
-    background-color: transparent !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
     color: var(--text-main) !important;
     border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 /* Quick Replies */
