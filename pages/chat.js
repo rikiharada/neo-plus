@@ -152,7 +152,7 @@ export async function handleInstruction(text, hasImage = false) {
                     localStorage.setItem('neo_transactions', JSON.stringify(savedTxs));
                 } catch (e) { }
 
-                if (window.renderProjects) window.renderProjects(window.mockDB.projects);
+                window.dispatchEvent(new CustomEvent('neo-render-projects', { detail: { projects: window.mockDB.projects } }));
 
                 const neoBubble = document.getElementById('neo-fab-bubble');
                 if (neoBubble) {
@@ -435,7 +435,7 @@ export async function handleInstruction(text, hasImage = false) {
                 };
                 window.insertProject(newProj);
                 window.currentOpenProjectId = newProjId;
-                if(window.renderProjects) window.renderProjects(window.mockDB.projects);
+                window.dispatchEvent(new CustomEvent('neo-render-projects', { detail: { projects: window.mockDB.projects } }));
 
                 const neoBubble = document.getElementById('neo-fab-bubble');
                 if (neoBubble) {
@@ -492,7 +492,7 @@ export async function handleInstruction(text, hasImage = false) {
                 if (isSilentWorkflow) {
                      try {
                          await window.insertTransaction(newTransactionDraft);
-                         if(window.renderProjects) window.renderProjects(window.mockDB.projects);
+                         window.dispatchEvent(new CustomEvent('neo-render-projects', { detail: { projects: window.mockDB.projects } }));
                          if (instructionInput) instructionInput.value = '';
                          
                          const neoBubble = document.getElementById('neo-fab-bubble');

@@ -1935,7 +1935,6 @@ window.addEventListener('load', async () => {
 
     // Render Projects (Bank Account style list)
     const renderProjects = (projectsToRender, resetPage = true) => {
-        window.renderProjects = renderProjects; // CEO Fix: Expose to Global Router
         const container = document.getElementById('project-list-container');
         const paginationContainer = document.getElementById('project-pagination-container');
         if (!container) return;
@@ -2048,11 +2047,16 @@ window.addEventListener('load', async () => {
         updateWalletDashboard(totalAgencyProfit);
 
 
-        // Render lucide icons for newly created list
         if (window.lucide) {
             window.lucide.createIcons();
         }
     };
+
+    // CEO Fix: Securely expose renderProjects via an Event Listener instead of a global Object reference
+    window.addEventListener('neo-render-projects', (e) => {
+        const projects = e.detail?.projects || mockDB.projects;
+        renderProjects(projects);
+    });
 
     // Wallet Dashboard Logic
     const updateWalletDashboard = (totalProfit) => {

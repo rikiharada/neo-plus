@@ -20,7 +20,7 @@
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    padding: calc(60px + var(--spacing-lg)) var(--spacing-lg) calc(100px + var(--spacing-lg)) var(--spacing-lg);
+    padding: calc(60px + env(safe-area-inset-top, 0px) + var(--spacing-lg)) var(--spacing-lg) calc(100px + env(safe-area-inset-bottom, 0px) + var(--spacing-lg)) var(--spacing-lg);
     gap: var(--spacing-lg);
     overflow-y: auto !important;
     overflow-x: hidden;
@@ -38,8 +38,8 @@
     width: 100%;
     max-width: 480px;
     margin: 0 auto;
-    height: 60px; /* Reduced from default to enforce tight bounds */
-    padding: 0 var(--spacing-lg);
+    height: calc(60px + env(safe-area-inset-top, 0px)); /* Reduced from default to enforce tight bounds */
+    padding: env(safe-area-inset-top, 0px) var(--spacing-lg) 0;
     display: grid; grid-auto-flow: column;
     align-items: center;
     justify-content: space-between;
