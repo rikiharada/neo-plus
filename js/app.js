@@ -753,9 +753,10 @@ window.addEventListener('load', async () => {
                 'view-sites': 'projects',
                 'view-wallet': 'wallet',
                 'view-settings': 'settings',
-                'view-account': 'settings' // Alias
+                'view-account': 'settings', // Alias
+                'view-chat': 'chat'          // 明示的に登録（未登録だと 'chat' にフォールバックして Chat がデフォルト起動する）
             };
-            const semanticName = viewMap[targetId] || 'chat';
+            const semanticName = viewMap[targetId] || 'home';
             renderGlobalHeader();
             renderBottomNav(semanticName);
         }
@@ -1062,7 +1063,7 @@ window.addEventListener('load', async () => {
     window.loadActivities = async (projectId) => {
         try {
             // OS共通の相対パスを使用
-            const response = await fetch(`./data/projects/${projectId}/activities.json`);
+            const response = await fetch(`/data/projects/${projectId}/activities.json`);
             if (!response.ok) throw new Error('Network response was not ok');
             return await response.json();
         } catch (error) {
@@ -2058,6 +2059,12 @@ window.addEventListener('load', async () => {
         renderProjects(projects);
     });
 
+    // Direct global exposure so project.js / other modules can call renderProjects immediately
+    window.renderProjects = (projects) => {
+        const data = projects ?? window.GlobalStore?.state?.projects ?? mockDB.projects ?? [];
+        renderProjects(data);
+    };
+
     // Wallet Dashboard Logic
     const updateWalletDashboard = (totalProfit) => {
         const globalProfitEl = document.getElementById('wallet-global-profit');
@@ -2818,151 +2825,9 @@ window.addEventListener('load', async () => {
     // document.querySelectorAll('.nav-item').forEach(item => { /* deleted */ });
 
     // --- New Project Modal Logic ---
-    const btnCreateProject = document.getElementById('btn-create-project');
-    const modalNewProject = document.getElementById('modal-new-project');
-    const btnCloseModal = document.getElementById('btn-close-modal');
-    const btnSaveProject = document.getElementById('btn-save-project');
-
-    // Color Picker Logic
-    let selectedColor = '#FF3B30'; // Default red
-    const colorDrops = document.querySelectorAll('.color-picker-drop');
-    colorDrops.forEach(drop => {
-        drop.addEventListener('click', (e) => {
-            colorDrops.forEach(d => d.classList.remove('selected'));
-            e.target.classList.add('selected');
-            selectedColor = e.target.getAttribute('data-color');
-        });
-    });
-
-    if (btnCreateProject && modalNewProject) {
-        btnCreateProject.addEventListener('click', () => {
-            console.log('[DEBUG] btnCreateProject clicked');
-            modalNewProject.classList.add('show');
-            // Neo Singleton: Do not hide neoFab
-
-
-            const dStart = document.getElementById('new-proj-start-date');
-            const dEnd = document.getElementById('new-proj-end-date');
-
-            const today = new Date();
-            const formatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            if (dStart) dStart.value = formatted;
-            if (dEnd) dEnd.value = formatted;
-
-            // Reset color to default explicitly on open if needed
-            selectedColor = '#FF3B30';
-            colorDrops.forEach(d => {
-                if (d.getAttribute('data-color') === selectedColor) {
-                    d.classList.add('selected');
-                } else {
-                    d.classList.remove('selected');
-                }
-            });
-
-            // const catInput = document.getElementById('new-proj-category');
-            // if (catInput) {
-            //     catInput.value = ''; // プレースホルダー「業種」を表示する
-            // }
-        });
-    }
-
-    // Detail Back Button listener
-    const projectBackBtn = document.querySelector('.passbook-back');
-    if (projectBackBtn) {
-        projectBackBtn.addEventListener('click', () => {
-            switchView('view-sites');
-        });
-    }
-
-    // Neo Reaction on Category Change (Removed to keep modal pure/silent)
-    // const categorySelect = document.getElementById('new-proj-category');
-
-    if (btnCloseModal) {
-        btnCloseModal.addEventListener('click', () => {
-            modalNewProject.classList.remove('show');
-            // Neo Singleton: Do not show neoFab
-
-        });
-    }
-
-    if (btnSaveProject) {
-        btnSaveProject.addEventListener('click', () => {
-            console.log('[DEBUG] btnSaveProject clicked');
-            const name = document.getElementById('new-proj-name').value;
-            const locationLink = document.getElementById('new-proj-location').value;
-            const note = document.getElementById('new-proj-note').value;
-            // const categorySelectObj = document.getElementById('new-proj-category');
-            // const category = categorySelectObj ? categorySelectObj.value : 'other';
-            const category = 'other';
-
-            const dStartVal = document.getElementById('new-proj-start-date').value;
-            const dEndVal = document.getElementById('new-proj-end-date').value;
-            let dateStr = '';
-            if (dStartVal && dEndVal) {
-                dateStr = `${dStartVal.replace(/-/g, '/')} - ${dEndVal.replace(/-/g, '/')}`;
-            } else if (dStartVal) {
-                dateStr = dStartVal.replace(/-/g, '/');
-            }
-
-            if (!name) {
-                alert('プロジェクト名を入力してください');
-                return;
-            }
-
-            // Determine Unit based on category
-            let unit = '件'; // Default
-            if (category === 'construction') {
-                unit = '人工';
-            } else if (category === 'freelance') {
-                unit = '時間';
-            }
-
-            const newProj = {
-                id: Date.now(),
-                name: name,
-                customerName: locationLink || '-', // Repurposed for backward compatibility if needed
-                location: locationLink,
-                note: note,
-                category: category,
-                color: selectedColor, // Apply selected color
-                unit: unit,
-                hasUnpaid: false,
-                revenue: 0,
-                status: 'planning',
-                lastUpdated: dateStr
-            };
-
-            // Prepend new project and re-render
-            mockDB.projects.unshift(newProj);
-            renderProjects(mockDB.projects);
-
-            // Show Neo encouragement after saving
-            const bubble = document.getElementById('neo-fab-bubble');
-            if (bubble) {
-                const originalText = bubble.textContent;
-                bubble.textContent = '新しいプロジェクト、追加しといたよ！';
-                bubble.classList.add('show');
-                setTimeout(() => {
-                    bubble.classList.remove('show');
-                    setTimeout(() => { bubble.textContent = originalText; }, 300);
-                }, 4000);
-            }
-
-            modalNewProject.classList.remove('show');
-            // Neo Singleton: Do not show neoFab
-
-
-            document.getElementById('new-proj-name').value = '';
-            document.getElementById('new-proj-location').value = '';
-            document.getElementById('new-proj-note').value = '';
-            const catReset = document.getElementById('new-proj-category');
-            if (catReset) catReset.value = '';
-            const dStartReset = document.getElementById('new-proj-start-date');
-            if (dStartReset) dStartReset.value = '';
-            const dEndReset = document.getElementById('new-proj-end-date');
-            if (dEndReset) dEndReset.value = '';
-        });
-    }
+    // NOTE: ボタンは project.html 内にあり遅延ロードされるため、
+    // バインドは pages/project.js の initProjectView() → bindProjectModals() で行う。
+    // ここでの getElementById は常に null を返すため削除済み。
     // --- Project Action Menu Logic ---
     const btnProjectMenuToggle = document.getElementById('btn-project-menu-toggle');
     const projectActionMenu = document.getElementById('project-action-menu');
