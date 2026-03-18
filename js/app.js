@@ -1,4 +1,4 @@
-import { createProjectCard, createTransactionRow, createNeoButton, renderBottomNav } from '../lib/components.js';
+import { createProjectCard, createTransactionRow, createNeoButton, renderBottomNav, renderGlobalHeader } from '../lib/components.js';
 import { uploadPdfToDrive } from '../lib/cloud/googleDrive.js';
 import { initHomeView } from '../pages/home.js';
 import { initSetupView } from '../pages/setup.js';
@@ -708,6 +708,7 @@ window.addEventListener('load', async () => {
                 'view-account': 'settings' // Alias
             };
             const semanticName = viewMap[targetId] || 'chat';
+            renderGlobalHeader();
             renderBottomNav(semanticName);
         }
     }; // close switchView()

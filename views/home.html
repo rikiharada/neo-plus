@@ -1,13 +1,5 @@
 <div id="view-dash" class="view hidden" style="background-color: var(--bg-color); display: flex; flex-direction: column; height: 100%; min-height: 100vh;">
-    <!-- Minimal X-Style Top Header for Home -->
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; position: sticky; top: 0; background: rgba(10, 10, 20, 0.85); backdrop-filter: blur(16px); z-index: 20; border-bottom: 1px solid rgba(255,255,255,0.05);">
-        <h1 style="font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0;">Cockpit</h1>
-        <div style="display: flex; gap: 12px; align-items: center;">
-            <div class="system-health-indicator" style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);" title="System Health: Online"></div>
-            <button class="theme-toggle" aria-label="Toggle Theme" style="background: transparent; color: var(--text-muted); border: none;"><i data-lucide="sun" class="icon-sun"></i><i data-lucide="moon" class="icon-moon" style="display: none;"></i></button>
-        </div>
-    </div>
-
+    <!-- Global header injected by app.js -> lib/components.js -->
     <!-- Timeline Content Area -->
     <div style="flex: 1; overflow-y: auto; padding-bottom: 90px;">
         <!-- Trend Graph Placeholder -->
