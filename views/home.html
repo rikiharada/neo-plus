@@ -63,4 +63,68 @@
 
         </div>
     </div>
+
+    <!-- Premium Multi-Modal Message Box (Restored Cockpit Input) -->
+    <div id="neo-cockpit"
+        style="width: 100%; position: sticky; bottom: 0; background: rgba(10, 10, 20, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.05); z-index: 2500; display: block; padding-bottom: calc(env(safe-area-inset-bottom) + 8px);">
+        
+        <div style="position: relative; display: block;">
+
+            <!-- Trinity Auto-Input Preview -->
+            <div id="trinity-preview"
+                style="display: grid; grid-auto-flow: column; gap: 8px; padding: 12px 24px 0 24px; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; align-items: center; justify-content: start; overflow: hidden; white-space: normal; max-width: 100%; word-break: break-word; overflow-wrap: break-word;">
+                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-right: 4px; letter-spacing: 0.1em;">DETECTED:</span>
+                <span class="badge" style="background: rgba(0, 122, 255, 0.1); color: #007AFF; font-size: 11px; padding: 4px 8px; border-radius: 12px; max-width: 100%; white-space: normal; word-break: break-all; overflow-wrap: anywhere;"><i data-lucide="tag" style="width: 10px; height: 10px; margin-right: 2px;"></i><span id="preview-title" style="word-break: break-all;">-</span></span>
+                <span class="badge" id="preview-loc-badge" style="background: rgba(248, 113, 113, 0.1); color: #f87171; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: none; max-width: 100%; white-space: normal; word-break: break-all; overflow-wrap: anywhere;"><i data-lucide="map-pin" style="width: 10px; height: 10px; margin-right: 2px;"></i><span id="preview-loc" style="word-break: break-all;">-</span></span>
+                <span class="badge" id="preview-date-badge" style="background: rgba(52, 211, 153, 0.1); color: #34d399; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: none;"><i data-lucide="calendar" style="width: 10px; height: 10px; margin-right: 2px;"></i><span id="preview-date">-</span></span>
+            </div>
+
+            <textarea id="main-instruction-input" data-testid="dash-main-input" class="form-control"
+                placeholder="CEO、今日はどのプロジェクトを進めますか？"
+                style="width: 100%; border: none; padding: 12px 24px; background: transparent; color: var(--text-main); font-size: 14px; resize: none; min-height: 80px; line-height: 1.6; outline: none; transition: all 0.3s ease;"></textarea>
+
+            <!-- Minimised Action Chips -->
+            <div id="cockpit-action-chips"
+                style="display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 12px 16px; white-space: nowrap; scrollbar-width: none;">
+                <style>
+                    #cockpit-action-chips::-webkit-scrollbar { display: none; }
+                    .cockpit-chip { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--accent-neo-blue); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+                    .cockpit-chip:hover { background: rgba(59, 130, 246, 0.2); }
+                </style>
+                <button class="cockpit-chip" onclick="document.getElementById('main-instruction-input').value='前回の内容をコピーして';">前回の内容をコピー</button>
+                <button class="cockpit-chip" onclick="document.getElementById('main-instruction-input').value='源泉税を計算して';">源泉税を計算</button>
+                <button class="cockpit-chip" onclick="document.getElementById('main-instruction-input').value='端数を切り捨てて';">端数を切り捨て</button>
+            </div>
+
+            <div id="cockpit-tools"
+                style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; padding: 0 16px 16px 16px; width: 100%; transition: all 0.3s ease;">
+                
+                <!-- Hidden OCR Input -->
+                <input type="file" id="ocr-upload" accept="image/*" style="display: none;">
+
+                <!-- [📷] カメラアイコン (Left side) -->
+                <button id="btn-camera" data-testid="dash-btn-camera" title="レシート読込 (OCR)"
+                    style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; min-width: 44px; min-height: 44px; padding: 10px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
+                    onmouseover="this.style.color='var(--text-main)';" onmouseout="this.style.color='var(--text-muted)';">
+                    <i data-lucide="camera" style="width: 20px; height: 20px;"></i>
+                </button>
+
+                <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px;">
+                    <!-- [🎤] マイクアイコン (Right side) -->
+                    <button id="btn-voice" data-testid="dash-btn-voice" title="音声入力 (Push-To-Talk)"
+                        style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; min-width: 44px; min-height: 44px; padding: 10px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
+                        onmouseover="this.style.color='var(--text-main)';" onmouseout="this.style.color='var(--text-muted)';">
+                        <i data-lucide="mic" style="width: 20px; height: 20px;"></i>
+                    </button>
+
+                    <!-- [✈︎] 送信アイコン (Right side) -->
+                    <button id="btn-send" data-testid="dash-btn-send" title="送信"
+                        style="background: var(--accent-neo-blue); color: white; border: none; border-radius: 50%; min-width: 44px; min-height: 44px; display: grid; place-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(29, 155, 240, 0.35);"
+                        onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';">
+                        <i data-lucide="send" style="width: 18px; height: 18px; stroke-width: 2.5px;"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

@@ -131,7 +131,7 @@ export function initSetupView() {
                 if (window.switchView) window.switchView('view-chat');
             } else {
                 if (window.switchView) {
-                    window.switchView('view-chat');
+                    window.switchView('view-dash');
                 }
             }
 
