@@ -1935,6 +1935,7 @@ window.addEventListener('load', async () => {
 
     // Render Projects (Bank Account style list)
     const renderProjects = (projectsToRender, resetPage = true) => {
+        window.renderProjects = renderProjects; // CEO Fix: Expose to Global Router
         const container = document.getElementById('project-list-container');
         const paginationContainer = document.getElementById('project-pagination-container');
         if (!container) return;
