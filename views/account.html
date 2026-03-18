@@ -1,4 +1,35 @@
 <div class="content-area" style="padding: var(--spacing-lg);">
+    
+    <!-- Account Profile Section -->
+    <div class="settings-group" style="margin-bottom: var(--spacing-xl); text-align: left;">
+        <h3 style="font-size: var(--text-small); color: var(--text-muted); font-weight: 600; margin-bottom: var(--spacing-sm);">アカウント情報</h3>
+        
+        <div style="background: var(--bg-color); border: 1.2px solid var(--btn-primary-border); border-radius: 12px; padding: var(--spacing-md); margin-bottom: var(--spacing-md);">
+            <!-- Name -->
+            <label style="display: block; margin-bottom: 12px;">
+                <span style="font-size: 13px; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 4px;">氏名</span>
+                <input type="text" id="acc-name" style="width: 100%; border: 1px solid var(--btn-secondary-border); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.02); color: var(--text-main); font-family: var(--font-primary); box-sizing: border-box;" placeholder="表示名">
+            </label>
+
+            <!-- Email -->
+            <label style="display: block; margin-bottom: 12px;">
+                <span style="font-size: 13px; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 4px;">メールアドレス</span>
+                <input type="email" id="acc-email" style="width: 100%; border: 1px solid var(--btn-secondary-border); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.02); color: var(--text-main); font-family: var(--font-primary); box-sizing: border-box;" placeholder="name@example.com">
+            </label>
+
+            <!-- Password -->
+            <label style="display: block; margin-bottom: 16px;">
+                <span style="font-size: 13px; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 4px;">新しいパスワード</span>
+                <input type="password" id="acc-password" style="width: 100%; border: 1px solid var(--btn-secondary-border); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.02); color: var(--text-main); font-family: var(--font-primary); box-sizing: border-box;" placeholder="変更する場合のみ入力">
+            </label>
+
+            <!-- Save Button -->
+            <button id="btn-save-account" class="btn-primary" style="background: var(--accent-neo-blue); color: #fff; border: none; border-radius: 8px; padding: 12px; font-weight: 600; width: 100%; display: grid; place-items: center; grid-auto-flow: column; gap: 8px;">
+                <i data-lucide="save" style="width: 16px; height: 16px;"></i>
+                保存して適用
+            </button>
+        </div>
+    </div>
     <div class="settings-group" style="margin-bottom: var(--spacing-xl); text-align: left;">
         <h3 style="font-size: var(--text-small); color: var(--text-muted); font-weight: 600; margin-bottom: var(--spacing-sm);">Neo+ 分散型クラウド連携 (BYOC)</h3>
         <div style="background: #f9fafb; border: 1.2px solid var(--btn-primary-border); border-radius: 12px; padding: var(--spacing-md); font-size: 13px; color: var(--text-main); margin-bottom: var(--spacing-md); line-height: 1.5;">

@@ -10,13 +10,26 @@ export function appendChatMessage(sender, htmlContent) {
     if (!chatMessages) return null;
 
     const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.alignItems = 'flex-end';
+    row.style.gap = '8px';
+    row.style.marginBottom = '16px';
+    row.style.width = '100%';
+
     if (sender === 'neo') {
-        row.className = 'message-bubble neo';
+        row.style.justifyContent = 'flex-start';
+        row.innerHTML = `
+            <img src="img/neo_avatar.jpg" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" alt="Neo">
+            <div class="message-bubble neo">${htmlContent}</div>
+        `;
     } else {
-        row.className = 'message-bubble ceo';
+        row.style.justifyContent = 'flex-end';
+        row.innerHTML = `
+            <div class="message-bubble ceo">${htmlContent}</div>
+            <img src="img/boss_avatar.jpg" onerror="this.src='https://ui-avatars.com/api/?name=BOSS&background=555&color=fff'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" alt="CEO">
+        `;
     }
     
-    row.innerHTML = htmlContent;
     chatMessages.appendChild(row);
     
     setTimeout(() => {
@@ -219,54 +232,65 @@ export async function handleInstruction(text, hasImage = false) {
             }
         }
 
+        window.showInvoicePreview = function(targetProjId) {
+             if (!targetProjId) return;
+             const targetProj = window.mockDB.projects.find(p => p.id === targetProjId);
+             if (!targetProj) return;
+
+             const expenses = window.mockDB.transactions.filter(t => t.projectId === targetProjId && (t.type === 'expense' || t.type === 'labor'));
+             const subtotal = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+             const tax = Math.floor(subtotal * 0.1);
+             const grandTotal = subtotal + tax;
+             
+             const industry = window.mockDB.userConfig ? window.mockDB.userConfig.industry : 'general';
+             const honorific = (industry === 'freelance' || industry === 'general') ? '様' : '御中';
+             const itemDescription = (industry === 'construction') ? '一式' : '内容';
+             const itemUnit = (industry === 'construction') ? '式' : '回';
+
+             document.getElementById('invoice-client-name').textContent = (targetProj.clientName || targetProj.name) + ` ${honorific}`;
+             document.getElementById('invoice-date').textContent = `発行日: ${new Date().toLocaleDateString('ja-JP').replace(/\//g, '/')}`;
+             document.getElementById('invoice-no').textContent = `請求番号: INV-${Date.now().toString().slice(-4)}`;
+             document.getElementById('invoice-total-amount').textContent = `¥${grandTotal.toLocaleString()}`;
+
+             const tbody = document.getElementById('invoice-items-body');
+             if (tbody) {
+                 tbody.innerHTML = `
+                     <tr style="border-bottom: 1px solid #eee;">
+                         <td style="padding: 12px 8px;">${targetProj.name} ${itemDescription}</td>
+                         <td style="padding: 12px 8px; text-align: center;">1</td>
+                         <td style="padding: 12px 8px; text-align: center;">${itemUnit}</td>
+                         <td style="padding: 12px 8px; text-align: right;">${subtotal.toLocaleString()}</td>
+                     </tr>
+                 `;
+             }
+
+             document.getElementById('invoice-subtotal').textContent = `¥${subtotal.toLocaleString()}`;
+             document.getElementById('invoice-tax').textContent = `¥${tax.toLocaleString()}`;
+             document.getElementById('invoice-grand-total').textContent = `¥${grandTotal.toLocaleString()}`;
+
+             const neoBubble = document.getElementById('neo-fab-bubble');
+             if (neoBubble) {
+                 neoBubble.textContent = `了解。「${targetProj.name}」の請求書を下書きしたよ⚡️`;
+                 neoBubble.classList.add('show');
+                 setTimeout(() => { neoBubble.classList.remove('show'); }, 3000);
+             }
+
+             if (typeof instructionInput !== 'undefined' && instructionInput) instructionInput.value = '';
+             
+             // Show the new global Document Generator Modal
+             const previewModal = document.getElementById('document-preview-modal');
+             if (previewModal) {
+                 previewModal.classList.remove('hidden');
+             }
+        };
+
         const invoiceMatch = text.match(/(?:「([^」]+)」|([^\s]+?))の請求書(プレビュー)?/);
         if (invoiceMatch && text.includes('プレビュー')) {
-             // To keep the script modular, we leave the intense invoice logic intact but ported
              const targetProjectName = invoiceMatch[1] || invoiceMatch[2];
              if (targetProjectName && window.findProjectIdByName) {
                  const targetProjId = window.findProjectIdByName(targetProjectName);
                  if (targetProjId) {
-                     const targetProj = window.mockDB.projects.find(p => p.id === targetProjId);
-                     const expenses = window.mockDB.transactions.filter(t => t.projectId === targetProjId && (t.type === 'expense' || t.type === 'labor'));
-                     const subtotal = expenses.reduce((acc, curr) => acc + curr.amount, 0);
-                     const tax = Math.floor(subtotal * 0.1);
-                     const grandTotal = subtotal + tax;
-                     
-                     const industry = window.mockDB.userConfig.industry;
-                     const honorific = (industry === 'freelance' || industry === 'general') ? '様' : '御中';
-                     const itemDescription = (industry === 'construction') ? '一式' : '内容';
-                     const itemUnit = (industry === 'construction') ? '式' : '回';
-
-                     document.getElementById('invoice-client-name').textContent = (targetProj.clientName || '株式会社〇〇') + ` ${honorific}`;
-                     document.getElementById('invoice-date').textContent = `発行日: ${new Date().toLocaleDateString('ja-JP').replace(/\//g, '/')}`;
-                     document.getElementById('invoice-no').textContent = `請求番号: INV-${Date.now().toString().slice(-4)}`;
-                     document.getElementById('invoice-total-amount').textContent = `¥${grandTotal.toLocaleString()}`;
-
-                     const tbody = document.getElementById('invoice-items-body');
-                     if (tbody) {
-                         tbody.innerHTML = `
-                             <tr style="border-bottom: 1px solid #eee;">
-                                 <td style="padding: 12px 8px;">${targetProj.name} ${itemDescription}</td>
-                                 <td style="padding: 12px 8px; text-align: center;">1</td>
-                                 <td style="padding: 12px 8px; text-align: center;">${itemUnit}</td>
-                                 <td style="padding: 12px 8px; text-align: right;">${subtotal.toLocaleString()}</td>
-                             </tr>
-                         `;
-                     }
-
-                     document.getElementById('invoice-subtotal').textContent = `¥${subtotal.toLocaleString()}`;
-                     document.getElementById('invoice-tax').textContent = `¥${tax.toLocaleString()}`;
-                     document.getElementById('invoice-grand-total').textContent = `¥${grandTotal.toLocaleString()}`;
-
-                     const neoBubble = document.getElementById('neo-fab-bubble');
-                     if (neoBubble) {
-                         neoBubble.textContent = `了解。「${targetProj.name}」の請求書を下書きしたよ⚡️`;
-                         neoBubble.classList.add('show');
-                         setTimeout(() => { neoBubble.classList.remove('show'); }, 3000);
-                     }
-
-                     if (instructionInput) instructionInput.value = '';
-                     window.switchView('view-invoice');
+                     window.showInvoicePreview(targetProjId);
                      return; 
                  }
              }
@@ -484,6 +508,31 @@ export async function handleInstruction(text, hasImage = false) {
                      }
                 } else {
                     document.getElementById('modal-neo-confirm').classList.remove('hidden');
+                }
+            } else if (action === "GENERATE_DOCUMENT") {
+                const targetProjectName = intent.project_name;
+                let targetProjId = null;
+
+                if (targetProjectName && window.findProjectIdByName) {
+                    targetProjId = window.findProjectIdByName(targetProjectName);
+                }
+                
+                // Fallback to currently open project if name match fails
+                if (!targetProjId && window.currentOpenProjectId) {
+                    targetProjId = window.currentOpenProjectId;
+                }
+
+                if (targetProjId) {
+                    if (isChatViewActive()) appendChatMessage('neo', `「${targetProjectName || '現在のプロジェクト'}」の請求書を下書きしました⚡️`);
+                    window.showInvoicePreview(targetProjId);
+                } else {
+                    const neoBubble = document.getElementById('neo-fab-bubble');
+                    if (neoBubble) {
+                        neoBubble.textContent = `ごめん、「${targetProjectName || '指定のプロジェクト'}」が見つからなかった。`;
+                        neoBubble.classList.add('show');
+                        setTimeout(() => neoBubble.classList.remove('show'), 4000);
+                    }
+                    if (isChatViewActive()) appendChatMessage('neo', `対象のプロジェクトが見つかりませんでした。`);
                 }
             } else if (action === "QUERY_KNOWLEDGE") {
                 const answerText = intent.answer;
