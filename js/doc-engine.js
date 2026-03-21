@@ -616,33 +616,33 @@ window.handleAIDocUpload = (event) => {
 
 // HTML template generation for consistency
 window.generateDocLineHTML = (name = "", price = 0, qty = 1, isAI = false) => {
+    // AI生成バッジ: インラインタグ形式（淡い紫 + 影 + × 閉じるボタン）
     const aiBadge = isAI ? `
-        <style>
-            @keyframes neoAIFadeIn {
-                0% { opacity: 0; transform: translateY(-4px) scale(0.95); }
-                100% { opacity: 1; transform: translateY(0) scale(1); }
-            }
-        </style>
-        <div style="position: absolute; left: -10px; top: -14px; background: linear-gradient(135deg, #6366f1, #a855f7); color: white; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 20px; box-shadow: 0 2px 4px rgba(168,85,247,0.4); z-index: 2; pointer-events: none; animation: neoAIFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;">✨ AI生成</div>
+        <div class="ai-tag-badge">
+            <span>✦ AI生成</span>
+            <button class="ai-badge-dismiss" onclick="this.closest('.ai-tag-badge').remove();" title="バッジを消す">✕</button>
+        </div>
     ` : '';
+
+    // 名前に含まれる " などをエスケープ
+    const safeName  = String(name).replace(/"/g, '&quot;');
+    const safePrice = Number(price) || 0;
+    const safeQty   = Number(qty)   || 1;
 
     return `
         <div class="line-item">
-            ${aiBadge}
             <div class="input-group">
-                <label>内容</label>
-                <input type="text" class="form-control item-name-input" placeholder="内容を入力" oninput="window.updateDocPreview()" value="${name}" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a; position: relative; z-index: 1;">
+                ${aiBadge}
+                <input type="text" class="form-control item-name-input" placeholder="内容を入力" oninput="window.updateDocPreview()" value="${safeName}">
             </div>
             <div class="input-group qty">
-                <label>数量</label>
-                <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="${qty}" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
+                <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" value="${safeQty}" oninput="window.updateDocPreview()">
             </div>
             <div class="input-group price">
-                <label>単価 (¥)</label>
-                <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="単価" value="${price}" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #fff; color: #0f172a;">
+                <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" value="${safePrice}" oninput="window.updateDocPreview()">
             </div>
-            <button class="btn btn-outline btn-icon delete-row-btn" onclick="this.closest('.line-item').remove(); window.updateDocPreview();" style="position: absolute; top: 0; right: 0; border: none; background: transparent; color: #ef4444; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; cursor: pointer; border-radius: 50%;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <button class="delete-row-btn" onclick="this.closest('.line-item').remove(); window.updateDocPreview();" title="この行を削除">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
         </div>
     `;

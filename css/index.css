@@ -41,6 +41,19 @@
   /* Borders */
   --radius-md: 12px;
   --radius-lg: 24px;
+
+  /* Chat bubbles (iMessage-style) */
+  --chat-neo-bg: #F2F2F7;          /* iOS secondary system fill */
+  --chat-neo-text: #1C1C1E;        /* iOS label black */
+  --chat-neo-shadow: rgba(0,0,0,0.10);
+  --chat-ceo-bg: #007AFF;          /* iOS system blue */
+  --chat-ceo-text: #FFFFFF;
+  --chat-ceo-shadow: rgba(0,122,255,0.30);
+  --chat-timestamp: #8E8E93;       /* iOS secondary label */
+  --chat-header-bg: rgba(255,255,255,0.92);
+  --chat-header-border: rgba(0,0,0,0.06);
+  --chat-input-bg: rgba(255,255,255,0.95);
+  --chat-input-border: rgba(0,0,0,0.06);
 }
 
 [data-theme="dark"] {
@@ -67,6 +80,17 @@
   --btn-secondary-text: #E7E9EA;
 
   --header-bg: rgba(0, 0, 0, 0.95);
+
+  /* Chat bubbles — dark mode overrides */
+  --chat-neo-bg: #2C2C2E;          /* iOS dark secondary system fill */
+  --chat-neo-text: #F2F2F7;        /* iOS light text */
+  --chat-neo-shadow: rgba(0,0,0,0.35);
+  --chat-ceo-shadow: rgba(0,122,255,0.40);
+  --chat-timestamp: #636366;       /* iOS dark secondary label */
+  --chat-header-bg: rgba(10,10,20,0.92);
+  --chat-header-border: rgba(255,255,255,0.06);
+  --chat-input-bg: rgba(10,10,20,0.96);
+  --chat-input-border: rgba(255,255,255,0.06);
 }
 
 * {

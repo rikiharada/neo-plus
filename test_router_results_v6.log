@@ -1,0 +1,41 @@
+[Neo Intent Routing] Launching Chrome...
+[Neo Intent Routing] Navigating to SPA root...
+Browser Console: ✅ Supabase Client Initialized v2
+Browser Console: ✅ Supabase Client Initialized (ESM Core Extraction)
+Browser Console: [Neo Boot] Initiating Brain Defrag...
+Browser Console: [Neo Boot] Volatile Session Cleared. Brain is fresh.
+Browser Console: [Neo Boot] Major version change detected. Wiping obsolete cache structures...
+Browser Console: [Setup] Initializing Setup View Controller
+Browser Console: [Setup] Initializing Auth Gatekeeper
+Browser Console: --- Self Test for Final Form parseCommand ---
+Browser Console: [DEBUG] Final Form Lexicon Parse Start: "3月24日、銀座で撮影"
+Browser Console: Extraction Test: [Date: 2026/03/24, Loc: 銀座, Title: 撮影, Category: 雑費]
+Browser Console: [Neo Global Agent] Cached 0 common business terms.
+Browser Console: [Neo Security Audit] System is secure. No new threats detected.
+Browser Console: [NeoGatekeeper] Development bypass activated. Logging in as CEO.
+Browser Console: [GlobalStore] Initializing Supabase Realtime Sync...
+Browser Console: [GlobalStore] SWR: Fallback to MockDB template
+Browser Console: [GlobalStore] Brain Sync: Data merged safely.
+[Neo Intent Routing] Sending Nav Intent: ホームへ戻る
+Browser Console: [DEBUG] Final Form Lexicon Parse Start: "ホームへ戻る"
+Browser Console: Extraction Test: [Date: -, Loc: -, Title: ホームへ戻る, Category: 雑費]
+Browser Console: [DEBUG] Final Form Lexicon Parse Start: "ホームへ戻る"
+Browser Console: Extraction Test: [Date: -, Loc: -, Title: ホームへ戻る, Category: 雑費]
+Browser Console: [DEBUG] Final Form Lexicon Parse Start: "ホームへ戻る"
+Browser Console: Extraction Test: [Date: -, Loc: -, Title: ホームへ戻る, Category: 雑費]
+Browser Console: [Neo Intent Execution] Executing action: NAVIGATE, is_silent: false
+✅ 成功: View-dash is visible (Navigation Intent)
+[Neo Intent Routing] Sending Create Intent: テストプロジェクト作って 1500
+Browser Console: [DEBUG] Final Form Lexicon Parse Start: "テストプロジェクト作って 1500"
+Browser Console: Extraction Test: [Date: -, Loc: -, Title: テストプロジェクト作って 1500, Category: 雑費]
+Browser Console: [DEBUG] Final Form Lexicon Parse Start: "テストプロジェクト作って 1500"
+Browser Console: Extraction Test: [Date: -, Loc: -, Title: テストプロジェクト作って 1500, Category: 雑費]
+Browser Console: [DEBUG] Final Form Lexicon Parse Start: "テストプロジェクト作って 1500"
+Browser Console: Extraction Test: [Date: -, Loc: -, Title: テストプロジェクト作って 1500, Category: 雑費]
+Browser Console: [Neo Intent Execution] Executing action: CREATE_PROJECT, is_silent: false
+Browser Console: [Neo Intent Execution] Directing to view-sites. Current visible view: view-dash
+Browser Console: [Neo Router] Initialized Project View
+Browser Console: Brain Sync OK
+✅ 成功: View-sites is visible (Compound Intent Route)
+[Neo Intent Routing] Capturing screenshot...
+[Neo Intent Routing] Finish.

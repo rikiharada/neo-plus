@@ -1,3 +1,5 @@
+import { generateHighFidelityPDF, generateAndUploadPDF } from '../lib/export/pdfGenerator.js';
+
 export function initDocumentGenerator() {
     // Basic Storage
     window.currentDocType = 'estimate'; // default
@@ -5,42 +7,81 @@ export function initDocumentGenerator() {
     window.projectActivities = []; // Global cache for the current modal session
 
     window.loadActivities = async (projectId) => {
+        // mockDB から .transactions (Supabase同期済み) と .activities (ローカル追加分) を両方マージして返す
+        const getMockActivities = () => {
+            if (!window.mockDB) return [];
+            const TYPES = new Set(['expense', 'labor', 'work']);
+            const txs = (window.mockDB.transactions || []).filter(t =>
+                t.projectId === projectId && !t.is_deleted && TYPES.has(t.type)
+            );
+            const acts = (window.mockDB.activities || []).filter(t =>
+                t.projectId === projectId && !t.is_deleted && TYPES.has(t.type)
+            );
+            // 重複除去: id が同じものは .transactions 側を優先
+            const seen = new Set(txs.map(t => t.id));
+            const merged = [...txs, ...acts.filter(a => !seen.has(a.id))];
+            return merged;
+        };
+
         try {
-            // OS共通の相対パスを使用
             const response = await fetch(`./data/projects/${projectId}/activities.json`);
             if (!response.ok) throw new Error('Network response was not ok');
             return await response.json();
         } catch (error) {
             console.error("Activity fetch error (fallback to mockDB):", error);
-            // エラー時はフォールバックとしてローカルモックから返して後続の処理を止めない
-            if (window.mockDB && window.mockDB.transactions) {
-                return window.mockDB.transactions.filter(t =>
-                    t.projectId === projectId &&
-                    !t.is_deleted &&
-                    (t.type === 'expense' || t.type === 'labor' || t.type === 'work')
-                );
-            }
-            return [];
+            return getMockActivities();
         }
     };
 
     window.openDocGenModal = async () => {
-        const modal = document.getElementById('modal-doc-gen');
+        let modal = document.getElementById('modal-doc-gen');
+        
+        // Lazy load the HTML if it's not present
+        if (!modal) {
+            window.GlobalStore?.setLoading(true);
+            try {
+                const response = await fetch('/views/document-gen.html');
+                if (!response.ok) throw new Error("Failed to fetch document-gen.html");
+                const htmlText = await response.text();
+                const container = document.getElementById('router-modal-doc-gen') || document.body;
+                container.insertAdjacentHTML('beforeend', htmlText);
+                modal = document.getElementById('modal-doc-gen');
+            } catch (e) {
+                console.error("Lazy load doc gen failed:", e);
+                window.GlobalStore?.setLoading(false);
+                return;
+            }
+            window.GlobalStore?.setLoading(false);
+        }
+
         if (modal) {
+            // Lock body scroll
+            document.body.style.overflow = 'hidden';
+
             modal.classList.remove('hidden');
             window.switchDocTab('estimate');
-            document.getElementById('doc-client-name').value = '';
-            document.getElementById('doc-subject').value = document.getElementById('detail-project-name')?.textContent || '';
-            document.getElementById('doc-issue-date').value = new Date().toISOString().split('T')[0];
+            const clientInput = document.getElementById('doc-client-name');
+            if (clientInput) clientInput.value = '';
+            
+            const detailProjName = document.getElementById('detail-project-name')?.textContent;
+            const subjectInput = document.getElementById('doc-subject');
+            if (subjectInput) subjectInput.value = detailProjName || '';
+            
+            const issueDateInput = document.getElementById('doc-issue-date');
+            if (issueDateInput) issueDateInput.value = new Date().toISOString().split('T')[0];
 
             // Load unbilled activities and push them natively into the invoice
             const container = document.getElementById('doc-line-items-container');
             if (container) {
                 container.innerHTML = '';
-                // Extract pending transactions
+                // Extract pending transactions (.transactions = Supabase同期済み, .activities = ローカル追加分)
                 let pendingTxs = [];
-                if (window.mockDB && window.mockDB.transactions && window.currentOpenProjectId) {
-                    pendingTxs = window.mockDB.transactions.filter(t => t.projectId === window.currentOpenProjectId && !t.is_deleted);
+                if (window.mockDB && window.currentOpenProjectId) {
+                    const pid = window.currentOpenProjectId;
+                    const fromTxs  = (window.mockDB.transactions || []).filter(t => t.projectId === pid && !t.is_deleted);
+                    const fromActs = (window.mockDB.activities  || []).filter(t => t.projectId === pid && !t.is_deleted);
+                    const seen = new Set(fromTxs.map(t => t.id));
+                    pendingTxs = [...fromTxs, ...fromActs.filter(a => !seen.has(a.id))];
                 }
 
                 if (pendingTxs.length > 0) {
@@ -82,7 +123,8 @@ export function initDocumentGenerator() {
                                 parsedItems.forEach(item => {
                                     const pName = item.item_name || '未分類項';
                                     const pPrice = parseInt(item.price || '0', 10);
-                                    container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(pName, pPrice, 1, true)); // isAI = true
+                                    const pQty = parseFloat(item.qty || '1');
+                                    container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(pName, pPrice, pQty, true)); // isAI = true
                                 });
                             } else {
                                 // Fallback: Render Raw Transactions if AI fails
@@ -293,7 +335,10 @@ export function initDocumentGenerator() {
         document.body.style.overflow = '';
     };
 
-    window.saveDocument = () => {
+    window.saveDocument = async () => {
+        window.GlobalStore?.setLoading(true);
+        if (window.showNeoToast) window.showNeoToast('info', 'PDFを生成中...');
+
         let subtotal = 0;
         document.querySelectorAll('.item-price-input').forEach(el => subtotal += parseInt(el.value || '0', 10));
 
@@ -305,13 +350,47 @@ export function initDocumentGenerator() {
         window.docDbStorage[window.currentDocType] = data;
 
         const totalStr = document.getElementById('preview-grand-total')?.textContent || '¥0';
-        let msg = `ドキュメント（${window.currentDocType === 'estimate' ? '見積書' : (window.currentDocType === 'invoice' ? '請求書' : '領収書')}）を保存しました！`;
+        
+        try {
+            // 1. Get the target HTML element defining the A4 layout
+            const element = document.getElementById('doc-preview-paper');
+            if (!element) throw new Error("Preview layout element not found.");
 
-        if (window.currentDocType === 'estimate') {
-            msg += `\n将来的に「請求書」タブを開くと、この内容(${totalStr})が自動で引き継がれます。`;
+            // 2. Define dynamic filename
+            const docTypeName = window.currentDocType === 'estimate' ? '見積書' : (window.currentDocType === 'invoice' ? '請求書' : '領収書');
+            const clientName = document.getElementById('doc-client-name')?.value || 'Guest';
+            const dateStr = new Date().toISOString().split('T')[0];
+            const filename = `Neo_${docTypeName}_${clientName}_${dateStr}.pdf`;
+
+            // 3. Generate High-Fidelity PDF and prompt download locally
+            const pdfBlob = await generateHighFidelityPDF(element, filename, true);
+
+            // 4. (Optional) Background Upload to Google Drive / Supabase
+            generateAndUploadPDF(element, filename).then(url => {
+                 if (url) console.log("Successfully backed up PDF to Drive:", url);
+            }).catch(e => console.warn("Failed to backup to drive, but local save succeeded", e));
+
+            window.GlobalStore?.setLoading(false);
+            
+            let msg = `ドキュメント（${docTypeName}）を保存・ダウンロードしました！`;
+            if (window.currentDocType === 'estimate') {
+                msg += `\n将来的に「請求書」タブを開くと、この内容(${totalStr})が自動で引き継がれます。`;
+            }
+            if (window.showNeoToast) {
+                window.showNeoToast('success', msg);
+            } else {
+                alert(msg);
+            }
+            
+            window.closeDocGenModal();
+        } catch (e) {
+            window.GlobalStore?.setLoading(false);
+            console.error("Document Generation Error:", e);
+            if (window.showNeoToast) {
+                window.showNeoToast('error', 'PDFの作成に失敗しました。');
+            } else {
+                alert('PDF作成エラーが発生しました。');
+            }
         }
-
-        alert(msg);
-        window.closeDocGenModal();
     };
 }

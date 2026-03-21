@@ -1638,43 +1638,225 @@ button:active {
     margin: 0 auto var(--spacing-sm) auto;
 }
 /* Document Line Item Grid Structure */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   明細テーブル: コンテナ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .line-items-container {
-  margin-top: 20px !important;
+  margin-top: 8px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: #fff !important;
 }
 
+/* テーブルヘッダー行 */
+.line-items-header {
+  display: grid !important;
+  grid-template-columns: 1fr 52px 90px 32px !important;
+  gap: 8px !important;
+  padding: 8px 12px !important;
+  background: #f8fafc !important;
+  border-bottom: 1.5px solid #e2e8f0 !important;
+}
+
+.line-items-header span {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+}
+
+.line-items-header span.col-qty  { text-align: center !important; }
+.line-items-header span.col-price { text-align: right !important; }
+
+/* 明細一行 */
+.line-item {
+  display: grid !important;
+  grid-template-columns: 1fr 52px 90px 32px !important;
+  gap: 8px !important;
+  align-items: center !important;
+  padding: 10px 12px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  position: relative !important;
+  transition: background 0.15s !important;
+}
+
+.line-item:last-child {
+  border-bottom: none !important;
+}
+
+.line-item:hover {
+  background: #fafbff !important;
+}
+
+/* ラベルは非表示（ヘッダーで代替） */
+.line-item .input-group label {
+  display: none !important;
+}
+
+/* 内容フィールド：AIタグをインライン表示するためrelative */
+.line-item .input-group {
+  position: relative !important;
+}
+
+/* 各入力フィールドの共通スタイル */
+.line-item .form-control {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 9px 10px !important;
+  font-size: 14px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: #0f172a !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+
+.line-item .form-control:focus {
+  outline: none !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+}
+
+.line-item .input-group.qty .form-control  { text-align: center !important; }
+.line-item .input-group.price .form-control { text-align: right !important; padding-right: 8px !important; }
+
+/* 削除ボタン */
+.delete-button,
+.delete-row-btn {
+  position: static !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 50% !important;
+  color: #cbd5e1 !important;
+  font-size: 18px !important;
+  cursor: pointer !important;
+  display: grid !important;
+  place-items: center !important;
+  transition: background 0.15s, color 0.15s !important;
+  justify-self: center !important;
+}
+
+.delete-button:hover,
+.delete-row-btn:hover {
+  background: #fef2f2 !important;
+  color: #ef4444 !important;
+}
+
+/* ─── AIタグバッジ（インライン） ─────────── */
+.ai-tag-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: rgba(99, 102, 241, 0.08) !important;
+  color: #6366f1 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 2px 7px 2px 6px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.15) !important;
+  margin-bottom: 4px !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
+  cursor: default !important;
+  animation: aiBadgeFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.ai-tag-badge .ai-badge-dismiss {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: rgba(99, 102, 241, 0.5) !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  display: grid !important;
+  place-items: center !important;
+  transition: color 0.15s !important;
+}
+
+.ai-tag-badge .ai-badge-dismiss:hover {
+  color: #6366f1 !important;
+}
+
+@keyframes aiBadgeFadeIn {
+  from { opacity: 0; transform: translateY(-3px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 行追加ボタン */
 .add-line-wrapper {
-  margin-bottom: 24px; /* 次のレシート読取ボタンとの間隔 */
+  margin: 0 !important;
+  padding: 2px 0 12px 0 !important;
 }
 
-/* レシート読取ボタンのラッパー（見出しの下に配置） */
+#add-item-btn {
+  width: 100% !important;
+  padding: 10px !important;
+  background: none !important;
+  border: none !important;
+  color: #6366f1 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  letter-spacing: 0.02em !important;
+  transition: color 0.15s !important;
+}
+
+#add-item-btn:hover { color: #4f46e5 !important; }
+
+/* レシート読取ボタン */
 .receipt-scan-wrapper {
   display: flex !important;
   justify-content: center !important;
   width: 100% !important;
-  padding: 16px 0 !important;
-  border-top: 1px dashed #eee !important; /* 境界線を薄く入れるとAI機能が際立ちます */
+  padding: 14px 0 !important;
+  border-top: 1px dashed #e2e8f0 !important;
 }
 
-/* 明細一行ごとの設定 */
-.line-item {
-  display: grid !important;
-  grid-template-columns: 1fr 60px 100px 30px !important; /* 内容, 数量, 金額, 削除 */
-  gap: 12px !important;
-  align-items: flex-end !important;
-  margin-bottom: 24px !important; /* 行同士の間にゆとりを作る */
-  padding: 10px 0 !important;
-  border-bottom: 1px solid #f0f0f0 !important; /* 境界線を薄く引くと分かりやすい */
+/* ─── 合計エリア ────────────────────── */
+.doc-total-area {
+  text-align: center !important;
+  margin: 0 !important;
+  padding: 20px !important;
+  background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%) !important;
+  border: 1.5px solid #fecaca !important;
+  border-radius: 16px !important;
+  box-shadow: 0 2px 12px rgba(239, 68, 68, 0.08) !important;
 }
 
-/* 削除ボタンを「×」だけでシンプルに、少し離して配置 */
-.delete-button {
-  position: static !important; /* absoluteをやめて列に収める */
-  color: #ff4d4f !important;
-  background: none !important;
-  border: none !important;
-  font-size: 18px !important;
-  cursor: pointer;
-  padding-bottom: 8px !important; /* 入力欄と高さを合わせる */
+.doc-tax-label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  margin-bottom: 6px !important;
+}
+
+.doc-total-label {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #ef4444 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 4px !important;
+}
+
+#doc-total-calc {
+  display: block !important;
+  font-size: clamp(2rem, 8vw, 3rem) !important;
+  font-weight: 900 !important;
+  color: #ef4444 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.1 !important;
+  text-shadow: 0 2px 8px rgba(239, 68, 68, 0.15) !important;
 }
 
 /* Document Line Item labels */
@@ -1683,7 +1865,7 @@ button:active {
   color: #64748b;
   font-weight: 500;
   margin-bottom: 4px;
-  display: block;
+  display: none;
 }
 
 .line-item .input-group.qty label {

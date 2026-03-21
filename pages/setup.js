@@ -127,13 +127,17 @@ export function initSetupView() {
             
             if (path === '/account' || path === '/settings') {
                 if (window.switchView) window.switchView('view-settings');
-            } else if (path === '/cockpit' || path === '/chat') {
+            } else if (path === '/chat') {
+                // /chat のみ Chatページへ。/cockpit は必ずダッシュボードへ
                 if (window.switchView) window.switchView('view-chat');
             } else {
+                // / または /cockpit を含む全パスはダッシュボードへ
                 if (window.switchView) {
                     window.switchView('view-dash');
                 }
             }
+
+            _routingComplete = true; // 以降の TOKEN_REFRESHED 等で再ルーティングさせない
 
             const uiAvatar = document.querySelector('.user-info-avatar-text');
             if (uiAvatar) {
@@ -155,16 +159,30 @@ export function initSetupView() {
     };
 
     // 1. Initial Check Strategy (Brain/Body Decouple)
+    let _initialAuthHandled = false; // 二重発火防止フラグ
+    let _routingComplete = false;    // 初回ルーティング完了フラグ（TOKEN_REFRESHED 等で再ルーティングしないため）
     if (window.supabaseClient) {
         window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+            _initialAuthHandled = true;
             handleAuthState(session);
         }).catch(err => {
             console.warn("Brain (Supabase) Unreachable. Falling back to Local Body Mode.", err);
+            _initialAuthHandled = true;
             handleAuthState({ user: { email: 'ceo@local.neo', id: 'local-body-id' } });
         });
 
         // 2. Continuous Listener
-        window.supabaseClient.auth.onAuthStateChange((_event, currentSession) => {
+        // INITIAL_SESSION イベントは getSession() と重複するためスキップ
+        // TOKEN_REFRESHED / SIGNED_IN 等は初回ルーティング後は状態更新のみ行い、再ルーティングしない
+        window.supabaseClient.auth.onAuthStateChange((event, currentSession) => {
+            if (event === 'INITIAL_SESSION' && _initialAuthHandled) return;
+
+            // 初回ルーティング完了後 & サインアウト以外のイベントはセッション更新のみ
+            if (_routingComplete && event !== 'SIGNED_OUT' && currentSession?.user) {
+                window.GlobalStore.updateState({ user: currentSession.user, session: currentSession });
+                return;
+            }
+
             handleAuthState(currentSession);
         });
     } else {

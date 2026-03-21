@@ -1,7 +1,7 @@
 <div class="content-area dashboard-health" style="padding: 0 var(--spacing-lg); display: block; gap: var(--spacing-xl); background-color: var(--bg-color); padding-bottom: 120px;">
     <!-- Center Profit Ring -->
-    <div style="display: block; align-items: center; justify-content: center; margin-top: var(--spacing-md); position: relative;">
-        <svg width="240" height="240" viewBox="0 0 240 240" style="transform: rotate(-90deg);">
+    <div style="display: grid; place-items: center; margin-top: var(--spacing-md);">
+        <svg width="240" height="240" viewBox="0 0 240 240" style="grid-area: 1/1; transform: rotate(-90deg);">
             <circle cx="120" cy="120" r="100" fill="none" stroke="rgba(29, 155, 240, 0.05)" stroke-width="8"></circle>
             <circle cx="120" cy="120" r="100" fill="none" class="profit-ring-progress" id="wallet-ring-progress" stroke="url(#blue-gradient)" stroke-width="8" stroke-dasharray="628" stroke-dashoffset="150" stroke-linecap="round" style="transition: stroke-dashoffset 1s ease-out;"></circle>
             <defs>
@@ -11,7 +11,7 @@
                 </linearGradient>
             </defs>
         </svg>
-        <div style="position: absolute; text-align: center; pointer-events: none;">
+        <div style="grid-area: 1/1; text-align: center; pointer-events: none; width: 180px; z-index: 1;">
             <span style="display: block; font-size: 13px; color: var(--text-muted); font-weight: 300; letter-spacing: 0.1em; margin-bottom: 4px;">月商/目標純利益</span>
             <span style="display: block; font-size: clamp(1.5rem, 5vw, 2.5rem); font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; line-height: 1;" id="wallet-global-profit">¥0</span>
             <span style="display: block; font-size: 13px; color: #10b981; margin-top: 8px; font-weight: 400;"><i data-lucide="trending-up" style="width: 14px; height: 14px; display: inline-block; vertical-align: text-bottom;"></i>+15% vs 先月</span>
@@ -67,15 +67,15 @@
         </div>
 
         <div style="display: block; gap: 8px;">
-            <button id="btn-export-csv" class="btn-primary" style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: grid; place-items: center; gap: 8px; width: 100%; margin-bottom: 8px;">
+            <button id="btn-export-csv" class="btn-primary" style="background: var(--btn-secondary-bg); color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: grid; place-items: center; gap: 8px; width: 100%; margin-bottom: 8px;">
                 <i data-lucide="file-down" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
                 CSV / PDF 書き出し
             </button>
-            <button class="btn-primary" style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: grid; place-items: center; gap: 8px; width: 100%; margin-bottom: 8px;">
+            <button class="btn-primary" style="background: var(--btn-secondary-bg); color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: grid; place-items: center; gap: 8px; width: 100%; margin-bottom: 8px;">
                 <i data-lucide="send" style="width: 16px; height: 16px; color: var(--accent-neo-blue);"></i>
                 税理士へデータ送信
             </button>
-            <button id="btn-export-pdf-grid" class="btn-primary" style="background: #fff; color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: grid; place-items: center; gap: 8px; width: 100%;">
+            <button id="btn-export-pdf-grid" class="btn-primary" style="background: var(--btn-secondary-bg); color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 10px; padding: 12px; font-weight: 600; display: grid; place-items: center; gap: 8px; width: 100%;">
                 <i data-lucide="receipt" style="width: 16px; height: 16px; color: #10b981;"></i>
                 レシート全件ダウンロード
             </button>

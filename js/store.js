@@ -20,8 +20,30 @@ window.GlobalStore = {
         return this.state;
     },
     
-    updateState(updates) {
-        this.state = { ...this.state, ...updates };
+    updateState(newState) {
+        this.state = { ...this.state, ...newState };
+        
+        // Ensure Global Sync directly populates UI memory uniformly preventing Tag dropouts
+        if (newState.projects && Array.isArray(newState.projects)) {
+            if (!window.mockDB) window.mockDB = {};
+            window.mockDB.projects = newState.projects.map(p => ({
+                id: p.id, name: p.name, customerName: p.customer_name || '-', location: p.location || '-', note: p.note || '',
+                category: p.category, color: p.color, unit: p.unit || '-', hasUnpaid: p.has_unpaid, revenue: parseFloat(p.revenue) || 0,
+                status: p.status, clientName: p.client_name, paymentDeadline: p.payment_deadline, bankInfo: p.bank_info, lastUpdated: p.last_updated, currency: p.currency,
+                startDate: p.created_at ? p.created_at.split('T')[0].replace(/-/g, '/') : (p.startDate || null)
+            }));
+        }
+        if (newState.activities && Array.isArray(newState.activities)) {
+            if (!window.mockDB) window.mockDB = {};
+            // Raw mapping for activities ensuring we don't drop frontend names
+            window.mockDB.activities = newState.activities.map(a => ({
+                id: a.id, projectId: a.project_id, type: a.type, category: a.category,
+                title: a.title, amount: a.amount, date: a.date ? a.date.split('T')[0].replace(/-/g, '/') : null,
+                isBookkeeping: a.is_bookkeeping, isDeleted: a.is_deleted
+            }));
+        }
+
+        // Notify UI to re-render
         this.notify();
     },
     
@@ -106,7 +128,12 @@ window.GlobalStore = {
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, (payload) => {
                     console.log('[GlobalStore] Realtime Activity Change received!', payload);
                     fetchInitialData();
-                }).subscribe((status, err) => {
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, (payload) => {
+                    console.log('[GlobalStore] Realtime Project Change received!', payload);
+                    fetchInitialData();
+                })
+                .subscribe((status, err) => {
                     const statusEl = document.getElementById('neo-core-status');
                     if (status === 'SUBSCRIBED') {
                         if (statusEl) {

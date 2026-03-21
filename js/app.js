@@ -2,6 +2,7 @@ import { createProjectCard, createTransactionRow, createNeoButton, renderBottomN
 import { uploadPdfToDrive } from '../lib/cloud/googleDrive.js';
 import { initHomeView } from '../pages/home.js';
 import { initSetupView } from '../pages/setup.js';
+import { initDocumentGenerator } from '../pages/document-manager.js';
 // Neo's Pride Validation: Prevents inappropriate user names
 window.validateUserName = function (name) {
     if (!name || typeof name !== 'string') return false;
@@ -72,6 +73,7 @@ window.mockDB = window.mockDB || {
     clients: [],
     vendors: [],
     projects: [],
+    activities: [],
     documents: [],
     transactions: [],
     learnedKeywords: {}
@@ -99,14 +101,22 @@ window.insertProject = async (proj) => {
     window.mockDB.projects.unshift(proj);
     window.persistLocalBody();
     
+    window.pendingProjectInserts = window.pendingProjectInserts || {};
     if (window.supabaseClient) {
         // Brain Sync: Background Async (Fire & Forget), do not block UI
-        window.supabaseClient.from('projects').insert([{
+        window.pendingProjectInserts[proj.id] = window.supabaseClient.from('projects').insert([{
+            id: proj.id,
             name: proj.name,
             category: proj.category || 'other',
             color: proj.color || '#8E8E93',
-            status: proj.status || 'active'
-        }]).then(() => console.log('Brain Sync OK')).catch(() => console.log('Brain Sync Skipped (Body kept intact)'));
+            status: proj.status || 'active',
+            location: proj.location || '-',
+            created_at: proj.startDate ? new Date(proj.startDate.replace(/-/g, '/')).toISOString() : new Date().toISOString()
+        }]).then(({ error }) => {
+            if (error) console.error('Brain Sync Error (Project):', JSON.stringify(error));
+            else console.log('Brain Sync OK (Project)');
+            delete window.pendingProjectInserts[proj.id];
+        });
     }
     return Promise.resolve(proj);
 };
@@ -117,16 +127,26 @@ window.insertTransaction = async (tx) => {
     window.persistLocalBody();
 
     if (window.supabaseClient) {
-        // Brain Sync: Background Async (Fire & Forget)
+        // FK Safety: Await parent project insert if it's currently pending
+        if (window.pendingProjectInserts && window.pendingProjectInserts[tx.projectId]) {
+            console.log(`[Brain Sync] Delaying Activity insert to ensure Project exists (FK safety)`);
+            await window.pendingProjectInserts[tx.projectId].catch(() => {});
+        }
+
+        // Brain Sync: Background Async
         window.supabaseClient.from('activities').insert([{
+            id: tx.id,
             project_id: tx.projectId,
             type: tx.type,
             category: tx.category,
             title: tx.title,
             amount: Number(tx.amount) || 0,
-            date: new Date().toISOString(),
+            date: tx.date ? new Date(tx.date.replace(/\//g, '-')).toISOString() : new Date().toISOString(),
             is_bookkeeping: tx.isBookkeeping || false
-        }]).then(() => console.log('Brain Sync OK')).catch(() => console.log('Brain Sync Skipped'));
+        }]).then(({ error }) => {
+            if (error) console.error('Brain Sync Error (Activity):', JSON.stringify(error));
+            else console.log('Brain Sync OK (Activity)');
+        });
     }
     return Promise.resolve(tx);
 };
@@ -170,10 +190,21 @@ window.updateTransaction = async (txId, updates) => {
 
 
 window.parseCommand = function (text) {
-    let result = { date: null, location: null, title: text, category: "雑費" };
+    let result = { date: null, location: null, title: text, category: "雑費", amount: null };
     console.log(`[DEBUG] Final Form Lexicon Parse Start: "${text}"`);
 
     let remainingText = text;
+
+    // 0. Amount Extraction: ５万, 50000円, ¥5000, 5,000円 etc.
+    const amountMatch = remainingText.match(/[¥￥]?([\d,]+(?:\.\d+)?)\s*万/);
+    if (amountMatch) {
+        result.amount = Math.round(parseFloat(amountMatch[1].replace(/,/g, '')) * 10000);
+    } else {
+        const yenMatch = remainingText.match(/[¥￥]([\d,]+)|(\d[\d,]+)\s*円/);
+        if (yenMatch) {
+            result.amount = parseInt((yenMatch[1] || yenMatch[2]).replace(/,/g, ''));
+        }
+    }
 
     // 1. Date Extraction: (\d{1,2})月(\d{1,2})日 OR (\d{1,2})/(\d{1,2})
     const dateMatch = remainingText.match(/(\d{1,2})[月\/](\d{1,2})(?:日)?/);
@@ -220,7 +251,7 @@ window.parseCommand = function (text) {
         result.category = window.StaticLexicon.categorizeExpense(text, currentIndustry);
     }
 
-    console.log(`Extraction Test: [Date: ${result.date || "-"}, Loc: ${result.location || "-"}, Title: ${result.title}, Category: ${result.category}]`);
+    console.log(`Extraction Test: [Date: ${result.date || "null"}, Loc: ${result.location || "null"}, Title: ${result.title}, Category: ${result.category}]`);
     return result;
 };
 
@@ -235,8 +266,9 @@ window.createProject = window.createProject || function (title, pDate, pLoc) {
         .replace(extraNoise, '')
         .replace(/[をが。.]/g, '');
     if (cleanTitle === '') cleanTitle = '新規プロジェクト';
-
-    const newProjId = Date.now();
+    
+    // Convert to 32-bit integer safe UNIX seconds to avoid Supabase value out-of-range errors
+    const newProjId = Math.floor(Date.now() / 1000);
     const newProj = {
         id: newProjId,
         name: cleanTitle,
@@ -276,6 +308,115 @@ setTimeout(() => {
         window.parseCommand('3月24日、銀座で撮影');
     }
 }, 1000);
+
+// ─── Compound Action Handler ──────────────────────────────────────────────────
+// Handles: project creation + multi-expense logging in a single input.
+// Routes intelligently using extractTags (Layer 1, sync) to avoid LLM roundtrip
+// for clear-cut compound inputs like "6月4日銀座でドラマ撮影、交通費10000円、人件費20000円".
+window.handleCompoundAction = async function(rawText) {
+    if (!rawText || !rawText.trim()) return;
+
+    const tags = window.extractTags ? window.extractTags(rawText) : null;
+
+    // Fallback to LLM if extractTags not loaded
+    if (!tags) return window.handleInstruction ? window.handleInstruction(rawText) : null;
+
+    const hasProject   = !!(tags.projectName);
+    const hasAmounts   = tags.amounts && tags.amounts.length > 0;
+    const isRevenue    = tags.isRevenue;
+    const isDocument   = tags.intent === 'GENERATE_DOCUMENT';
+    const isQueryOnly  = tags.intent === 'QUERY';
+
+    // Always route documents / revenue / queries to LLM handler
+    if (isDocument || isRevenue || isQueryOnly) {
+        return window.handleInstruction ? window.handleInstruction(rawText) : null;
+    }
+
+    // Pure expense (no project detected) → LLM handler for confirmation modal
+    if (!hasProject && hasAmounts) {
+        return window.handleInstruction ? window.handleInstruction(rawText) : null;
+    }
+
+    // Pure project or compound (project + expenses) → handle locally
+    if (hasProject) {
+        // 1. Create project folder
+        const projName = tags.projectName;
+        const projDate = tags.date ? tags.date.replace(/\//g, '-') : new Date().toLocaleDateString('ja-JP').replace(/\//g, '-');
+        let projLoc  = tags.location || '';
+        if (!projLoc && tags.projectName && tags.entities && tags.entities.length > 0) {
+            projLoc = tags.entities[0];
+        }
+
+        let newProj = null;
+        if (window.createProject) {
+            // Pass projName directly — createProject cleans noise words
+            newProj = window.createProject(projName, projDate, projLoc);
+            // Override location if extractTags found one (createProject uses parseCommand internally)
+            if (newProj && projLoc) newProj.location = projLoc;
+            console.log(`[CompoundAction] Project created: ${newProj?.name} (id=${newProj?.id})`);
+        }
+
+        // 2. Insert each expense amount as a transaction
+        if (hasAmounts && newProj) {
+            let offset = 1;
+            for (const amt of tags.amounts) {
+                const txId = Math.floor(Date.now() / 1000) + offset;
+                offset++;
+                const tx = {
+                    id: txId,
+                    projectId: newProj.id,
+                    projectName: newProj.name,
+                    type: 'expense',
+                    category: amt.label || tags.category || '雑費',
+                    title: amt.label || tags.category || '経費',
+                    amount: amt.value,
+                    date: tags.date || new Date().toLocaleDateString('ja-JP').replace(/\//g, '-'),
+                    source: 'compound-rule',
+                    originalInput: rawText
+                };
+                if (window.insertTransaction) {
+                    await window.insertTransaction(tx);
+                    console.log(`[CompoundAction] Expense logged: ${tx.category} ¥${tx.amount}`);
+                }
+            }
+        }
+
+        // 3. Re-render projects list
+        if (typeof renderProjects === 'function') renderProjects(window.mockDB.projects);
+        window.dispatchEvent(new CustomEvent('neo-render-projects', { detail: { projects: window.mockDB?.projects } }));
+
+        // 4. Neo Bubble notification
+        const neoBubble = document.getElementById('neo-fab-bubble');
+        if (neoBubble) {
+            let msg = `⚡️ フォルダ「${newProj?.name || projName}」を作成`;
+            if (hasAmounts) {
+                const amtSummary = tags.amounts
+                    .map(a => `${a.label || '経費'} ¥${a.value.toLocaleString()}`)
+                    .join(' ・ ');
+                msg += `、${amtSummary} を記録`;
+            }
+            msg += 'したよ！';
+            neoBubble.textContent = msg;
+            neoBubble.classList.add('show');
+            setTimeout(() => neoBubble.classList.remove('show'), 5000);
+        }
+
+        // 5. Clear input, play sound, navigate
+        if (window.neo) window.neo.speak('neo_success');
+        const activeInput = document.getElementById('main-instruction-input');
+        if (activeInput) { activeInput.value = ''; activeInput.style.height = '48px'; }
+
+        // Reset trinity preview
+        const previewContainer = document.getElementById('trinity-preview');
+        if (previewContainer) previewContainer.style.opacity = '0';
+
+        if (window.switchView) window.switchView('view-dash');
+        return;
+    }
+
+    // Default fallback → LLM
+    if (window.handleInstruction) window.handleInstruction(rawText);
+};
 
 // --- Boot-time Brain Defrag ---
 window.neoBrainDefrag = function () {
@@ -448,7 +589,7 @@ window.addEventListener('load', async () => {
     // Now using a class for theme toggles since they exist on multiple views
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('fini_theme', theme);
+        localStorage.setItem('fini_theme_v2', theme);
 
         // Update all theme toggle buttons
         const toggleBtns = document.querySelectorAll('.theme-toggle');
@@ -473,7 +614,7 @@ window.addEventListener('load', async () => {
     };
 
     const toggleTheme = () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
         applyTheme(newTheme);
 
@@ -494,8 +635,8 @@ window.addEventListener('load', async () => {
         }
     });
 
-    // Initial Theme load
-    const savedTheme = localStorage.getItem('fini_theme') || 'dark';
+    // Initial Theme load (v2 key = clean start, defaults to light for all users)
+    const savedTheme = localStorage.getItem('fini_theme_v2') || 'light';
     applyTheme(savedTheme);
 
     // --- BYOC Google Drive Sync Visualization ---
@@ -584,7 +725,7 @@ window.addEventListener('load', async () => {
             };
 
             if (!viewDom && routerAnchor) {
-                fetch(`/views/${viewName}.html`)
+                fetch(`/views/${viewName}.html?v=${Date.now()}`)
                     .then(r => r.text())
                     .then(html => {
                         // CEO Directive: innerHTML + ID 再付与
@@ -643,17 +784,35 @@ window.addEventListener('load', async () => {
             case 'view-sites':
                 loadView('project', 'router-view-sites', 'view-sites', '../pages/project.js', 'initProjectView');
                 break;
-            case 'view-project-detail':
-                // Handled implicitly within the project view domain, re-route to project base
-                loadView('project', 'router-view-sites', 'view-sites', '../pages/project.js', 'initProjectView');
-                // Force detail view logic after load
+            case 'view-project-detail': {
                 const pDetail = document.getElementById('view-project-detail');
                 if (pDetail) {
+                    // project.html はロード済み → view-sites を隠してそのまま表示
+                    const sitesEl = document.getElementById('view-sites');
+                    if (sitesEl) { sitesEl.classList.add('hidden'); sitesEl.style.display = 'none'; }
                     pDetail.classList.remove('hidden');
                     pDetail.style.display = 'block';
                     pDetail.style.opacity = '1';
+                } else {
+                    // 初回: project.html をフェッチ → ロード完了後に detail を表示
+                    loadView('project', 'router-view-sites', 'view-sites', '../pages/project.js', 'initProjectView');
+                    // loadView の fetch 完了を 50ms ポーリングで待つ（最大 500ms）
+                    const waitForDetail = (retries) => {
+                        const detail = document.getElementById('view-project-detail');
+                        if (detail) {
+                            const sitesEl = document.getElementById('view-sites');
+                            if (sitesEl) { sitesEl.classList.add('hidden'); sitesEl.style.display = 'none'; }
+                            detail.classList.remove('hidden');
+                            detail.style.display = 'block';
+                            detail.style.opacity = '1';
+                        } else if (retries > 0) {
+                            setTimeout(() => waitForDetail(retries - 1), 50);
+                        }
+                    };
+                    waitForDetail(10);
                 }
                 break;
+            }
             case 'view-chat':
                 // Reset Cockpit if present
                 const dashCockpit = document.getElementById('neo-cockpit');
@@ -814,91 +973,154 @@ window.addEventListener('load', async () => {
         // --- Real-time Local Parsing to populate background inputs ---
         instructionInputs.forEach(input => {
             input.addEventListener('input', (e) => {
-                if (!e.target.value) return;
-                // Silent parsing for UI updates
-                const parsed = window.parseCommand(e.target.value);
-                if (parsed) {
-                    // UI Auto-Input Preview (The Trinity Thrill)
-                    const previewContainer = document.getElementById('trinity-preview');
-                    const pTitle = document.getElementById('preview-title');
-                    const pLoc = document.getElementById('preview-loc');
-                    const pLocBadge = document.getElementById('preview-loc-badge');
-                    const pDate = document.getElementById('preview-date');
-                    const pDateBadge = document.getElementById('preview-date-badge');
+                const rawText = e.target.value;
+                if (!rawText) {
+                    const pc = document.getElementById('trinity-preview');
+                    if (pc) pc.style.opacity = '0';
+                    return;
+                }
 
-                    if (previewContainer && pTitle) {
-                        let hasAny = false;
+                // Use 8-category extractTags (Layer 1, sync) for real-time preview
+                const parsed = window.extractTags ? window.extractTags(rawText) : window.parseCommand(rawText);
+                if (!parsed) return;
 
-                        let dispTitle = parsed.title;
-                        if (dispTitle === '新規プロジェクト' || dispTitle === '') {
-                            dispTitle = '-';
-                        } else {
-                            hasAny = true;
+                // ── Trinity Preview ──────────────────────────────────────────
+                const previewContainer = document.getElementById('trinity-preview');
+                const pTitle     = document.getElementById('preview-title');
+                const pLoc       = document.getElementById('preview-loc');
+                const pLocBadge  = document.getElementById('preview-loc-badge');
+                const pDate      = document.getElementById('preview-date');
+                const pDateBadge = document.getElementById('preview-date-badge');
+                const pCat       = document.getElementById('preview-cat');
+                const pCatBadge  = document.getElementById('preview-cat-badge');
+                const pAmount    = document.getElementById('preview-amount');
+                const pAmountBadge = document.getElementById('preview-amount-badge');
+                const pEntity    = document.getElementById('preview-entity');
+                const pEntityBadge = document.getElementById('preview-entity-badge');
+                const pRevenueBadge = document.getElementById('preview-revenue-badge');
+                const pDoc       = document.getElementById('preview-doc');
+                const pDocBadge  = document.getElementById('preview-doc-badge');
+
+                if (previewContainer && pTitle) {
+                    let hasAny = false;
+
+                    // タイトル (project name or raw text slice)
+                    const titleSrc = parsed.projectName || parsed.title || '';
+                    const dispTitle = (titleSrc && titleSrc !== '新規プロジェクト') ? titleSrc : '-';
+                    if (dispTitle !== '-') hasAny = true;
+                    pTitle.textContent = dispTitle;
+
+                    // 場所
+                    if (parsed.location && pLocBadge) {
+                        pLoc.textContent = parsed.location;
+                        pLocBadge.style.display = 'inline-flex';
+                        hasAny = true;
+                    } else if (pLocBadge) {
+                        pLocBadge.style.display = 'none';
+                    }
+
+                    // 日付
+                    if (parsed.date && pDateBadge) {
+                        pDate.textContent = parsed.date;
+                        pDateBadge.style.display = 'inline-flex';
+                        hasAny = true;
+                    } else if (pDateBadge) {
+                        pDateBadge.style.display = 'none';
+                    }
+
+                    // 科目/カテゴリ
+                    if (parsed.category && pCatBadge) {
+                        pCat.textContent = parsed.category;
+                        pCatBadge.style.display = 'inline-flex';
+                        hasAny = true;
+                    } else if (pCatBadge) {
+                        pCatBadge.style.display = 'none';
+                    }
+
+                    // 金額（複数対応: "交通費10,000・人件費20,000"）
+                    if (parsed.amounts && parsed.amounts.length > 0 && pAmountBadge) {
+                        const amtDisplay = parsed.amounts.length === 1
+                            ? '¥' + parsed.amounts[0].value.toLocaleString()
+                            : parsed.amounts.map(a => (a.label ? a.label + '¥' : '¥') + a.value.toLocaleString()).join(' / ');
+                        pAmount.textContent = amtDisplay;
+                        pAmountBadge.style.display = 'inline-flex';
+                        hasAny = true;
+                    } else if (parsed.amount && pAmountBadge) {
+                        pAmount.textContent = '¥' + parsed.amount.toLocaleString();
+                        pAmountBadge.style.display = 'inline-flex';
+                        hasAny = true;
+                    } else if (pAmountBadge) {
+                        pAmountBadge.style.display = 'none';
+                    }
+
+                    // 固有名詞
+                    if (parsed.entities && parsed.entities.length > 0 && pEntityBadge) {
+                        pEntity.textContent = parsed.entities.slice(0, 2).join('・');
+                        pEntityBadge.style.display = 'inline-flex';
+                        hasAny = true;
+                    } else if (pEntityBadge) {
+                        pEntityBadge.style.display = 'none';
+                    }
+
+                    // 売上/収入フラグ
+                    if (parsed.isRevenue && pRevenueBadge) {
+                        pRevenueBadge.style.display = 'inline-flex';
+                        hasAny = true;
+                    } else if (pRevenueBadge) {
+                        pRevenueBadge.style.display = 'none';
+                    }
+
+                    // 書類関連
+                    if (parsed.docType && pDocBadge) {
+                        pDoc.textContent = parsed.docType;
+                        pDocBadge.style.display = 'inline-flex';
+                        hasAny = true;
+                    } else if (pDocBadge) {
+                        pDocBadge.style.display = 'none';
+                    }
+
+                    previewContainer.style.opacity = hasAny ? '1' : '0';
+                }
+
+                // ── Bi-directional binding ───────────────────────────────────
+                // Title (from projectName or legacy title)
+                const bindTitle = parsed.projectName || (parsed.title && parsed.title !== '新規プロジェクト' ? parsed.title : null);
+                if (bindTitle) {
+                    const newName = document.getElementById('new-proj-name');
+                    if (newName) newName.value = bindTitle;
+                    const editName = document.getElementById('edit-proj-name');
+                    if (editName) editName.value = bindTitle;
+                    const ceoName = document.getElementById('project-name-input');
+                    if (ceoName) ceoName.value = bindTitle;
+                }
+
+                // Location
+                if (parsed.location) {
+                    const newLoc = document.getElementById('new-proj-location');
+                    if (newLoc) newLoc.value = parsed.location;
+                    const editLoc = document.getElementById('edit-proj-location');
+                    if (editLoc) editLoc.value = parsed.location;
+                }
+
+                // Date
+                if (parsed.date) {
+                    const dateStr = parsed.date.replace(/\//g, '-');
+                    const startInput = document.getElementById('new-proj-start-date');
+                    if (startInput) startInput.value = dateStr;
+                    const deadInput = document.getElementById('edit-proj-deadline');
+                    if (deadInput) deadInput.value = dateStr;
+                    const ceoDate = document.getElementById('project-date-input');
+                    if (ceoDate) ceoDate.value = dateStr;
+                }
+
+                // Immediate dynamic eradication of '工事完了日' if industry is general/unset
+                const ind = (typeof mockDB !== 'undefined' && mockDB.userConfig) ? mockDB.userConfig.industry : 'general';
+                if (!ind || ind === 'general') {
+                    document.querySelectorAll('label, div, span, p').forEach(el => {
+                        if (el.textContent && el.textContent.includes('工事完了日') && el.children.length === 0) {
+                            el.textContent = el.textContent.replace(/工事完了日/g, '予定日');
                         }
-                        pTitle.textContent = dispTitle;
-
-                        if (parsed.location) {
-                            pLoc.textContent = parsed.location;
-                            if (pLocBadge) pLocBadge.style.display = 'inline-grid';
-                            hasAny = true;
-                        } else if (pLocBadge) {
-                            pLocBadge.style.display = 'none';
-                        }
-
-                        if (parsed.date) {
-                            pDate.textContent = parsed.date;
-                            if (pDateBadge) pDateBadge.style.display = 'inline-grid';
-                            hasAny = true;
-                        } else if (pDateBadge) {
-                            pDateBadge.style.display = 'none';
-                        }
-
-                        previewContainer.style.opacity = hasAny ? '1' : '0';
-                    }
-                    // Bi-directional binding: Title
-                    if (parsed.title && parsed.title !== '新規プロジェクト') {
-                        // Update original UI inputs
-                        const newName = document.getElementById('new-proj-name');
-                        if (newName) newName.value = parsed.title;
-                        const editName = document.getElementById('edit-proj-name');
-                        if (editName) editName.value = parsed.title;
-
-                        // Force the CEO's requested physical ID if it exists anywhere
-                        const ceoName = document.getElementById('project-name-input');
-                        if (ceoName) ceoName.value = parsed.title;
-                    }
-
-                    // Bi-directional binding: Location
-                    if (parsed.location) {
-                        const newLoc = document.getElementById('new-proj-location');
-                        if (newLoc) newLoc.value = parsed.location;
-                        const editLoc = document.getElementById('edit-proj-location');
-                        if (editLoc) editLoc.value = parsed.location;
-                    }
-
-                    // Bi-directional binding: Date
-                    if (parsed.date) {
-                        const dateStr = parsed.date.replace(/\//g, '-');
-                        // Original inputs
-                        const startInput = document.getElementById('new-proj-start-date');
-                        if (startInput) startInput.value = dateStr;
-                        const deadInput = document.getElementById('edit-proj-deadline');
-                        if (deadInput) deadInput.value = dateStr;
-
-                        // Force the CEO's requested physical ID if it exists anywhere
-                        const ceoDate = document.getElementById('project-date-input');
-                        if (ceoDate) ceoDate.value = dateStr;
-                    }
-
-                    // Immediate dynamic eradication of '工事完了日' if industry is general/unset
-                    const ind = (typeof mockDB !== 'undefined' && mockDB.userConfig) ? mockDB.userConfig.industry : 'general';
-                    if (!ind || ind === 'general') {
-                        document.querySelectorAll('label, div, span, p').forEach(el => {
-                            if (el.textContent && el.textContent.includes('工事完了日') && el.children.length === 0) {
-                                el.textContent = el.textContent.replace(/工事完了日/g, '予定日');
-                            }
-                        });
-                    }
+                    });
                 }
             });
         });
@@ -909,20 +1131,21 @@ window.addEventListener('load', async () => {
 
     // --- Tag Relay Dedicated Function ---
     window.createNewProjectFromTags = (rawText = '') => {
-        // 1. タグデータの強制抽出 (モーダルの状態やOpacityに依存させない)
+        // 1. タグデータの強制抽出 (8-category extractTags 優先、フォールバックで parseCommand)
         const textToParse = rawText || getActiveInput()?.value || '';
-        const parsed = window.parseCommand(textToParse);
+        const tags   = window.extractTags ? window.extractTags(textToParse) : null;
+        const parsed = window.parseCommand(textToParse); // keep for legacy bi-directional binding
 
-        let previewTitle = document.getElementById('preview-title')?.textContent || '';
-        if (previewTitle === '-' || previewTitle === '') {
+        let previewTitle = tags?.projectName || document.getElementById('preview-title')?.textContent || '';
+        if (!previewTitle || previewTitle === '-') {
             previewTitle = parsed.title || '新規プロジェクト';
         }
 
-        let previewLoc = document.getElementById('preview-loc')?.textContent || '';
-        if (previewLoc === '-' || previewLoc === '') previewLoc = parsed.location || '';
+        let previewLoc = tags?.location || document.getElementById('preview-loc')?.textContent || '';
+        if (!previewLoc || previewLoc === '-') previewLoc = parsed.location || '';
 
-        let previewDate = document.getElementById('preview-date')?.textContent || '';
-        if (previewDate === '-' || previewDate === '') previewDate = parsed.date || '';
+        let previewDate = tags?.date || document.getElementById('preview-date')?.textContent || '';
+        if (!previewDate || previewDate === '-') previewDate = parsed.date || '';
 
         // 2.強制実行
         let newProj = null;
@@ -968,21 +1191,14 @@ window.addEventListener('load', async () => {
                 console.log('[DEBUG] btnSendInstruction clicked');
                 const input = getActiveInput();
                 if (!input) return;
-                const rawText = input.value;
-
-                if (rawText.trim() === '') return;
-
-                // 送信ボタンの機能強制接続: アクション動詞または日付・場所が含まれていれば、バイパスしてプロジェクト化
-                // 領収書のメタファー（儲かった、交通費）等の場合は handleInstruction (支出登録) へ流すため除外
-                const isExpense = /(儲かった|ゲット|交通費|代|費|タクシー|電車|領収書|レシート)/.test(rawText);
-                const isProject = /(作って|新規|作成|立ち上げて|が入った|決まった|する|はいいた|はいいった|入った|決定|の件)/.test(rawText);
-
-                const pCmd = window.parseCommand(rawText);
-
-                if (!isExpense && (pCmd.date || pCmd.location || isProject)) {
-                    window.createNewProjectFromTags(rawText);
+                const rawText = input.value.trim();
+                if (!rawText) return;
+                input.value = '';
+                // Route through handleCompoundAction — intelligently handles project+expense combinations
+                if (window.handleCompoundAction) {
+                    window.handleCompoundAction(rawText);
                 } else {
-                    handleInstruction(rawText);
+                    window.handleInstruction ? window.handleInstruction(rawText) : null;
                 }
             });
         });
@@ -2241,6 +2457,15 @@ window.addEventListener('load', async () => {
 
             // Update UI
             document.getElementById('detail-project-name').textContent = proj.name;
+            const tagsCont = document.getElementById('detail-project-tags');
+            if (tagsCont) {
+                let tagsHtml = '';
+                if (proj.startDate) tagsHtml += `<span class="tag tag-blue" style="font-size:10px; padding:2px 6px; border-radius:4px;"><i data-lucide="calendar" style="width:10px;height:10px;margin-right:2px;"></i>${proj.startDate}</span>`;
+                if (proj.location)  tagsHtml += `<span class="tag" style="background:var(--bg-color); color:var(--text-main); font-size:10px; padding:2px 6px; border-radius:4px;"><i data-lucide="map-pin" style="width:10px;height:10px;margin-right:2px;color:var(--accent-neo-blue);"></i>${proj.location}</span>`;
+                if (proj.category && proj.category !== 'other') tagsHtml += `<span class="tag" style="background:var(--btn-secondary-bg); color:var(--text-muted); font-size:10px; padding:2px 6px; border-radius:4px;">${proj.category}</span>`;
+                tagsCont.innerHTML = tagsHtml;
+                if (window.lucide) window.lucide.createIcons();
+            }
             const revEl = document.getElementById('detail-revenue');
             if (revEl) revEl.textContent = `¥${revenue.toLocaleString()}`;
             const expEl = document.getElementById('detail-expense');
@@ -3826,7 +4051,8 @@ window.addEventListener('load', async () => {
                 window.mockDB.projects = aliveProjects.map(p => ({
                     id: p.id, name: p.name, customerName: p.customer_name || '-', location: p.location || '-', note: p.note || '',
                     category: p.category, color: p.color, unit: p.unit || '-', hasUnpaid: p.has_unpaid, revenue: parseFloat(p.revenue) || 0,
-                    status: p.status, clientName: p.client_name, paymentDeadline: p.payment_deadline, bankInfo: p.bank_info, lastUpdated: p.last_updated, currency: p.currency
+                    status: p.status, clientName: p.client_name, paymentDeadline: p.payment_deadline, bankInfo: p.bank_info, lastUpdated: p.last_updated, currency: p.currency,
+                    startDate: p.created_at ? p.created_at.split('T')[0].replace(/-/g, '/') : null
                 }));
             }
 
@@ -4052,6 +4278,7 @@ window.addEventListener('load', async () => {
     }
     if (inputNplusChat) {
         inputNplusChat.addEventListener('keydown', (e) => {
+            if (e.isComposing || e.keyCode === 229) return;
             if (e.key === 'Enter') {
                 e.preventDefault();
                 sendNplusMessage();
@@ -4085,4 +4312,9 @@ window.addEventListener('load', async () => {
 
     // Expose handleInstruction globally for inline HTML event handlers
     window.handleInstruction = handleInstruction;
+    
+    // Initialize Document Generator (Overrides legacy app.js handlers and uses html2pdf)
+    if (typeof initDocumentGenerator === 'function') {
+        initDocumentGenerator();
+    }
 });

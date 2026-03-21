@@ -148,7 +148,7 @@ body {
     right: 0 !important;
     height: 80px !important;
     z-index: 2147483647 !important;
-    background-color: white !important;
+    background-color: var(--bg-color) !important;
     border-top: 1px solid rgba(150, 150, 150, 0.15);
     display: grid !important;
     grid-template-columns: repeat(5, 1fr) !important;
@@ -165,7 +165,7 @@ body {
 #bottom-nav * {
     z-index: 999999 !important;
     opacity: 1 !important;
-    color: black !important; /* Force black in case of white-on-white */
+    color: var(--text-main) !important; /* Theme-aware nav icon color */
 }
 
 /* Sidebar styling for desktop */

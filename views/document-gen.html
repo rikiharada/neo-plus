@@ -1,5 +1,5 @@
 <!-- Full Screen Document Generator Modal (Scrolling Form) -->
-<div id="modal-doc-gen" class="modal-overlay hidden" style="z-index: 10000 !important; background: #f8fafc; display: block; width: 100vw; max-width: 100%; position: fixed; top: 0; left: 0; bottom: 0; right: 0; overflow-y: scroll !important; -webkit-overflow-scrolling: touch; padding: 0; margin: 0;">
+<div id="modal-doc-gen" class="modal-overlay hidden" style="z-index: 10000 !important; background: #f8fafc; color: #0f172a; display: block; width: 100vw; max-width: 100%; position: fixed; top: 0; left: 0; bottom: 0; right: 0; overflow-y: scroll !important; -webkit-overflow-scrolling: touch; padding: 0; margin: 0;">
     <style>
         #modal-doc-gen:not(.hidden) {
             opacity: 1 !important;
@@ -103,26 +103,33 @@
                 </style>
             </div>
             
-            <div id="doc-line-items-container" class="line-items-container" style="display: block; gap: 0; width: 100%; margin: 0; padding: 0;">
-                <!-- Dynamic Item Row Template -->
+            <div class="line-items-container" style="margin: 0;">
+                <!-- テーブルヘッダー -->
+                <div class="line-items-header">
+                    <span class="col-content">内容</span>
+                    <span class="col-qty">数量</span>
+                    <span class="col-price">単価</span>
+                    <span></span>
+                </div>
+            <div id="doc-line-items-container" style="display: block; margin: 0; padding: 0;">
+                <!-- 初期行（JS側で openDocGenModal 時に差し替えられる） -->
                 <div class="line-item">
                     <div class="input-group">
-                        <label>内容</label>
-                        <input type="text" class="form-control item-name-input" placeholder="内容を入力" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a;">
+                        <input type="text" class="form-control item-name-input" placeholder="内容を入力" oninput="window.updateDocPreview()">
                     </div>
                     <div class="input-group qty">
-                        <label>数量</label>
-                        <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" placeholder="数量" value="1" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #fff; color: #0f172a;">
+                        <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-qty-input" value="1" oninput="window.updateDocPreview()">
                     </div>
-                    <div class="input-group price" style="position: relative; width: 100%;">
-                        <label>単価</label>
-                        <input type="text" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" placeholder="0" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 24px 12px 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #fff; color: #0f172a;">
-                        <span style="position: absolute; right: 8px; top: 38px; font-size: 12px; color: #94a3b8; pointer-events: none;">円</span>
+                    <div class="input-group price">
+                        <input type="number" inputmode="decimal" pattern="[0-9]*" class="form-control item-price-input" value="0" oninput="window.updateDocPreview()">
                     </div>
-                    <button type="button" class="delete-button" onclick="this.closest('.line-item').remove(); window.updateDocPreview();">×</button>
+                    <button type="button" class="delete-row-btn" onclick="this.closest('.line-item').remove(); window.updateDocPreview();" title="この行を削除">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
                 </div>
             </div>
-            <div class="add-line-wrapper" style="text-align: center; margin-top: 10px;">
+            </div><!-- /.line-items-container -->
+            <div class="add-line-wrapper" style="text-align: center; margin-top: 4px;">
                 <button id="add-item-btn" onclick="window.addDocLineItem()" style="border: none; background: none; color: #666; cursor: pointer;">
                     ＋ 行を追加
                 </button>
@@ -134,12 +141,11 @@
                 </button>
             </div>
 
-            <!-- HUGE TOTAL AMOUNT -->
-            <div style="text-align: center; margin: 0; padding: 24px 0 0 0; width: 100%; display: block; align-items: center; justify-content: center; gap: 8px; border-top: 1px dashed #cbd5e1;">
-                <div style="font-weight: 600; font-size: 13px; color: #64748b; margin: 0; padding: 0;">消費税(10%): <span id="doc-tax-calc">¥0</span></div>
-                <div style="color: #0f172a; font-size: 16px; font-weight: 700; margin: 0; padding: 0; display: grid; grid-auto-flow: column; align-items: baseline; justify-content: center;">
-                    合計 <span id="doc-total-calc" style="font-size: clamp(1.5rem, 5vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em; margin-left: 12px;">¥0</span>
-                </div>
+            <!-- 合計エリア -->
+            <div class="doc-total-area" style="margin-top: 20px;">
+                <div class="doc-tax-label">消費税(10%): <span id="doc-tax-calc">¥0</span></div>
+                <div class="doc-total-label">合　計</div>
+                <span id="doc-total-calc">¥0</span>
             </div>
 
             <!-- ADVANCED SETTINGS TOGGLES -->

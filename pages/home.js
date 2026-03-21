@@ -60,48 +60,20 @@ window.openDashToCockpit = () => {
 function setupHomeListeners() {
     const dashInput = document.getElementById('main-instruction-input');
     if (dashInput) {
-        // Real-time local parsing UI
-        dashInput.addEventListener('input', (e) => {
-            if (!e.target.value) return;
-            const parsed = window.parseCommand ? window.parseCommand(e.target.value) : null;
-            if (parsed) {
-                const previewContainer = document.getElementById('trinity-preview');
-                const pTitle = document.getElementById('preview-title');
-                const pLoc = document.getElementById('preview-loc');
-                const pLocBadge = document.getElementById('preview-loc-badge');
-                const pDate = document.getElementById('preview-date');
-                const pDateBadge = document.getElementById('preview-date-badge');
+        // Real-time parsing handled by bindCockpitInputs (8-category extractor via extractTags).
+        // No duplicate listener needed here.
 
-                if (previewContainer && pTitle) {
-                    previewContainer.style.opacity = '1';
-                    pTitle.textContent = parsed.title || '-';
-
-                    if (parsed.location) {
-                        pLoc.textContent = parsed.location;
-                        pLocBadge.style.display = 'inline-block';
-                    } else {
-                        pLocBadge.style.display = 'none';
-                    }
-
-                    if (parsed.date) {
-                        pDate.textContent = parsed.date;
-                        pDateBadge.style.display = 'inline-block';
-                    } else {
-                        pDateBadge.style.display = 'none';
-                    }
-                }
-            }
-        });
-
-        // Trigger command with Enter key
+        // Trigger command with Enter key (IME-safe: skip during Japanese composition)
+        // Route through handleCompoundAction — handles project+multi-expense in one input
         dashInput.addEventListener('keydown', (e) => {
+            if (e.isComposing || e.keyCode === 229) return;
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 const textValue = dashInput.value.trim();
+                if (!textValue) return;
                 dashInput.value = '';
-                if (textValue && window.handleInstruction) {
-                    window.handleInstruction(textValue);
-                }
+                const handler = window.handleCompoundAction || window.handleInstruction;
+                if (handler) handler(textValue);
             }
         });
     }
@@ -110,10 +82,10 @@ function setupHomeListeners() {
     if (btnSend && dashInput) {
         btnSend.addEventListener('click', () => {
             const textValue = dashInput.value.trim();
+            if (!textValue) return;
             dashInput.value = '';
-            if (textValue && window.handleInstruction) {
-                window.handleInstruction(textValue);
-            }
+            const handler = window.handleCompoundAction || window.handleInstruction;
+            if (handler) handler(textValue);
         });
     }
 

@@ -3,8 +3,8 @@
     <!-- Timeline Content Area -->
     <div style="flex: 1; overflow-y: auto; padding-bottom: 90px;">
         <!-- Trend Graph Placeholder -->
-        <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-            <div style="height: 140px; border-radius: 12px; background: rgba(29, 155, 240, 0.05); border: 1px solid rgba(29, 155, 240, 0.15); display: grid; place-items: center; color: var(--accent-neo-blue); flex-direction: column; gap: 8px;">
+        <div style="padding: 16px; border-bottom: 1px solid var(--btn-secondary-border);">
+            <div style="height: 140px; border-radius: 12px; background: rgba(29, 155, 240, 0.05); border: 1px solid rgba(29, 155, 240, 0.25); display: grid; place-items: center; color: var(--accent-neo-blue); flex-direction: column; gap: 8px;">
                 <i data-lucide="bar-chart-2" style="width: 24px; height: 24px;"></i>
                 <span style="font-size: 13px; font-weight: 600;">ビジネス・トレンド解析 (Syncing...)</span>
             </div>
@@ -14,8 +14,8 @@
         <div id="cockpit-timeline-feed" style="display: flex; flex-direction: column;">
             
             <!-- Timeline Item Mock 1 -->
-            <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-                <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); display: grid; place-items: center; flex-shrink: 0;">
+            <div style="padding: 16px; border-bottom: 1px solid var(--btn-secondary-border); display: flex; gap: 12px; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='var(--btn-secondary-bg)'" onmouseout="this.style.background='transparent'">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--btn-secondary-bg); display: grid; place-items: center; flex-shrink: 0;">
                     <i data-lucide="receipt" style="color: var(--text-muted); width: 20px; height: 20px;"></i>
                 </div>
                 <div style="flex: 1;">
@@ -38,7 +38,7 @@
             </div>
             
             <!-- Timeline Item Mock 2 -->
-            <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+            <div style="padding: 16px; border-bottom: 1px solid var(--btn-secondary-border); display: flex; gap: 12px; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='var(--btn-secondary-bg)'" onmouseout="this.style.background='transparent'">
                 <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: grid; place-items: center; flex-shrink: 0;">
                     <i data-lucide="trending-up" style="color: #10b981; width: 20px; height: 20px;"></i>
                 </div>
@@ -64,64 +64,81 @@
         </div>
     </div>
 
-    <!-- Premium Multi-Modal Message Box (Restored Cockpit Input) -->
+    <!-- Premium Multi-Modal Message Box (Floating Card) -->
     <div id="neo-cockpit"
-        style="width: 100%; position: sticky; bottom: 90px; background: rgba(10, 10, 20, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.05); z-index: 900; display: block; padding-bottom: calc(env(safe-area-inset-bottom) + 8px);">
-        
-        <div style="position: relative; display: block;">
+        style="width: 100%; position: sticky; bottom: 90px; background: transparent; z-index: 900; display: block; padding: 8px 16px 12px 16px;">
+
+        <!-- Floating Card -->
+        <div style="background: var(--bg-color); border: 1px solid var(--btn-secondary-border); border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 6px rgba(0,0,0,0.06); overflow: hidden; position: relative;">
 
             <!-- Trinity Auto-Input Preview -->
             <div id="trinity-preview"
-                style="display: grid; grid-auto-flow: column; gap: 8px; padding: 12px 24px 0 24px; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; align-items: center; justify-content: start; overflow: hidden; white-space: normal; max-width: 100%; word-break: break-word; overflow-wrap: break-word;">
-                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); margin-right: 4px; letter-spacing: 0.1em;">DETECTED:</span>
-                <span class="badge" style="background: rgba(0, 122, 255, 0.1); color: #007AFF; font-size: 11px; padding: 4px 8px; border-radius: 12px; max-width: 100%; white-space: normal; word-break: break-all; overflow-wrap: anywhere;"><i data-lucide="tag" style="width: 10px; height: 10px; margin-right: 2px;"></i><span id="preview-title" style="word-break: break-all;">-</span></span>
-                <span class="badge" id="preview-loc-badge" style="background: rgba(248, 113, 113, 0.1); color: #f87171; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: none; max-width: 100%; white-space: normal; word-break: break-all; overflow-wrap: anywhere;"><i data-lucide="map-pin" style="width: 10px; height: 10px; margin-right: 2px;"></i><span id="preview-loc" style="word-break: break-all;">-</span></span>
-                <span class="badge" id="preview-date-badge" style="background: rgba(52, 211, 153, 0.1); color: #34d399; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: none;"><i data-lucide="calendar" style="width: 10px; height: 10px; margin-right: 2px;"></i><span id="preview-date">-</span></span>
+                style="display: flex; flex-wrap: wrap; gap: 5px; padding: 10px 16px 6px 16px; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; align-items: center; max-width: 100%;">
+                <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.1em; flex-shrink: 0;">DETECTED:</span>
+                <!-- タイトル -->
+                <span class="badge" style="background: rgba(29,155,240,0.12); color: #1D9BF0; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: inline-flex; align-items: center; gap: 3px; max-width: 180px;"><i data-lucide="tag" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-title" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</span></span>
+                <!-- 場所 -->
+                <span class="badge" id="preview-loc-badge" style="background: rgba(248,113,113,0.12); color: #f87171; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="map-pin" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-loc">-</span></span>
+                <!-- 日付 -->
+                <span class="badge" id="preview-date-badge" style="background: rgba(52,211,153,0.12); color: #34d399; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="calendar" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-date">-</span></span>
+                <!-- カテゴリー -->
+                <span class="badge" id="preview-cat-badge" style="background: rgba(251,191,36,0.12); color: #f59e0b; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="layers" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-cat">-</span></span>
+                <!-- 金額 -->
+                <span class="badge" id="preview-amount-badge" style="background: rgba(16,185,129,0.12); color: #10b981; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px; font-weight: 700;"><i data-lucide="coins" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-amount">-</span></span>
+                <!-- 固有名詞 -->
+                <span class="badge" id="preview-entity-badge" style="background: rgba(139,92,246,0.12); color: #8b5cf6; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="user" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-entity">-</span></span>
+                <!-- 売上/収入フラグ -->
+                <span class="badge" id="preview-revenue-badge" style="background: rgba(251,146,60,0.12); color: #fb923c; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px; font-weight: 700;"><i data-lucide="trending-up" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-revenue">売上</span></span>
+                <!-- 書類関連 -->
+                <span class="badge" id="preview-doc-badge" style="background: rgba(6,182,212,0.12); color: #06b6d4; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="file-text" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-doc">-</span></span>
             </div>
 
             <textarea id="main-instruction-input" data-testid="dash-main-input" class="form-control"
                 placeholder="CEO、今日はどのプロジェクトを進めますか？"
-                style="width: 100%; border: none; padding: 12px 24px; background: transparent; color: var(--text-main); font-size: 14px; resize: none; min-height: 80px; line-height: 1.6; outline: none; transition: all 0.3s ease;"></textarea>
+                style="width: 100%; border: none; padding: 14px 16px 8px 16px; background: transparent; color: var(--text-main); font-size: 14px; resize: none; min-height: 72px; line-height: 1.6; outline: none; transition: all 0.3s ease; box-sizing: border-box;"></textarea>
 
-            <!-- Minimised Action Chips -->
+            <!-- Action Chips -->
             <div id="cockpit-action-chips"
-                style="display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 12px 16px; white-space: nowrap; scrollbar-width: none;">
+                style="display: flex; gap: 6px; overflow-x: auto; padding: 0 12px 10px 12px; white-space: nowrap; scrollbar-width: none;">
                 <style>
                     #cockpit-action-chips::-webkit-scrollbar { display: none; }
-                    .cockpit-chip { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--accent-neo-blue); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
-                    .cockpit-chip:hover { background: rgba(59, 130, 246, 0.2); }
+                    .cockpit-chip { background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--text-muted); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+                    .cockpit-chip:hover { background: var(--btn-primary-border); color: var(--text-main); }
                 </style>
                 <button class="cockpit-chip" onclick="document.getElementById('main-instruction-input').value='前回の内容をコピーして';">前回の内容をコピー</button>
                 <button class="cockpit-chip" onclick="document.getElementById('main-instruction-input').value='源泉税を計算して';">源泉税を計算</button>
                 <button class="cockpit-chip" onclick="document.getElementById('main-instruction-input').value='端数を切り捨てて';">端数を切り捨て</button>
             </div>
 
+            <!-- Divider -->
+            <div style="height: 1px; background: var(--btn-secondary-border); margin: 0 12px;"></div>
+
             <div id="cockpit-tools"
-                style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; padding: 0 16px 16px 16px; width: 100%; transition: all 0.3s ease;">
-                
+                style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; padding: 8px 12px; width: 100%; box-sizing: border-box;">
+
                 <!-- Hidden OCR Input -->
                 <input type="file" id="ocr-upload" accept="image/*" style="display: none;">
 
-                <!-- [📷] カメラアイコン (Left side) -->
+                <!-- [📷] カメラアイコン -->
                 <button id="btn-camera" data-testid="dash-btn-camera" title="レシート読込 (OCR)"
-                    style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; min-width: 44px; min-height: 44px; padding: 10px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
+                    style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; min-width: 40px; min-height: 40px; padding: 8px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
                     onmouseover="this.style.color='var(--text-main)';" onmouseout="this.style.color='var(--text-muted)';">
-                    <i data-lucide="camera" style="width: 20px; height: 20px;"></i>
+                    <i data-lucide="camera" style="width: 19px; height: 19px;"></i>
                 </button>
 
-                <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px;">
-                    <!-- [🎤] マイクアイコン (Right side) -->
+                <div style="display: grid; grid-auto-flow: column; align-items: center; gap: 4px;">
+                    <!-- [🎤] マイクアイコン -->
                     <button id="btn-voice" data-testid="dash-btn-voice" title="音声入力 (Push-To-Talk)"
-                        style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; min-width: 44px; min-height: 44px; padding: 10px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
+                        style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; min-width: 40px; min-height: 40px; padding: 8px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
                         onmouseover="this.style.color='var(--text-main)';" onmouseout="this.style.color='var(--text-muted)';">
-                        <i data-lucide="mic" style="width: 20px; height: 20px;"></i>
+                        <i data-lucide="mic" style="width: 19px; height: 19px;"></i>
                     </button>
 
-                    <!-- [✈︎] 送信アイコン (Right side) -->
+                    <!-- [✈︎] 送信ボタン -->
                     <button id="btn-send" data-testid="dash-btn-send" title="送信"
-                        style="background: var(--accent-neo-blue); color: white; border: none; border-radius: 50%; min-width: 44px; min-height: 44px; display: grid; place-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(29, 155, 240, 0.35);"
-                        onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';">
-                        <i data-lucide="send" style="width: 18px; height: 18px; stroke-width: 2.5px;"></i>
+                        style="background: var(--accent-neo-blue); color: white; border: none; border-radius: 50%; min-width: 40px; min-height: 40px; display: grid; place-items: center; cursor: pointer; box-shadow: 0 3px 10px rgba(29, 155, 240, 0.40); transition: transform 0.15s, box-shadow 0.15s;"
+                        onmouseover="this.style.transform='scale(1.07)'; this.style.boxShadow='0 5px 16px rgba(29,155,240,0.5)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 3px 10px rgba(29,155,240,0.40)';">
+                        <i data-lucide="send" style="width: 17px; height: 17px; stroke-width: 2.5px;"></i>
                     </button>
                 </div>
             </div>
