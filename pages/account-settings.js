@@ -180,9 +180,47 @@ function bindStampOverlayControls() {
 }
 
 // Global reset exposed
-window.resetSetup = () => {
-    if (confirm("全てのローカルデータと設定を消去し、初期化しますか？")) {
+window.resetSetup = async () => {
+    const confirmed = confirm(
+        "⚠️ 全データを完全に消去します。\n\n" +
+        "・フォルダ（プロジェクト）\n" +
+        "・経費・取引履歴\n" +
+        "・書類データ\n" +
+        "・ローカルキャッシュ・設定\n\n" +
+        "この操作は取り消せません。本当に初期化しますか？"
+    );
+    if (!confirmed) return;
+
+    // ボタンをローディング表示に変更
+    const btn = document.querySelector('[onclick="window.resetSetup()"]');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.innerHTML = '⏳ リセット中...';
+        btn.disabled = true;
+    }
+
+    try {
+        // 1. Supabase のユーザーデータを削除 + localStorage のユーザーボディをクリア
+        if (typeof window.neoHardReset === 'function') {
+            await window.neoHardReset();
+        } else {
+            // フォールバック: ローカルのみクリア
+            if (typeof window.neoDangerZoneWipeUserLocalBody === 'function') {
+                window.neoDangerZoneWipeUserLocalBody({ context: 'manual_reset' });
+            }
+        }
+
+        // 2. 残りの localStorage を全消去（設定・テーマ・キャッシュ含む）
         localStorage.clear();
+
+        // 3. リロードして真っさらな状態に
         window.location.reload();
+    } catch (e) {
+        console.error('[Reset] エラー:', e);
+        if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+        alert('リセット中にエラーが発生しました。ページを手動でリロードしてください。\n' + (e?.message || e));
     }
 };

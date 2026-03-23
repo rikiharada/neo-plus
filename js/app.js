@@ -9,7 +9,30 @@ import {
     neoHardResetKnowledge,
     neoDangerZoneWipeUserLocalBody
 } from '../lib/core/neoKnowledgeReset.js';
+import '../lib/supabase-knowledge-client.js';
+
 loadUserProfile(); // 非同期でSupabaseからも取得（localStorage は即時反映済み）
+
+/** 知識専用クライアントで neo_global_lexicon のみ取得（ユーザーデータ init から分離） */
+async function loadNeoGlobalLexiconFromKnowledge() {
+    const kc = window.supabaseKnowledgeClient;
+    if (!kc) {
+        window.globalLexicon = [];
+        return;
+    }
+    const { data: lexData, error: lexErr } = await kc
+        .from('neo_global_lexicon')
+        .select('*')
+        .order('frequency', { ascending: false })
+        .limit(500);
+    if (!lexErr && lexData) {
+        window.globalLexicon = lexData;
+        console.log(`[Neo Global Agent] Cached ${window.globalLexicon.length} common business terms (knowledge client).`);
+    } else {
+        window.globalLexicon = [];
+        if (lexErr) console.warn('[Neo Global Agent] Lexicon fetch failed:', lexErr.message);
+    }
+}
 
 /** 遅延ロード view HTML（サブパス配信で壊れないよう import.meta.url 基準） */
 function fetchNeoViewHtml(viewName) {
@@ -364,19 +387,43 @@ window.insertTransaction = async (tx) => {
             return window._toDbSafeId ? window._toDbSafeId(id) : Number(id);
         })();
 
-        // Brain Sync: Background Async
-        window.supabaseClient.from('activities').insert([{
-            id: dbActivityId,
+        // Retrieve exact session scope for deterministic Database binds
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        const uid = session?.user?.id || null;
+
+        const dbDate = normalized.date ? new Date(String(normalized.date).replace(/\//g, '-')).toISOString() : new Date().toISOString();
+        const dbAmount = Number(normalized.amount) || 0;
+
+        const basePayload = {
             project_id: dbProjectId,
             type: normalized.type,
             category: normalized.category,
             title: normalized.title,
-            amount: Number(normalized.amount) || 0,
-            date: normalized.date ? new Date(String(normalized.date).replace(/\//g, '-')).toISOString() : new Date().toISOString(),
+            amount: dbAmount,
+            date: dbDate,
+            user_id: uid
+        };
+
+        // 1. Brain Sync: Activity Log
+        window.supabaseClient.from('activities').insert([{
+            ...basePayload,
+            id: dbActivityId,
             is_bookkeeping: normalized.isBookkeeping ?? normalized.is_bookkeeping ?? false
         }]).then(({ error }) => {
             if (error) console.error('Brain Sync Error (Activity):', JSON.stringify(error));
             else console.log('Brain Sync OK (Activity)');
+        });
+
+        // 2. Ledger Sync: Transactions DB
+        window.supabaseClient.from('transactions').insert([basePayload]).then(({ error, data }) => {
+            if (error) console.error('Ledger Sync Error (Transaction):', JSON.stringify(error));
+            else {
+                console.log('Ledger Sync OK (Transaction)');
+                if (data && data[0]) {
+                    // Tag original mockDB item with physical ledger ID if necessary
+                    normalized.transaction_ledger_id = data[0].id;
+                }
+            }
         });
     }
     return Promise.resolve(normalized);
@@ -3132,7 +3179,8 @@ window.addEventListener('load', async () => {
                     console.log("[Neo Global Agent] Extracted pure term for communal DB:", pureTerm);
 
                     // Check existing dictionary via Supabase
-                    const { data: existing } = await window.supabaseClient
+                    const kc = window.supabaseKnowledgeClient || window.supabaseClient;
+                    const { data: existing } = await kc
                         .from('neo_global_lexicon')
                         .select('id, frequency')
                         .eq('keyword', pureTerm)
@@ -3140,12 +3188,12 @@ window.addEventListener('load', async () => {
                         .single();
 
                     if (existing) {
-                        await window.supabaseClient
+                        await kc
                             .from('neo_global_lexicon')
                             .update({ frequency: existing.frequency + 1 })
                             .eq('id', existing.id);
                     } else {
-                        await window.supabaseClient
+                        await kc
                             .from('neo_global_lexicon')
                             .insert([{
                                 keyword: pureTerm,
@@ -4412,21 +4460,12 @@ window.addEventListener('load', async () => {
                 console.warn('[Neo Boot] Activities fetch failed; keeping local mockDB.activities:', actErr.message);
             }
 
-            // Fetch Documents
+            // Fetch Documents（ユーザーデータのみ — 語彙は loadNeoGlobalLexiconFromKnowledge）
             const { data: docData, error: docErr } = await window.supabaseClient.from('documents').select('*');
             if (!docErr && docData) {
                 window.mockDB.documents = docData.map(d => ({
                     id: d.id, projectId: d.project_id, type: d.type, title: d.title, amount: parseFloat(d.amount) || 0, date: d.date, url: d.url
                 }));
-            }
-
-            // Fetch Global Lexicon (Crowdsourced Knowledge - Top 500)
-            const { data: lexData, error: lexErr } = await window.supabaseClient.from('neo_global_lexicon').select('*').order('frequency', { ascending: false }).limit(500);
-            if (!lexErr && lexData) {
-                window.globalLexicon = lexData;
-                console.log(`[Neo Global Agent] Cached ${window.globalLexicon.length} common business terms.`);
-            } else {
-                window.globalLexicon = [];
             }
 
             // Re-render dashboard
@@ -4443,9 +4482,12 @@ window.addEventListener('load', async () => {
     };
 
     window.refreshNeoUserDataFromRemote = initSupabaseData;
+    window.refreshNeoKnowledgeFromRemote = loadNeoGlobalLexiconFromKnowledge;
 
-    // Call DB Init
-    initSupabaseData();
+    // ユーザーデータと語彙（知識クライアント）を並列取得
+    Promise.all([initSupabaseData(), loadNeoGlobalLexiconFromKnowledge()]).catch((e) =>
+        console.error('[Neo Boot] Supabase / knowledge init failed', e)
+    );
 
     // Initialize Google Drive GIS explicitly on boot (Async Poller to prevent GSI race condition)
     function safelyInitGIS() {

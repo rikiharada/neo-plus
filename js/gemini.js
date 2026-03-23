@@ -52,8 +52,8 @@ window.getGeminiApiKey = function() {
 
     // 3. Static Project Auth Pool
     if (!key || key === 'undefined' || key === 'null') {
-        console.log("[Neo Security] AI Engine initialized with secure API key (AIza...g9k)");
-        key = 'AIzaSyA4ox9lYXxnJxq7v7V2_aIVzgwjQfayg9k';
+        console.log("[Neo Security] AI Engine initialized with secure API key (AIza...M3M)");
+        key = 'AIzaSyCR6uUb9Dzc-jR3fmDBIHmKXAc0WwLfM3M';
     }
 
     if (!key || key.trim() === '') {
@@ -92,16 +92,17 @@ async function determineRouteFromIntent(userInput, userOccupation = "general", s
     // --- RAG: Retrieving vectors from Supabase ---
     let ragContext = "";
     try {
-        if (typeof window !== 'undefined' && window.supabaseClient) {
+        if (typeof window !== 'undefined' && (window.supabaseKnowledgeClient || window.supabaseClient)) {
+            const kbClient = window.supabaseKnowledgeClient || window.supabaseClient;
             // --- CEO Demo Bypass for Zero Console Errors ---
-            if (window.supabaseClient.supabaseUrl && window.supabaseClient.supabaseUrl.includes('nvnwnefqdsaecczpemkc')) {
+            if (kbClient.supabaseUrl && kbClient.supabaseUrl.includes('nvnwnefqdsaecczpemkc')) {
                 // Silently skip to fallback
             } else {
                 console.log("[Neo RAG] Querying Supabase knowledge_base...");
                 // Scaffolding: Generating dummy vector for the query since Gemini embedding API key applies differently locally
                 const dummyEmbedding = Array.from({ length: 768 }, () => Math.random() * 2 - 1);
 
-                const rpcPromise = window.supabaseClient.rpc('match_knowledge', {
+                const rpcPromise = kbClient.rpc('match_knowledge', {
                     query_embedding: dummyEmbedding,
                     match_threshold: 0.1,
                     match_count: 2
@@ -303,7 +304,7 @@ Example Query: [{"action": "QUERY_KNOWLEDGE", "answer": "現在稼働中のプ�
 
 
     try {
-        console.log("[Neo Network] Full Request URL:", endpoint);
+        console.log("[Neo Network] Intent routing request (key redacted):", endpoint.replace(apiKey, "***"));
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -347,6 +348,24 @@ Example Query: [{"action": "QUERY_KNOWLEDGE", "answer": "現在稼働中のプ�
 
         if (!response.ok) {
             const errBody = await response.text();
+            let apiMsg = errBody;
+            try {
+                const j = JSON.parse(errBody);
+                apiMsg = j?.error?.message || errBody;
+            } catch {
+                /* raw text */
+            }
+            if (
+                response.status === 400 ||
+                response.status === 403
+            ) {
+                const m = String(apiMsg);
+                if (
+                    /expired|leaked|API[_ ]?KEY|API_KEY_INVALID|invalid.*key|permission denied/i.test(m)
+                ) {
+                    throw new Error(`INVALID_API_KEY: ${m}`);
+                }
+            }
             throw new Error(`Gemini API Error (${response.status}): ${errBody}`);
         }
 
@@ -595,13 +614,14 @@ window.generateGeminiResponse = async function (userInput, context = "chat_room"
     // --- RAG: Retrieving vectors from Supabase (FP/Tax PDFs) ---
     let ragContext = "";
     try {
-        if (typeof window !== 'undefined' && window.supabaseClient) {
-            if (window.supabaseClient.supabaseUrl && window.supabaseClient.supabaseUrl.includes('nvnwnefqdsaecczpemkc')) {
+        if (typeof window !== 'undefined' && (window.supabaseKnowledgeClient || window.supabaseClient)) {
+            const kbClient = window.supabaseKnowledgeClient || window.supabaseClient;
+            if (kbClient.supabaseUrl && kbClient.supabaseUrl.includes('nvnwnefqdsaecczpemkc')) {
                 // Silently skip
             } else {
                 console.log("[Neo RAG Chat] Querying Supabase knowledge_base for PDF data...");
                 const dummyEmbedding = Array.from({ length: 768 }, () => Math.random() * 2 - 1);
-                const rpcPromise = window.supabaseClient.rpc('match_knowledge', {
+                const rpcPromise = kbClient.rpc('match_knowledge', {
                     query_embedding: dummyEmbedding,
                     match_threshold: 0.1,
                     match_count: 3

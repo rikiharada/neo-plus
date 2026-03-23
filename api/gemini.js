@@ -12,8 +12,11 @@ export default async function handler(req, res) {
   const { prompt, config } = body || {};
   const modelId = req.query.model || 'gemini-flash-latest';
   
-  // Securely retrieve API Key from environment or fallback to legacy key
-  const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || 'AIzaSyDlsYWXwU12EOu9b8ylMwYpIBG_NpdJFq4';
+  const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return res.status(503).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+  }
 
   if (!prompt) {
     return res.status(400).json({ error: 'Prompt is required' });

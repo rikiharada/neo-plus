@@ -499,7 +499,18 @@ export async function handleInstruction(text, hasImage = false) {
                     continue;
                 }
 
-                // ── Step 2: APIキー未設定・システムエラー時の優雅なフォールバック ───────────
+                // ── Step 2a: 無効・期限切れ・漏洩扱いの API キー ─────────────────────
+                if (intent.errorType === "INVALID_API_KEY") {
+                    if (isChatViewActive()) {
+                        appendChatMessage(
+                            'neo',
+                            'Gemini APIキーが無効か、有効期限が切れています。<br><span style="font-size:13px;color:var(--text-muted);">Google AI Studio（aistudio.google.com/apikey）で新しいキーを発行し、右下「アカウント」から保存し直してください。</span>'
+                        );
+                    }
+                    continue;
+                }
+
+                // ── Step 2b: APIキー未設定 ─────────────────────────────────────────
                 if (!_hasValidApiKey() || intent.errorType === "NO_API_KEY") {
                     if (isChatViewActive()) appendChatMessage('neo', 'ごめんなさい、今は少し考えさせてくださいね。後ほどもう一度お試しください。');
                     continue;
@@ -520,11 +531,19 @@ export async function handleInstruction(text, hasImage = false) {
                                 if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
                             });
                         } catch (streamErr) {
-                            const isKeyErr = streamErr?.message?.includes('INVALID_API_KEY') || streamErr?.message?.includes('NO_API_KEY') || streamErr?.message?.includes('quota');
+                            const isKeyErr =
+                                streamErr?.message?.includes('INVALID_API_KEY') ||
+                                streamErr?.message?.includes('NO_API_KEY') ||
+                                streamErr?.message?.includes('quota') ||
+                                /expired|API_KEY_INVALID|leaked/i.test(String(streamErr?.message || ''));
                             if (isKeyErr) {
-                                // バブルを優雅なエラーに差し替え
                                 if (streamRow) streamRow.remove();
-                                if (isChatViewActive()) appendChatMessage('neo', 'ごめんなさい、今は少し考えさせてくださいね。後ほどもう一度お試しください。');
+                                if (isChatViewActive()) {
+                                    appendChatMessage(
+                                        'neo',
+                                        'Gemini APIキーが無効か期限切れです。アカウントタブで新しいキーを保存してください。'
+                                    );
+                                }
                                 continue;
                             }
                             // その他のエラー → 非ストリーミングにフォールバック

@@ -19,9 +19,6 @@ BEGIN
   DELETE FROM public.activities WHERE user_id = uid;
   GET DIAGNOSTICS a1 = ROW_COUNT;
 
-  DELETE FROM public.documents WHERE user_id = uid;
-  GET DIAGNOSTICS d1 = ROW_COUNT;
-
   DELETE FROM public.transactions WHERE user_id = uid;
   GET DIAGNOSTICS t1 = ROW_COUNT;
 
@@ -29,8 +26,10 @@ BEGIN
   WHERE project_id IN (SELECT id FROM public.projects WHERE user_id = uid);
   GET DIAGNOSTICS a2 = ROW_COUNT;
 
+  /* documents に user_id 列が無い環境があるため、project_id 経由のみ */
   DELETE FROM public.documents
   WHERE project_id IN (SELECT id FROM public.projects WHERE user_id = uid);
+  GET DIAGNOSTICS d1 = ROW_COUNT;
 
   DELETE FROM public.transactions
   WHERE project_id IN (SELECT id FROM public.projects WHERE user_id = uid);
@@ -43,7 +42,7 @@ BEGIN
     'deleted', jsonb_build_object(
       'activities_by_user_id', a1,
       'activities_by_project_owner', a2,
-      'documents', d1,
+      'documents_by_project_owner', d1,
       'transactions', t1,
       'projects', p1
     )
