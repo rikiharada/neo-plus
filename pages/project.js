@@ -61,6 +61,28 @@ function bindProjectModals() {
     const btnClose     = document.getElementById('btn-close-modal');
     const btnSave      = document.getElementById('btn-save-project');
 
+    // ── "..." アクションメニュー ──────────────────────────────────────
+    // app.js のバインドはビューロード前に実行されるため null になる。
+    // project.html がDOMに挿入されたこのタイミングで正しくバインドする。
+    const menuToggle      = document.getElementById('btn-project-menu-toggle');
+    const actionMenu      = document.getElementById('project-action-menu');
+
+    if (menuToggle && actionMenu) {
+        // ボタンをクリックでメニュー表示／非表示
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            actionMenu.classList.toggle('hidden');
+        });
+
+        // メニュー外クリックで閉じる
+        document.addEventListener('click', (e) => {
+            if (!actionMenu.contains(e.target) && e.target !== menuToggle) {
+                actionMenu.classList.add('hidden');
+            }
+        }, { capture: false });
+    }
+    // ─────────────────────────────────────────────────────────────────
+
     let selectedColor  = '#FF3B30';
 
     // カラーピッカー

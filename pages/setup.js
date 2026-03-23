@@ -148,12 +148,18 @@ export function initSetupView() {
             window.GlobalStore.user = null;
             window.GlobalStore.session = null;
 
+            // 書類プレビュー / modal-doc-gen 等は position:fixed のため、ログアウト時に必ず閉じる（switchView は呼ばれない）
+            if (typeof window.closeAllNeoOverlays === 'function') {
+                window.closeAllNeoOverlays();
+            }
+
             if (appContainer) {
                 appContainer.style.display = 'none';
             }
             if (viewAuth) {
                 viewAuth.classList.remove('hidden');
                 viewAuth.style.display = 'grid';
+                viewAuth.style.opacity = '1';
             }
         }
     };

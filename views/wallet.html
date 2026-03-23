@@ -29,18 +29,67 @@
         </div>
         <div class="health-indicator-card">
             <div class="health-indicator-label">固定費</div>
-            <div class="health-indicator-value">¥120k</div>
+            <div class="health-indicator-value" id="wallet-fixed-costs-display">¥120k</div>
             <div class="health-indicator-bar-container">
-                <div class="health-indicator-bar" style="width: 40%; background: #ef4444;"></div>
+                <div class="health-indicator-bar" id="wallet-fixed-bar" style="width: 40%; background: #ef4444;"></div>
             </div>
         </div>
         <div class="health-indicator-card">
             <div class="health-indicator-label">投資余力</div>
-            <div class="health-indicator-value">¥475k</div>
+            <div class="health-indicator-value" id="wallet-investment-display">¥475k</div>
             <div class="health-indicator-bar-container">
-                <div class="health-indicator-bar" style="width: 85%; background: var(--accent-neo-blue);"></div>
+                <div class="health-indicator-bar" id="wallet-investment-bar" style="width: 85%; background: var(--accent-neo-blue);"></div>
             </div>
         </div>
+    </div>
+
+    <!-- 目標・設定 編集パネル -->
+    <div style="margin-top: 12px; padding: 16px; background: rgba(29, 155, 240, 0.03); border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
+        <h3 style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 0 0 14px 0; letter-spacing: 0.08em; display: flex; align-items: center; gap: 6px; text-transform: uppercase;">
+            <i data-lucide="sliders-horizontal" style="width: 14px; height: 14px;"></i>
+            目標・固定値の設定
+        </h3>
+        <div style="display: grid; gap: 10px;">
+            <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px;">
+                <label style="font-size: 12px; color: var(--text-muted); font-weight: 500;">目標純利益（月間）</label>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 12px; color: var(--text-muted);">¥</span>
+                    <input id="input-target-profit" type="number" min="0" step="10000"
+                        style="width: 110px; background: var(--btn-secondary-bg); color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 8px; padding: 6px 8px; font-size: 13px; font-weight: 600; text-align: right; outline: none;"
+                        onfocus="this.style.borderColor='var(--accent-neo-blue)'"
+                        onblur="this.style.borderColor='var(--btn-secondary-border)'"
+                        placeholder="1000000">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px;">
+                <label style="font-size: 12px; color: var(--text-muted); font-weight: 500;">固定費（月間）</label>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 12px; color: var(--text-muted);">¥</span>
+                    <input id="input-fixed-costs" type="number" min="0" step="1000"
+                        style="width: 110px; background: var(--btn-secondary-bg); color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 8px; padding: 6px 8px; font-size: 13px; font-weight: 600; text-align: right; outline: none;"
+                        onfocus="this.style.borderColor='var(--accent-neo-blue)'"
+                        onblur="this.style.borderColor='var(--btn-secondary-border)'"
+                        placeholder="120000">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px;">
+                <label style="font-size: 12px; color: var(--text-muted); font-weight: 500;">投資余力（月間）</label>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 12px; color: var(--text-muted);">¥</span>
+                    <input id="input-investment" type="number" min="0" step="1000"
+                        style="width: 110px; background: var(--btn-secondary-bg); color: var(--text-main); border: 1px solid var(--btn-secondary-border); border-radius: 8px; padding: 6px 8px; font-size: 13px; font-weight: 600; text-align: right; outline: none;"
+                        onfocus="this.style.borderColor='var(--accent-neo-blue)'"
+                        onblur="this.style.borderColor='var(--btn-secondary-border)'"
+                        placeholder="475000">
+                </div>
+            </div>
+        </div>
+        <button id="btn-save-wallet-config"
+            style="margin-top: 14px; width: 100%; padding: 10px; background: var(--accent-neo-blue); color: #fff; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 0.04em; transition: opacity 0.2s;"
+            onmouseover="this.style.opacity='0.85'"
+            onmouseout="this.style.opacity='1'">
+            保存する
+        </button>
     </div>
 
     <!-- Cash Flow Wave (Bar Chart) -->

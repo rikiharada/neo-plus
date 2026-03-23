@@ -37,9 +37,11 @@ window.GlobalStore = {
             if (!window.mockDB) window.mockDB = {};
             // Raw mapping for activities ensuring we don't drop frontend names
             window.mockDB.activities = newState.activities.map(a => ({
-                id: a.id, projectId: a.project_id, type: a.type, category: a.category,
+                id: a.id,
+                projectId: a.project_id ?? a.projectId,
+                type: a.type, category: a.category,
                 title: a.title, amount: a.amount, date: a.date ? a.date.split('T')[0].replace(/-/g, '/') : null,
-                isBookkeeping: a.is_bookkeeping, isDeleted: a.is_deleted
+                isBookkeeping: a.is_bookkeeping, is_deleted: a.is_deleted || false
             }));
         }
 

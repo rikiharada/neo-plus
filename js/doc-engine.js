@@ -14,6 +14,8 @@ window.switchDocTab = (type) => {
             issueDate: document.getElementById('doc-issue-date')?.value || '',
             deadline: document.getElementById('doc-deadline-date')?.value || '',
             subject: document.getElementById('doc-subject')?.value || '',
+            docNumber: document.getElementById('doc-doc-number')?.value || '',
+            remarks: document.getElementById('doc-remarks')?.value || '',
             receiptMemo: document.getElementById('doc-receipt-memo')?.value || '',
             paymentMethod: document.getElementById('doc-payment-method')?.value || 'cash',
             bankInfo: document.getElementById('doc-bank-info')?.value || '',
@@ -68,6 +70,8 @@ window.switchDocTab = (type) => {
         if (document.getElementById('doc-issue-date')) document.getElementById('doc-issue-date').value = mem.issueDate;
         if (document.getElementById('doc-deadline-date')) document.getElementById('doc-deadline-date').value = mem.deadline;
         if (document.getElementById('doc-subject')) document.getElementById('doc-subject').value = mem.subject;
+        if (document.getElementById('doc-doc-number')) document.getElementById('doc-doc-number').value = mem.docNumber || '';
+        if (document.getElementById('doc-remarks')) document.getElementById('doc-remarks').value = mem.remarks || '';
         if (document.getElementById('doc-receipt-memo')) document.getElementById('doc-receipt-memo').value = mem.receiptMemo;
         if (document.getElementById('doc-payment-method')) document.getElementById('doc-payment-method').value = mem.paymentMethod;
         if (document.getElementById('doc-bank-info')) document.getElementById('doc-bank-info').value = mem.bankInfo;
@@ -80,13 +84,22 @@ window.switchDocTab = (type) => {
         if (document.getElementById('doc-subject')) document.getElementById('doc-subject').value = document.getElementById('detail-project-name')?.textContent || '';
         if (document.getElementById('doc-issue-date')) document.getElementById('doc-issue-date').value = new Date().toISOString().split('T')[0];
         if (document.getElementById('doc-deadline-date')) document.getElementById('doc-deadline-date').value = '';
+        if (document.getElementById('doc-remarks')) document.getElementById('doc-remarks').value = '';
         if (document.getElementById('doc-receipt-memo')) document.getElementById('doc-receipt-memo').value = '';
-        
-        // Reset items to default 1 row
+        // 書類番号を自動生成
+        const _prefix = { estimate:'EST', invoice:'INV', delivery:'DEL', receipt:'REC', expense:'EXP' }[type] || 'DOC';
+        const _today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        if (document.getElementById('doc-doc-number')) document.getElementById('doc-doc-number').value = `${_prefix}-${_today}-01`;
+
+        // Load type-filtered activities for this specific doc type
         const container = document.getElementById('doc-line-items-container');
-        if(container) {
+        if (container) {
             container.innerHTML = '';
-            container.insertAdjacentHTML('beforeend', window.generateDocLineHTML('', 0, 1, false));
+            if (window.refreshLineItemsForDocType) {
+                window.refreshLineItemsForDocType(type); // Async: loads + filters + renders
+            } else {
+                container.insertAdjacentHTML('beforeend', window.generateDocLineHTML('', 0, 1, false));
+            }
         }
     }
 
@@ -120,6 +133,23 @@ window.updateDocPreview = () => {
     const itemName = document.getElementById('doc-item-name')?.value || '作業代行費';
     const itemPrice = parseInt(document.getElementById('doc-item-price')?.value || '0', 10);
 
+    // 発行者情報・書類番号・備考
+    const docNumber   = document.getElementById('doc-doc-number')?.value || '';
+    const remarks     = document.getElementById('doc-remarks')?.value || '';
+    const companyName = document.getElementById('doc-company-name')?.value || 'あなたの会社名';
+    const companyAddr = document.getElementById('doc-company-address')?.value || '';
+    const companyTel  = document.getElementById('doc-company-tel')?.value || '';
+    // 複数社判（位置別レンダリング）
+    let _seals = [];
+    try { _seals = JSON.parse(localStorage.getItem('neo_company_seals') || '[]'); } catch(e) {}
+    const _sealBlock = (pos) => {
+        const arr = _seals.filter(s => s.position === pos);
+        if (!arr.length) return '';
+        return `<div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:6px 0;">${
+            arr.map(s => `<img src="${s.dataURL}" title="${s.label||'印'}" style="width:${s.size}px;height:${s.size}px;object-fit:contain;opacity:0.82;border-radius:50%;border:2px solid rgba(192,0,0,0.28);">`).join('')
+        }</div>`;
+    };
+
     // Context specific reads
     const receiptMemo = document.getElementById('doc-receipt-memo')?.value || 'お品代として';
     const paymentMethodEl = document.getElementById('doc-payment-method');
@@ -145,21 +175,22 @@ window.updateDocPreview = () => {
     const items = [];
 
     itemRows.forEach(row => {
-        const name = row.querySelector('.item-name-input').value || '作業代行費';
-        const price = parseInt(row.querySelector('.item-price-input').value || '0', 10);
+        // エラーUI等、入力欄を持たない行はスキップ
+        const nameEl  = row.querySelector('.item-name-input');
+        const priceEl = row.querySelector('.item-price-input');
+        if (!nameEl || !priceEl) return;
+
+        const name = nameEl.value || '作業代行費';
+        const price = parseInt(priceEl.value || '0', 10);
         const qtyInput = row.querySelector('.item-qty-input');
         const qty = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
         const lineTotal = price * qty;
         subTotal += lineTotal;
         items.push({ name, price, qty });
 
-        const isEstimate = window.currentDocType === 'estimate';
-        const tdStyle = isEstimate 
-            ? 'padding: 2px 4px; font-size: 11px !important; color: #333; border-bottom: 1px solid #999;'
-            : 'padding: 15px; font-size: 16px; color: #000; border-bottom: 1px solid #ccc;';
-        const tdStyleRight = isEstimate
-            ? 'padding: 2px 4px; font-size: 11px !important; color: #333; text-align: right; border-bottom: 1px solid #999;'
-            : 'padding: 15px; font-size: 16px; color: #000; text-align: right; border-bottom: 1px solid #ccc;';
+        // 全書類タイプで統一スタイル
+        const tdStyle      = 'padding:6px 10px;font-size:13px;color:#222;border-bottom:1px solid #e5e7eb;line-height:1.4;';
+        const tdStyleRight = 'padding:6px 10px;font-size:13px;color:#222;text-align:right;border-bottom:1px solid #e5e7eb;line-height:1.4;';
 
         linesHTML += `
             <tr>
@@ -182,204 +213,510 @@ window.updateDocPreview = () => {
         window.defaultGenericTemplateHTML = docPaperContainer.innerHTML;
     }
 
+    // ── 共通スタイル定数 ────────────────────────────────────────────────────────
+    const S = {
+        title:      'font-size:22px;font-weight:900;letter-spacing:4px;color:#000;',
+        clientName: 'font-size:17px;font-weight:700;border-bottom:2px solid #000;padding-bottom:5px;display:inline-block;min-width:75%;color:#000;',
+        companyName:'font-size:14px;font-weight:700;color:#000;margin-bottom:3px;',
+        bodyText:   'font-size:13px;color:#444;line-height:1.6;',
+        smallText:  'font-size:12px;color:#555;line-height:1.6;',
+        label:      'font-size:12px;color:#777;',
+        subject:    'font-size:14px;font-weight:700;border-bottom:1px solid #ccc;padding-bottom:3px;display:inline-block;min-width:60%;color:#000;',
+        thCell:     'padding:7px 10px;font-size:12px;font-weight:600;color:#444;',
+        totalLbl:   'padding:5px 10px;font-size:13px;color:#666;',
+        totalVal:   'padding:5px 10px;font-size:13px;color:#333;text-align:right;',
+        grandLbl:   'padding:8px 10px;font-size:15px;font-weight:700;color:#000;border-top:2px solid #000;',
+        grandVal:   'padding:8px 10px;font-size:20px;font-weight:900;color:#000;text-align:right;border-top:2px solid #000;',
+        itemTable:  'width:100%;border-collapse:collapse;margin-bottom:16px;',
+        divider:    'border-bottom:2px solid #333;margin:4px 0 16px;',
+    };
+
+    // ── 共通フッター ──────────────────────────────────────────────────────────
+    const docFooter = `
+        <div style="display:flex;justify-content:flex-end;margin-top:24px;padding-top:10px;border-top:1px solid #e5e7eb;">
+            <span style="font-size:10px;color:#d1d5db;">Powered by Neo+</span>
+        </div>`;
+
+    // ── 発行者情報ブロック（全テンプレート共通）──────────────────────────────
+    const companyBlock = `
+        <div style="${S.companyName}">${companyName}</div>
+        ${companyAddr ? `<div style="${S.smallText}">${companyAddr}</div>` : ''}
+        ${companyTel  ? `<div style="${S.smallText}">TEL: ${companyTel}</div>` : ''}
+        ${_sealBlock('header')}`;
+
+    // ── 備考ブロック（入力ありの場合のみ表示）────────────────────────────────
+    const remarksBlock = remarks ? `
+        <div style="margin:14px 0 8px;padding:10px 14px;background:#fafafa;border-left:3px solid #d1d5db;border-radius:0 6px 6px 0;">
+            <div style="${S.label};font-weight:700;margin-bottom:4px;">備考</div>
+            <div style="${S.bodyText};white-space:pre-wrap;">${remarks}</div>
+        </div>` : '';
+
     if (window.currentDocType === 'estimate') {
-        const estimate_dateStr = dateInputStr.replace(/-/g, '/');
-        const estimate_docNo = 'EST-' + dateInputStr.replace(/-/g, '') + '-01';
+        const est_date  = dateInputStr.replace(/-/g, '/');
+        const est_docNo = 'EST-' + dateInputStr.replace(/-/g, '') + '-01';
+        const est_deadline = deadlineInputStr ? deadlineInputStr.replace(/-/g, '/') : '';
 
         if (docPaperContainer) {
-            docPaperContainer.innerHTML = ''; // EXPLICIT DOM CLEARING
             docPaperContainer.innerHTML = `
-    <div id="neo-v3-estimate">
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-                <td colspan="2" style="text-align: center; padding-bottom: 30px;">
-                    <span id="preview-doc-title" style="font-size: 18px !important; font-weight: bold; letter-spacing: 2px; color: #000;">御見積書</span>
-                </td>
-            </tr>
-            <tr>
-                <td style="width: 60%; vertical-align: top; padding-bottom: 10px;">
-                    <div id="preview-client-name" style="font-size: 14px !important; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 4px; display: inline-block; min-width: 80%; color: #000;">${client}</div>
-                </td>
-                <td style="width: 40%; vertical-align: top; text-align: right; font-size: 11px !important; padding-bottom: 10px; color: #333;">
-                    <div id="preview-doc-date" style="font-size: 11px !important;">発行日: ${estimate_dateStr}</div>
-                    <div id="preview-doc-no" style="font-size: 11px !important;">No: ${estimate_docNo}</div>
-                </td>
-            </tr>
-            <tr>
-                <td style="width: 60%; vertical-align: top; color: #333;">
-                    <div style="font-size: 11px !important; margin-bottom: 15px;">下記の通り御見積申し上げます。</div>
-                    <div style="margin-bottom: 5px;">
-                        <span style="font-size: 11px !important; margin-right: 10px;">件名:</span>
-                        <span id="preview-subject" style="font-size: 12px !important; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 2px; display: inline-block; min-width: 60%; color: #000;">${subject}</span>
-                    </div>
-                    <div id="preview-receipt-memo" style="font-size: 11px !important; color: #333;">但し書き: <span id="preview-memo-text">${receiptMemo}</span></div>
-                </td>
-                <td style="width: 40%; vertical-align: top; text-align: right; font-size: 11px !important; line-height: 1.6; color: #333;">
-                    <div style="font-size: 12px !important; font-weight: bold; margin-bottom: 5px; color: #000;">あなたの会社名</div>
-                    <div style="font-size: 11px !important;">〒106-0032</div>
-                    <div style="font-size: 11px !important;">東京都港区六本木1-1-1</div>
-                    <div style="font-size: 11px !important;">TEL: 03-1234-5678</div>
-                    <div id="preview-bank-info" style="margin-top: 10px; white-space: pre-line; font-size: 11px !important;">${bankInfo}</div>
-                </td>
-            </tr>
-        </table>
-        <div style="margin-bottom: 20px;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px !important;">
-                <thead>
-                    <tr style="background-color: #f8f9fa; border-top: 2px solid #000; border-bottom: 1px solid #000;">
-                        <th style="padding: 2px 4px; font-weight: normal; color: #333; font-size: 11px !important;">内容・品名</th>
-                        <th style="padding: 2px 4px; font-weight: normal; text-align: right; width: 15%; color: #333; font-size: 11px !important;">数量</th>
-                        <th style="padding: 2px 4px; font-weight: normal; text-align: right; width: 20%; color: #333; font-size: 11px !important;">単価</th>
-                        <th style="padding: 2px 4px; font-weight: normal; text-align: right; width: 20%; color: #333; font-size: 11px !important;">金額</th>
-                    </tr>
-                </thead>
-                <tbody id="preview-items-container">
-                    ${linesHTML}
-                </tbody>
-            </table>
-            <div style="border-bottom: 2px solid #333; margin-bottom: 15px;"></div>
+<div id="neo-v3-estimate" style="font-family:'Noto Sans JP',sans-serif;">
+
+  <!-- タイトル -->
+  <div style="text-align:center;padding-bottom:24px;border-bottom:3px solid #000;margin-bottom:20px;">
+    <span id="preview-doc-title" style="${S.title}">御　見　積　書</span>
+  </div>
+
+  <!-- ヘッダー情報 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+    <tr>
+      <td style="width:58%;vertical-align:top;padding-right:16px;">
+        <div id="preview-client-name" style="${S.clientName}">${client}</div>
+        <div style="${S.bodyText};margin-top:10px;">御中</div>
+        <div style="${S.bodyText};margin-top:14px;">下記の通り御見積申し上げます。</div>
+        <div style="margin-top:12px;">
+          <span style="${S.label}">件名：</span>
+          <span id="preview-subject" style="${S.subject}">${subject}</span>
         </div>
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-                <td style="width: 60%;"></td>
-                <td style="width: 40%; vertical-align: bottom;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td style="padding: 2px 4px; font-size: 11px !important; color: #666; width: 50%;">小計</td>
-                            <td id="preview-subtotal" style="padding: 2px 4px; font-size: 11px !important; color: #333; text-align: right; width: 50%;">¥${fmt.format(subTotal)}</td>
-                        </tr>
-                        <tr>
-                            <td id="preview-tax-label" style="padding: 2px 4px; font-size: 11px !important; color: #666; width: 50%;">消費税 (10%)</td>
-                            <td id="preview-tax" style="padding: 2px 4px; font-size: 11px !important; color: #333; text-align: right; width: 50%;">¥${fmt.format(tax)}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px 4px; font-size: 12px !important; font-weight: bold; color: #000; border-top: 1px solid #666; width: 50%;">合計金額</td>
-                            <td id="preview-grand-total" style="padding: 6px 4px; font-size: 16px !important; font-weight: bold; color: #000; text-align: right; border-top: 1px solid #666; width: 50%;">¥${fmt.format(total)}</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-        <div style="position: absolute; bottom: 30px; left: 30px; margin: 0; padding: 0;">
-            <table style="border-collapse: collapse;">
-                <tr>
-                    <td style="width: 60px; vertical-align: bottom;">
-                        <img id="preview-qr-code" src="" style="width: 50px; height: 50px; display: block;" alt="QR">
-                    </td>
-                    <td style="vertical-align: bottom; font-size: 9px !important; color: #666; padding-bottom: 2px; line-height: 1.2;">
-                        このQRコードをカメラで読み取ると、<br>本書類をデジタル保存できます。
-                    </td>
-                </tr>
-            </table>
+        ${est_deadline ? `<div style="${S.smallText};margin-top:8px;">有効期限：<strong style="color:#000;">${est_deadline}</strong></div>` : ''}
+      </td>
+      <td style="width:42%;vertical-align:top;text-align:right;">
+        ${companyBlock}
+        <div id="preview-bank-info" style="margin-top:8px;white-space:pre-line;${S.smallText}">${bankInfo}</div>
+        <div style="margin-top:10px;${S.label}">
+          <div id="preview-doc-date">発行日：${est_date}</div>
+          <div id="preview-doc-no">文書番号：${docNumber}</div>
         </div>
-    </div>
-            `;
+      </td>
+    </tr>
+  </table>
+
+  <!-- 明細テーブル -->
+  <table style="${S.itemTable}">
+    <thead>
+      <tr style="background:#f3f4f6;border-top:2px solid #000;border-bottom:1px solid #d1d5db;">
+        <th style="${S.thCell};text-align:left;">内容・品名</th>
+        <th style="${S.thCell};text-align:right;width:13%;">数量</th>
+        <th style="${S.thCell};text-align:right;width:22%;">単価</th>
+        <th style="${S.thCell};text-align:right;width:22%;">金額</th>
+      </tr>
+    </thead>
+    <tbody id="preview-items-container">${linesHTML}</tbody>
+  </table>
+  <div style="${S.divider}"></div>
+
+  <!-- 合計欄 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+    <tr>
+      <td style="width:55%;vertical-align:bottom;${S.smallText};font-style:italic;color:#888;">
+        ※ 消費税は別途申し受けます。<br>本見積書の有効期限は発行日より1ヶ月です。
+      </td>
+      <td style="width:45%;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="${S.totalLbl}">小計</td>
+            <td id="preview-subtotal" style="${S.totalVal}">¥${fmt.format(subTotal)}</td>
+          </tr>
+          <tr>
+            <td id="preview-tax-label" style="${S.totalLbl}">消費税（10%）</td>
+            <td id="preview-tax"       style="${S.totalVal}">¥${fmt.format(tax)}</td>
+          </tr>
+          <tr>
+            <td style="${S.grandLbl}">合計金額</td>
+            <td id="preview-grand-total" style="${S.grandVal}">¥${fmt.format(total)}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  ${_sealBlock('total')}
+  ${remarksBlock}
+  ${_sealBlock('bottom')}
+  ${docFooter}
+</div>`;
         }
-        // Update tiny UI
-        document.getElementById('doc-tax-calc').textContent = `¥${fmt.format(tax)}`;
+        document.getElementById('doc-tax-calc').textContent  = `¥${fmt.format(tax)}`;
         document.getElementById('doc-total-calc').textContent = `¥${fmt.format(total)}`;
-        return; // EXIT EARLY
+        return;
+
     } else if (window.currentDocType === 'invoice') {
-        const invoice_dateStr = dateInputStr.replace(/-/g, '/');
-        const invoice_deadlineStr = deadlineInputStr ? deadlineInputStr.replace(/-/g, '/') : '';
-        const invoice_docNo = 'INV-' + dateInputStr.replace(/-/g, '') + '-01';
+        const inv_date     = dateInputStr.replace(/-/g, '/');
+        const inv_deadline = deadlineInputStr ? deadlineInputStr.replace(/-/g, '/') : '末日';
+        const inv_docNo    = 'INV-' + dateInputStr.replace(/-/g, '') + '-01';
 
         if (docPaperContainer) {
-            docPaperContainer.innerHTML = ''; // EXPLICIT DOM CLEARING
             docPaperContainer.innerHTML = `
-    <div id="neo-v3-estimate">
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-                <td colspan="2" style="text-align: center; padding-bottom: 30px;">
-                    <span id="preview-doc-title" style="font-size: 18px !important; font-weight: bold; letter-spacing: 2px; color: #000;">御請求書</span>
-                </td>
-            </tr>
-            <tr>
-                <td style="width: 60%; vertical-align: top; padding-bottom: 10px;">
-                    <div id="preview-client-name" style="font-size: 14px !important; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 4px; display: inline-block; min-width: 80%; color: #000;">${client}</div>
-                </td>
-                <td style="width: 40%; vertical-align: top; text-align: right; font-size: 11px !important; padding-bottom: 10px; color: #333;">
-                    <div id="preview-doc-date" style="font-size: 11px !important;">請求日: ${invoice_dateStr}</div>
-                    <div id="preview-doc-no" style="font-size: 11px !important;">No: ${invoice_docNo}</div>
-                </td>
-            </tr>
-            <tr>
-                <td style="width: 60%; vertical-align: top; color: #333;">
-                    <div style="font-size: 11px !important; margin-bottom: 15px;">下記の通り御請求申し上げます。</div>
-                    <div style="margin-bottom: 5px;">
-                        <span style="font-size: 11px !important; margin-right: 10px;">件名:</span>
-                        <span id="preview-subject" style="font-size: 12px !important; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 2px; display: inline-block; min-width: 60%; color: #000;">${subject}</span>
-                    </div>
-                    <div style="font-size: 11px !important; margin-bottom: 5px; color: #333;">お支払期限: <span style="font-weight: bold; color: #000;">${invoice_deadlineStr || '末日'}</span></div>
-                </td>
-                <td style="width: 40%; vertical-align: top; text-align: right; font-size: 11px !important; line-height: 1.6; color: #333;">
-                    <div style="font-size: 12px !important; font-weight: bold; margin-bottom: 5px; color: #000;">あなたの会社名</div>
-                    <div style="font-size: 11px !important;">〒106-0032</div>
-                    <div style="font-size: 11px !important;">東京都港区六本木1-1-1</div>
-                    <div style="font-size: 11px !important;">TEL: 03-1234-5678</div>
-                    <div id="preview-bank-info" style="margin-top: 10px; white-space: pre-line; font-size: 11px !important; text-align: right;">${bankInfo}</div>
-                </td>
-            </tr>
-        </table>
-        <div style="margin-bottom: 20px;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px !important;">
-                <thead>
-                    <tr style="background-color: #f8f9fa; border-top: 2px solid #000; border-bottom: 1px solid #000;">
-                        <th style="padding: 2px 4px; font-weight: normal; color: #333; font-size: 11px !important;">内容・品名</th>
-                        <th style="padding: 2px 4px; font-weight: normal; text-align: right; width: 15%; color: #333; font-size: 11px !important;">数量</th>
-                        <th style="padding: 2px 4px; font-weight: normal; text-align: right; width: 20%; color: #333; font-size: 11px !important;">単価</th>
-                        <th style="padding: 2px 4px; font-weight: normal; text-align: right; width: 20%; color: #333; font-size: 11px !important;">金額</th>
-                    </tr>
-                </thead>
-                <tbody id="preview-items-container">
-                    ${linesHTML}
-                </tbody>
-            </table>
-            <div style="border-bottom: 2px solid #333; margin-bottom: 15px;"></div>
+<div id="neo-v3-invoice" style="font-family:'Noto Sans JP',sans-serif;">
+
+  <!-- タイトル -->
+  <div style="text-align:center;padding-bottom:24px;border-bottom:3px solid #000;margin-bottom:20px;">
+    <span id="preview-doc-title" style="${S.title}">御　請　求　書</span>
+  </div>
+
+  <!-- ヘッダー情報 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+    <tr>
+      <td style="width:58%;vertical-align:top;padding-right:16px;">
+        <div id="preview-client-name" style="${S.clientName}">${client}</div>
+        <div style="${S.bodyText};margin-top:10px;">御中</div>
+        <div style="${S.bodyText};margin-top:14px;">下記の通り御請求申し上げます。</div>
+        <div style="margin-top:12px;">
+          <span style="${S.label}">件名：</span>
+          <span id="preview-subject" style="${S.subject}">${subject}</span>
         </div>
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-                <td style="width: 60%;"></td>
-                <td style="width: 40%; vertical-align: bottom;">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td style="padding: 2px 4px; font-size: 11px !important; color: #666; width: 50%;">小計</td>
-                            <td id="preview-subtotal" style="padding: 2px 4px; font-size: 11px !important; color: #333; text-align: right; width: 50%;">¥${fmt.format(subTotal)}</td>
-                        </tr>
-                        <tr>
-                            <td id="preview-tax-label" style="padding: 2px 4px; font-size: 11px !important; color: #666; width: 50%;">消費税 (10%)</td>
-                            <td id="preview-tax" style="padding: 2px 4px; font-size: 11px !important; color: #333; text-align: right; width: 50%;">¥${fmt.format(tax)}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 6px 4px; font-size: 12px !important; font-weight: bold; color: #000; border-top: 1px solid #666; width: 50%;">ご請求金額</td>
-                            <td id="preview-grand-total" style="padding: 6px 4px; font-size: 16px !important; font-weight: bold; color: #000; text-align: right; border-top: 1px solid #666; width: 50%;">¥${fmt.format(total)}</td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-        <div style="position: absolute; bottom: 30px; left: 30px; margin: 0; padding: 0;">
-            <table style="border-collapse: collapse;">
-                <tr>
-                    <td style="width: 60px; vertical-align: bottom;">
-                        <img id="preview-qr-code" src="" style="width: 50px; height: 50px; display: block;" alt="QR">
-                    </td>
-                    <td style="vertical-align: bottom; font-size: 9px !important; color: #666; padding-bottom: 2px; line-height: 1.2;">
-                        このQRコードをカメラで読み取ると、<br>本書類をデジタル保存できます。
-                    </td>
-                </tr>
-            </table>
+        <div style="${S.smallText};margin-top:8px;">お支払期限：<strong style="color:#c00;">${inv_deadline}</strong></div>
+      </td>
+      <td style="width:42%;vertical-align:top;text-align:right;">
+        ${companyBlock}
+        <div id="preview-bank-info" style="margin-top:8px;white-space:pre-line;${S.smallText};background:#f8faff;border:1px solid #dde5ff;border-radius:6px;padding:8px;text-align:left;">${bankInfo}</div>
+        <div style="margin-top:10px;${S.label};text-align:right;">
+          <div id="preview-doc-date">請求日：${inv_date}</div>
+          <div id="preview-doc-no">文書番号：${docNumber}</div>
         </div>
-    </div>
-            `;
+      </td>
+    </tr>
+  </table>
+
+  <!-- 明細テーブル -->
+  <table style="${S.itemTable}">
+    <thead>
+      <tr style="background:#f3f4f6;border-top:2px solid #000;border-bottom:1px solid #d1d5db;">
+        <th style="${S.thCell};text-align:left;">内容・品名</th>
+        <th style="${S.thCell};text-align:right;width:13%;">数量</th>
+        <th style="${S.thCell};text-align:right;width:22%;">単価</th>
+        <th style="${S.thCell};text-align:right;width:22%;">金額</th>
+      </tr>
+    </thead>
+    <tbody id="preview-items-container">${linesHTML}</tbody>
+  </table>
+  <div style="${S.divider}"></div>
+
+  <!-- 合計欄 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+    <tr>
+      <td style="width:55%;${S.smallText};font-style:italic;color:#888;vertical-align:top;">
+        ※ お振込手数料はご負担ください。<br>期日を過ぎた場合は遅延損害金が発生する場合があります。
+      </td>
+      <td style="width:45%;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="${S.totalLbl}">小計</td>
+            <td id="preview-subtotal" style="${S.totalVal}">¥${fmt.format(subTotal)}</td>
+          </tr>
+          <tr>
+            <td id="preview-tax-label" style="${S.totalLbl}">消費税（10%）</td>
+            <td id="preview-tax"       style="${S.totalVal}">¥${fmt.format(tax)}</td>
+          </tr>
+          <tr>
+            <td style="${S.grandLbl}">ご請求金額</td>
+            <td id="preview-grand-total" style="${S.grandVal}">¥${fmt.format(total)}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  ${_sealBlock('total')}
+  ${remarksBlock}
+  ${_sealBlock('bottom')}
+  ${docFooter}
+</div>`;
         }
-        // Update tiny UI
-        document.getElementById('doc-tax-calc').textContent = `¥${fmt.format(tax)}`;
+        document.getElementById('doc-tax-calc').textContent  = `¥${fmt.format(tax)}`;
         document.getElementById('doc-total-calc').textContent = `¥${fmt.format(total)}`;
-        return; // EXIT EARLY
+        return;
+    } else if (window.currentDocType === 'delivery') {
+        // ── 納品書テンプレート（金額あり） ───────────────────────────────────
+        const del_dateStr  = dateInputStr.replace(/-/g, '/');
+        const del_docNo    = 'DEL-' + dateInputStr.replace(/-/g, '') + '-01';
+        if (docPaperContainer) {
+            docPaperContainer.innerHTML = `
+<div id="neo-v3-delivery" style="font-family:'Noto Sans JP',sans-serif;">
+
+  <!-- タイトル -->
+  <div style="text-align:center;padding-bottom:24px;border-bottom:3px solid #000;margin-bottom:20px;">
+    <span id="preview-doc-title" style="${S.title}">納　品　書</span>
+  </div>
+
+  <!-- ヘッダー情報 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+    <tr>
+      <td style="width:58%;vertical-align:top;padding-right:16px;">
+        <div id="preview-client-name" style="${S.clientName}">${client}</div>
+        <div style="${S.bodyText};margin-top:10px;">御中</div>
+        <div style="${S.bodyText};margin-top:14px;">下記の通り納品いたしました。</div>
+        <div style="margin-top:12px;">
+          <span style="${S.label}">件名：</span>
+          <span id="preview-subject" style="${S.subject}">${subject}</span>
+        </div>
+      </td>
+      <td style="width:42%;vertical-align:top;text-align:right;">
+        ${companyBlock}
+        <div style="margin-top:10px;${S.label};text-align:right;">
+          <div id="preview-doc-date">納品日：${del_dateStr}</div>
+          <div id="preview-doc-no">文書番号：${docNumber}</div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 明細テーブル -->
+  <table style="${S.itemTable}">
+    <thead>
+      <tr style="background:#f3f4f6;border-top:2px solid #000;border-bottom:1px solid #d1d5db;">
+        <th style="${S.thCell};text-align:left;">内容・品名</th>
+        <th style="${S.thCell};text-align:right;width:13%;">数量</th>
+        <th style="${S.thCell};text-align:right;width:22%;">単価</th>
+        <th style="${S.thCell};text-align:right;width:22%;">金額</th>
+      </tr>
+    </thead>
+    <tbody id="preview-items-container">${linesHTML}</tbody>
+  </table>
+  <div style="${S.divider}"></div>
+
+  <!-- 合計欄 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+    <tr>
+      <td style="width:55%;vertical-align:bottom;${S.smallText};font-style:italic;color:#888;">
+        ※ 上記商品・サービスを納品いたしました。
+      </td>
+      <td style="width:45%;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="${S.totalLbl}">小計</td>
+            <td id="preview-subtotal" style="${S.totalVal}">¥${fmt.format(subTotal)}</td>
+          </tr>
+          <tr>
+            <td id="preview-tax-label" style="${S.totalLbl}">消費税（10%）</td>
+            <td id="preview-tax"       style="${S.totalVal}">¥${fmt.format(tax)}</td>
+          </tr>
+          <tr>
+            <td style="${S.grandLbl}">納品合計</td>
+            <td id="preview-grand-total" style="${S.grandVal}">¥${fmt.format(total)}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 納品済スタンプ（通常フロー） -->
+  <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+    <div style="width:72px;height:72px;border:2px solid #c00;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#c00;font-size:13px;font-weight:bold;opacity:0.7;letter-spacing:2px;">納品済</div>
+  </div>
+
+  ${_sealBlock('total')}
+  ${remarksBlock}
+  ${_sealBlock('bottom')}
+  ${docFooter}
+</div>`;
+        }
+        document.getElementById('doc-tax-calc').textContent  = `¥${fmt.format(tax)}`;
+        document.getElementById('doc-total-calc').textContent = `¥${fmt.format(total)}`;
+        return;
+
+    } else if (window.currentDocType === 'receipt') {
+        // ── 領収書テンプレート（明細付き） ───────────────────────────────────
+        const rec_dateStr    = dateInputStr.replace(/-/g, '/');
+        const rec_docNo      = 'REC-' + dateInputStr.replace(/-/g, '') + '-01';
+        const receiptMemoVal = document.getElementById('doc-receipt-memo')?.value || 'お品代として';
+        const payMethodEl    = document.getElementById('doc-payment-method');
+        const payMethodLabel = payMethodEl ? payMethodEl.options[payMethodEl.selectedIndex]?.text || '現金' : '現金';
+        const payMethodColor = payMethodLabel === '現金' ? '#059669' : payMethodLabel.includes('銀行') ? '#2563eb' : '#7c3aed';
+
+        if (docPaperContainer) {
+            docPaperContainer.innerHTML = `
+<div id="neo-v3-receipt" style="font-family:'Noto Sans JP',sans-serif;">
+
+  <!-- タイトル -->
+  <div style="text-align:center;padding-bottom:24px;border-bottom:3px solid #000;margin-bottom:20px;">
+    <span id="preview-doc-title" style="${S.title}">領　収　書</span>
+  </div>
+
+  <!-- ヘッダー情報 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+    <tr>
+      <td style="width:58%;vertical-align:top;padding-right:16px;">
+        <div id="preview-client-name" style="${S.clientName}">${client}</div>
+        <div style="${S.bodyText};margin-top:10px;">御中</div>
+        <div style="${S.bodyText};margin-top:10px;">上記の金額を確かに領収いたしました。</div>
+      </td>
+      <td style="width:42%;vertical-align:top;text-align:right;">
+        ${companyBlock}
+        <div style="margin-top:10px;${S.label};text-align:right;">
+          <div id="preview-doc-date">領収日：${rec_dateStr}</div>
+          <div id="preview-doc-no">文書番号：${docNumber}</div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 大きな合計金額 -->
+  <div style="text-align:center;margin:18px 0;padding:18px;background:#f8faff;border:1px solid #dde5ff;border-radius:10px;">
+    <div style="${S.label};margin-bottom:6px;">領　収　金　額</div>
+    <div id="preview-grand-total" style="font-size:32px;font-weight:900;color:#000;letter-spacing:2px;">¥${fmt.format(total)} <span style="font-size:15px;font-weight:normal;">也</span></div>
+  </div>
+
+  <!-- 但し書き + 決済方法 -->
+  <div style="display:flex;align-items:center;gap:20px;margin:16px 0;${S.bodyText}">
+    <div>但し書き：<span id="preview-memo-text" style="font-weight:700;color:#000;">${receiptMemoVal}</span></div>
+    <div>決済方法：<span style="background:${payMethodColor};color:#fff;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:700;">${payMethodLabel}</span></div>
+  </div>
+
+  <!-- 明細テーブル -->
+  <table style="${S.itemTable}">
+    <thead>
+      <tr style="background:#f3f4f6;border-top:2px solid #000;border-bottom:1px solid #d1d5db;">
+        <th style="${S.thCell};text-align:left;">内容・品名</th>
+        <th style="${S.thCell};text-align:right;width:13%;">数量</th>
+        <th style="${S.thCell};text-align:right;width:22%;">単価</th>
+        <th style="${S.thCell};text-align:right;width:22%;">金額</th>
+      </tr>
+    </thead>
+    <tbody id="preview-items-container">${linesHTML}</tbody>
+  </table>
+  <div style="${S.divider}"></div>
+
+  <!-- 小計・税 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+    <tr>
+      <td style="width:55%;${S.smallText};font-style:italic;color:#888;vertical-align:top;">
+        ※ この領収書が唯一の証票となります。
+      </td>
+      <td style="width:45%;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="${S.totalLbl}">小計</td>
+            <td id="preview-subtotal" style="${S.totalVal}">¥${fmt.format(subTotal)}</td>
+          </tr>
+          <tr>
+            <td id="preview-tax-label" style="${S.totalLbl}">消費税（10%）</td>
+            <td id="preview-tax"       style="${S.totalVal}">¥${fmt.format(tax)}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  ${_sealBlock('total')}
+  ${remarksBlock}
+  ${_sealBlock('bottom')}
+  ${docFooter}
+</div>`;
+        }
+        document.getElementById('doc-tax-calc').textContent  = `¥${fmt.format(tax)}`;
+        document.getElementById('doc-total-calc').textContent = `¥${fmt.format(total)}`;
+        return;
+
+    } else if (window.currentDocType === 'expense') {
+        // ── 経費精算書テンプレート（日付順リスト） ───────────────────────────
+        const exp_dateStr = dateInputStr.replace(/-/g, '/');
+        const exp_docNo   = 'EXP-' + dateInputStr.replace(/-/g, '') + '-01';
+        const projectName = document.getElementById('doc-subject')?.value || '';
+
+        // 日付列付き行 (data-item-date attribute から日付を取得)
+        const expTdDate  = 'padding:6px 10px;font-size:13px;color:#555;border-bottom:1px solid #e5e7eb;width:18%;white-space:nowrap;';
+        const expTdBody  = 'padding:6px 10px;font-size:13px;color:#222;border-bottom:1px solid #e5e7eb;line-height:1.4;';
+        const expTdRight = 'padding:6px 10px;font-size:13px;color:#222;text-align:right;border-bottom:1px solid #e5e7eb;';
+        let expLinesHTML = '';
+        let expSubTotal  = 0;
+        const expItemRows = document.querySelectorAll('#doc-items-container .line-item, #doc-line-items-container .line-item');
+        expItemRows.forEach(row => {
+            const nameEl  = row.querySelector('.item-name-input');
+            const priceEl = row.querySelector('.item-price-input');
+            if (!nameEl || !priceEl) return;
+            const n    = nameEl.value || '経費';
+            const p    = parseInt(priceEl.value || '0', 10);
+            const q    = parseInt(row.querySelector('.item-qty-input')?.value || '1', 10);
+            const lt   = p * q;
+            const date = row.getAttribute('data-item-date') || '';
+            const displayDate = date ? date.replace(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/, '$2/$3') : '';
+            expSubTotal += lt;
+            expLinesHTML += `<tr>
+              <td style="${expTdDate}">${displayDate}</td>
+              <td style="${expTdBody}">${n}</td>
+              <td style="${expTdRight}">¥${fmt.format(lt)}</td>
+            </tr>`;
+        });
+        const expTax   = Math.floor(expSubTotal * taxRate);
+        const expTotal = expSubTotal + expTax;
+        const expItems = items; // use same items array for QR
+
+        if (docPaperContainer) {
+            docPaperContainer.innerHTML = `
+<div id="neo-v3-expense" style="font-family:'Noto Sans JP',sans-serif;">
+
+  <!-- タイトル -->
+  <div style="text-align:center;padding-bottom:24px;border-bottom:3px solid #000;margin-bottom:20px;">
+    <span id="preview-doc-title" style="${S.title}">経　費　精　算　書</span>
+  </div>
+
+  <!-- ヘッダー情報 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+    <tr>
+      <td style="width:58%;vertical-align:top;padding-right:16px;">
+        <div style="${S.label}">申請者</div>
+        <div id="preview-client-name" style="${S.clientName}">${client || '担当者名'}</div>
+        <div style="margin-top:12px;">
+          <span style="${S.label}">件名：</span>
+          <span id="preview-subject" style="${S.subject}">${projectName}</span>
+        </div>
+      </td>
+      <td style="width:42%;vertical-align:top;text-align:right;">
+        ${companyBlock}
+        <div style="margin-top:10px;${S.label};text-align:right;">
+          <div id="preview-doc-date">作成日：${exp_dateStr}</div>
+          <div id="preview-doc-no">文書番号：${docNumber}</div>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 経費明細テーブル（日付順・3列） -->
+  <table style="${S.itemTable}">
+    <thead>
+      <tr style="background:#f3f4f6;border-top:2px solid #000;border-bottom:1px solid #d1d5db;">
+        <th style="${S.thCell};text-align:left;width:18%;">日付</th>
+        <th style="${S.thCell};text-align:left;">内容・費目</th>
+        <th style="${S.thCell};text-align:right;width:22%;">金額</th>
+      </tr>
+    </thead>
+    <tbody id="preview-items-container">${expLinesHTML}</tbody>
+  </table>
+  <div style="${S.divider}"></div>
+
+  <!-- 合計欄 -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+    <tr>
+      <td style="width:55%;${S.smallText};font-style:italic;color:#888;vertical-align:top;">
+        ※ 上記経費について精算をお願いいたします。
+      </td>
+      <td style="width:45%;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="${S.totalLbl}">小計</td>
+            <td id="preview-subtotal" style="${S.totalVal}">¥${fmt.format(expSubTotal)}</td>
+          </tr>
+          <tr>
+            <td id="preview-tax-label" style="${S.totalLbl}">消費税（10%）</td>
+            <td id="preview-tax"       style="${S.totalVal}">¥${fmt.format(expTax)}</td>
+          </tr>
+          <tr>
+            <td style="${S.grandLbl}">精算合計</td>
+            <td id="preview-grand-total" style="${S.grandVal}">¥${fmt.format(expTotal)}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+  ${_sealBlock('total')}
+  ${remarksBlock}
+  ${_sealBlock('bottom')}
+  ${docFooter}
+</div>`;
+        }
+        document.getElementById('doc-tax-calc').textContent  = `¥${fmt.format(expTax)}`;
+        document.getElementById('doc-total-calc').textContent = `¥${fmt.format(expTotal)}`;
+        return;
+
     } else if (docPaperContainer && window.defaultGenericTemplateHTML) {
-        // Restore generic template structure for Invoice/Delivery/Receipt if we are switching away from Estimate
-        if (docPaperContainer.querySelector('#neo-v3-estimate')) {
+        // Restore generic template structure when switching away from typed templates
+        if (docPaperContainer.querySelector('#neo-v3-estimate, #neo-v3-delivery, #neo-v3-receipt, #neo-v3-expense')) {
             docPaperContainer.innerHTML = window.defaultGenericTemplateHTML;
         }
     }
@@ -615,7 +952,8 @@ window.handleAIDocUpload = (event) => {
 };
 
 // HTML template generation for consistency
-window.generateDocLineHTML = (name = "", price = 0, qty = 1, isAI = false) => {
+// date: optional ISO/JP date string → stored as data-item-date attribute (used by 経費精算書 preview)
+window.generateDocLineHTML = (name = "", price = 0, qty = 1, isAI = false, date = "") => {
     // AI生成バッジ: インラインタグ形式（淡い紫 + 影 + × 閉じるボタン）
     const aiBadge = isAI ? `
         <div class="ai-tag-badge">
@@ -628,9 +966,10 @@ window.generateDocLineHTML = (name = "", price = 0, qty = 1, isAI = false) => {
     const safeName  = String(name).replace(/"/g, '&quot;');
     const safePrice = Number(price) || 0;
     const safeQty   = Number(qty)   || 1;
+    const dateAttr  = date ? ` data-item-date="${date}"` : '';
 
     return `
-        <div class="line-item">
+        <div class="line-item"${dateAttr}>
             <div class="input-group">
                 ${aiBadge}
                 <input type="text" class="form-control item-name-input" placeholder="内容を入力" oninput="window.updateDocPreview()" value="${safeName}">

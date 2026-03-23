@@ -62,7 +62,7 @@
 
                     <!-- Pagination Container -->
                     <div id="project-pagination-container"
-                        style="display: grid; grid-auto-flow: column; justify-content: center; align-items: center; gap: 12px; margin-top: 16px; padding-bottom: 120px; visibility: visible !important;">
+                        style="display: grid; grid-auto-flow: column; justify-content: center; align-items: center; gap: 12px; margin-top: 16px; padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); visibility: visible !important;">
                         <!-- Injected via JS -->
                     </div>
                 </div>
@@ -162,7 +162,7 @@
 
                 <!-- Main Content Area (Data Dashboard) -->
                 <div class="passbook-content"
-                    style=" background: var(--bg-color); padding: var(--spacing-lg); display: block; gap: var(--spacing-md); padding-bottom: 120px; margin-top: 40px;">
+                    style=" background: var(--bg-color); padding: var(--spacing-lg); display: block; gap: var(--spacing-md); padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)); margin-top: 40px;">
 
                     <div class="dashboard-grid"
                         style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md);">
@@ -198,8 +198,11 @@
                                 <i data-lucide="file-text"
                                     style="width: 20px; height: 20px; color: var(--text-muted);"></i>
                             </div>
-                            <h3 style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 4px 0;">
-                                PDF書類
+                            <h3 style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 4px 0; display: flex; align-items: center; justify-content: space-between;">
+                                <span>PDF書類</span>
+                                <button onclick="window.openDrivePicker('Documents')" class="btn-micro" style="padding: 2px 6px; font-size: 10px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(29, 155, 240, 0.4); color: #1D9BF0; background: rgba(29, 155, 240, 0.05); cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+                                    <i data-lucide="cloud" style="width:12px; height:12px;"></i> Drive引用
+                                </button>
                             </h3>
                             <div id="detail-doc-count"
                                 style="font-size: 24px; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em;">
@@ -212,8 +215,11 @@
                             style="padding: 16px; border: 1px solid var(--btn-secondary-border); border-radius: 16px;">
                             <i data-lucide="image"
                                 style="width: 20px; height: 20px; color: var(--text-muted); margin-bottom: 12px;"></i>
-                            <h3 style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 8px 0;">
-                                現場写真・資料
+                            <h3 style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin: 0 0 8px 0; display: flex; align-items: center; justify-content: space-between;">
+                                <span>現場写真・資料</span>
+                                <button onclick="window.openDrivePicker('Photos')" class="btn-micro" style="padding: 2px 6px; font-size: 10px; font-weight: 600; border-radius: 6px; border: 1px solid rgba(29, 155, 240, 0.4); color: #1D9BF0; background: rgba(29, 155, 240, 0.05); cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;">
+                                    <i data-lucide="cloud" style="width:12px; height:12px;"></i> Drive引用
+                                </button>
                             </h3>
                             <div id="detail-photo-gallery"
                                 style="display: grid; grid-auto-flow: column; gap: 6px; overflow-x: hidden;">
@@ -280,10 +286,10 @@
 
         <!-- A4 PREVIEW RENDER AREA -->
         <div class="doc-gen-preview-container"
-            style=" overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: #64748b; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 16px 120px 16px; box-sizing: border-box; width: 100%; min-height: 100%; position: relative;">
+            style=" overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: #64748b; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 16px 80px 16px; box-sizing: border-box; width: 100%; min-height: 100%; position: relative;">
             <!-- A4 Paper Container -->
             <div id="doc-preview-paper"
-                style="max-width: 100%; height: auto; aspect-ratio: 1 / 1.414; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 50px 40px 120px 40px; margin: 0 auto; position: relative; flex-shrink: 0; box-sizing: border-box; overflow: hidden; color: #333; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;">
+                style="max-width: 100%; height: auto; aspect-ratio: 1 / 1.414; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 50px 40px 50px 40px; margin: 0 auto; position: relative; flex-shrink: 0; box-sizing: border-box; overflow: hidden; color: #333; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;">
                 <div id="neo-v3-estimate">
                     <!-- Top Area (3 Rows) -->
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
@@ -443,6 +449,11 @@
                     <i data-lucide="printer" style="width: 18px; height: 18px;"></i> 印刷 (AirPrint)
                 </button>
             </div>
+            
+            <button id="btn-preview-save-drive" onclick="if(window.saveToDriveOnly) window.saveToDriveOnly()"
+                style="width: 100%; margin-top: 8px; margin-bottom: 4px; padding: 10px 0; background: #34A853; color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; display: grid; place-items: center; gap: 6px;">
+                <i data-lucide="cloud-upload" style="width: 16px; height: 16px;"></i> Driveに保存
+            </button>
             <button id="btn-preview-edit" onclick="document.getElementById('modal-doc-preview').classList.add('hidden')"
                 style="width: 100%; padding: 8px 0; background: transparent; border: none; color: var(--text-muted); font-size: 14px; font-weight: 600; transition: color 0.2s;">
                 修正する
@@ -707,3 +718,31 @@
         </div>
     </div>
 
+<!-- EXTRACTED modal-drive-picker -->
+<div id="modal-drive-picker" class="half-modal-overlay hidden" style="backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.6); z-index: 10005 !important; position: fixed; top: 0; left: 0; right: 0; bottom: 0;">
+    <div class="half-modal-content" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 75vh; background: var(--bg-color); border-radius: 24px 24px 0 0; padding: 24px; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+        <style>
+            #modal-drive-picker:not(.hidden) .half-modal-content { transform: translateY(0); }
+        </style>
+        <div class="half-modal-handle" style="width: 40px; height: 5px; background: #cbd5e1; border-radius: 3px; margin: 0 auto 16px auto;"></div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="cloud" style="width: 20px; height: 20px; color: #34A853;"></i>
+                <h3 id="drive-picker-title" style="margin: 0; font-size: 16px; font-weight: 700; color: var(--text-main);">Google Drive から引用</h3>
+            </div>
+            <button onclick="document.getElementById('modal-drive-picker').classList.add('hidden')" style="background: rgba(15,23,42,0.05); border: none; width: 32px; height: 32px; border-radius: 16px; display: grid; place-items: center; cursor: pointer;">
+                <i data-lucide="x" style="width: 16px; height: 16px; color: var(--text-main);"></i>
+            </button>
+        </div>
+
+        <div id="drive-picker-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 12px; color: var(--text-muted);">
+            <i data-lucide="loader-2" class="spin" style="width: 32px; height: 32px; color: #34A853; animation: spin 1s linear infinite;"></i>
+            <span style="font-size: 14px; font-weight: 500;">フォルダをスキャン中...</span>
+        </div>
+
+        <div id="drive-picker-list" style="display: none; flex-direction: column; gap: 12px; overflow-y: auto; flex: 1; padding-bottom: 40px;">
+            <!-- Rendered by JS -->
+        </div>
+    </div>
+</div>

@@ -30,6 +30,8 @@
             </button>
         </div>
     </div>
+
+    <!-- AI API Key configuration removed. Using internal zero-config system key. -->
     <div class="settings-group" style="margin-bottom: var(--spacing-xl); text-align: left;">
         <h3 style="font-size: var(--text-small); color: var(--text-muted); font-weight: 600; margin-bottom: var(--spacing-sm);">Neo+ 分散型クラウド連携 (BYOC)</h3>
         <div style="background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-primary-border); border-radius: 12px; padding: var(--spacing-md); font-size: 13px; color: var(--text-main); margin-bottom: var(--spacing-md); line-height: 1.5;">
@@ -45,16 +47,48 @@
             <input type="radio" name="cloudSync" value="icloud" checked style="accent-color: var(--accent-neo-blue);">
         </label>
         
-        <label id="label-gdrive-sync" style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer; position: relative;">
-            <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
-                <i data-lucide="triangle" style="width: 20px; height: 20px; color: #34A853;"></i>
-                <span style="font-size: 14px; font-weight: 500;">Google Drive</span>
+        <label id="label-gdrive-sync" style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #EFF3F4; cursor: pointer; position: relative; flex-direction: column; align-items: stretch; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="triangle" style="width: 20px; height: 20px; color: #34A853;"></i>
+                    <span style="font-size: 14px; font-weight: 500;">Google Drive</span>
+                </div>
+                <input type="radio" name="cloudSync" value="gdrive" id="radio-gdrive-sync" style="accent-color: var(--accent-neo-blue);">
             </div>
-            <input type="radio" name="cloudSync" value="gdrive" id="radio-gdrive-sync" style="accent-color: var(--accent-neo-blue);">
+
+            <!-- GIS Connection Button Panel -->
+            <div id="gdrive-connection-panel" style="padding: 12px; background: rgba(52, 168, 83, 0.05); border-radius: 8px; border: 1px dashed rgba(52, 168, 83, 0.3); display: none; margin-top: 8px;">
+                <div id="gdrive-status-disconnected">
+                    <!-- 1-Click Connection Mode: ID handled internally via Vercel ENVs -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="folder-search-2" style="width: 16px; height: 16px; color: #34A853;"></i>
+                            <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">Advanced: Drive読込 (引用)</span>
+                        </div>
+                        <label style="position: relative; display: inline-block; width: 40px; height: 20px;">
+                            <input type="checkbox" id="toggle-gdrive-advanced" onchange="if(this.checked && window.NeoCloudSync) { window.NeoCloudSync.requestDriveAccess(); } else if(!this.checked && window.NeoCloudSync) { window.NeoCloudSync.disconnect(); }" style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 20px;">
+                                <span class="slider-knob" style="position: absolute; content: ''; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+                            </span>
+                        </label>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); text-align: left; margin: 4px 0 0 0;">保存だけでなく、プロジェクト画面で自身のDriveからの資料引用機能がONになります。（※保存機能単体はボタンから直接起動します）</p>
+                </div>
+                
+                <div id="gdrive-status-connected" style="display: none; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="position: relative; display: flex; width: 10px; height: 10px;">
+                            <span style="position: relative; display: inline-flex; border-radius: 9999px; width: 10px; height: 10px; background-color: #34A853;"></span>
+                        </span>
+                        <span style="font-size: 13px; font-weight: 600; color: #34A853;">接続済み (Sync Active)</span>
+                    </div>
+                    <button onclick="if(window.NeoCloudSync) window.NeoCloudSync.disconnect()" style="background: transparent; border: 1px solid rgba(0,0,0,0.1); padding: 4px 8px; border-radius: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer;">切断</button>
+                </div>
+            </div>
 
             <!-- BYOC Dynamic Loading Overlay -->
-            <div id="gdrive-loading-overlay" class="hidden" style="position: absolute; top:0; left:0; right:0; bottom:0; background: var(--bg-color); display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between; z-index: 10;">
-                <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+            <div id="gdrive-loading-overlay" class="hidden" style="position: absolute; top:0; left:0; right:0; bottom:0; background: var(--bg-color); display: flex; align-items: center; justify-content: center; z-index: 10; border-radius: 6px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
                     <i data-lucide="loader-2" class="spin" style="width: 20px; height: 20px; color: #34A853; animation: spin 1s linear infinite;"></i>
                     <span style="font-size: 14px; font-weight: 500; color: #34A853;">Google Drive に接続中...</span>
                 </div>

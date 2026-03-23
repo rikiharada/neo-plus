@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   }
 
   const { prompt, config } = body || {};
-  const modelId = req.query.model || 'gemini-3-flash-preview';
+  const modelId = req.query.model || 'gemini-flash-latest';
   
   // Securely retrieve API Key from environment or fallback to legacy key
   const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || 'AIzaSyDlsYWXwU12EOu9b8ylMwYpIBG_NpdJFq4';

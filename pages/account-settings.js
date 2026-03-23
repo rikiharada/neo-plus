@@ -6,14 +6,43 @@
 export function initAccountSettings() {
     console.log("[Neo Account Settings] Initializing...");
 
+    _restoreGDriveState();
     bindCloudSyncEvents();
     bindStampOverlayControls();
-    
-    // Lucide icons re-render for settings view
+
     if (window.lucide) {
         window.lucide.createIcons();
     }
 }
+
+/** Restore Google Drive UI state from localStorage on every settings page open */
+function _restoreGDriveState() {
+    const panel      = document.getElementById('gdrive-connection-panel');
+    // 1-Click Flow: Client ID is safely wrapped inside googleDrive.js
+
+    // Restore connected/disconnected display
+    const token  = localStorage.getItem('neo_cloud_token');
+    const expiry = parseInt(localStorage.getItem('neo_token_expiry') || '0', 10);
+    const isValid = token && expiry > Date.now();
+
+    if (panel) panel.style.display = 'block';
+
+    if (isValid) {
+        // Already connected — re-init GIS silently and show connected state
+        _initGISWithSavedId(() => {});
+        if (window.NeoCloudSync) window.NeoCloudSync.updateUIConnectionState(true);
+    } else {
+    if (window.NeoCloudSync) window.NeoCloudSync.updateUIConnectionState(false);
+    }
+}
+
+/** Init GIS synchronously for 1-click binding */
+function _initGISWithSavedId(onToken) {
+    if (!window.NeoCloudSync) return;
+    window.NeoCloudSync.initGIS(onToken);
+}
+
+// 1-click flow implies no explicit ID saving necessary.
 
 function bindCloudSyncEvents() {
     const radioGdrive = document.getElementById('radio-gdrive-sync');

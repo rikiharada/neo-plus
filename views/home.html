@@ -1,101 +1,66 @@
 <div id="view-dash" class="view hidden" style="background-color: var(--bg-color); display: flex; flex-direction: column; height: 100%; min-height: 100vh;">
     <!-- Global header injected by app.js -> lib/components.js -->
-    <!-- Timeline Content Area -->
-    <div style="flex: 1; overflow-y: auto; padding-bottom: 90px;">
-        <!-- Trend Graph Placeholder -->
-        <div style="padding: 16px; border-bottom: 1px solid var(--btn-secondary-border);">
-            <div style="height: 140px; border-radius: 12px; background: rgba(29, 155, 240, 0.05); border: 1px solid rgba(29, 155, 240, 0.25); display: grid; place-items: center; color: var(--accent-neo-blue); flex-direction: column; gap: 8px;">
-                <i data-lucide="bar-chart-2" style="width: 24px; height: 24px;"></i>
-                <span style="font-size: 13px; font-weight: 600;">ビジネス・トレンド解析 (Syncing...)</span>
+    <!-- Timeline Content Area — padding-bottom reserves space for the global fixed cockpit -->
+    <div class="dash-scroll-area">
+        <!-- 初回アクセス or その日の初回ホーム表示: Neo 立ち絵風 + 大きな吹き出し -->
+        <div id="neo-cockpit-welcome" class="neo-cockpit-welcome hidden" role="region" aria-label="Neoからのメッセージ" aria-hidden="true">
+            <div class="neo-cockpit-welcome-inner">
+                <div class="neo-cockpit-welcome-art" aria-hidden="true">
+                    <img src="img/neo_avatar.jpg" alt="" class="neo-cockpit-standee"
+                        width="112" height="168"
+                        onerror="this.style.display='none'">
+                </div>
+                <div class="neo-cockpit-welcome-bubble-wrap">
+                    <button type="button" class="neo-cockpit-welcome-dismiss" id="neo-cockpit-welcome-dismiss" aria-label="メッセージを閉じる">×</button>
+                    <p class="neo-cockpit-welcome-msg" id="neo-cockpit-welcome-msg">今すぐ入力してみて！</p>
+                    <p class="neo-cockpit-welcome-sub">下のコックピットに話しかけるだけで、経費やプロジェクトを記録できます。</p>
+                </div>
             </div>
         </div>
 
-        <!-- Transaction Feed -->
-        <div id="cockpit-timeline-feed" style="display: flex; flex-direction: column;">
-            
-            <!-- Timeline Item Mock 1 -->
-            <div style="padding: 16px; border-bottom: 1px solid var(--btn-secondary-border); display: flex; gap: 12px; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='var(--btn-secondary-bg)'" onmouseout="this.style.background='transparent'">
-                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--btn-secondary-bg); display: grid; place-items: center; flex-shrink: 0;">
-                    <i data-lucide="receipt" style="color: var(--text-muted); width: 20px; height: 20px;"></i>
-                </div>
-                <div style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
-                        <span style="font-weight: 700; color: var(--text-main); font-size: 15px;">コーナンで木材</span>
-                        <span style="font-size: 12px; color: var(--text-muted);">2h</span>
-                    </div>
-                    <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4;">
-                        AI: 「材料費」として自動仕訳済み。領収書スキャンは完了しています。
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 16px; font-weight: 700; color: var(--text-main);">¥ 12,400</span>
-                        <div style="display: flex; gap: 16px; color: var(--text-muted);">
-                            <i data-lucide="message-circle" style="width: 16px; height: 16px;"></i>
-                            <i data-lucide="repeat" style="width: 16px; height: 16px;"></i>
-                            <i data-lucide="heart" style="width: 16px; height: 16px;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Timeline Item Mock 2 -->
-            <div style="padding: 16px; border-bottom: 1px solid var(--btn-secondary-border); display: flex; gap: 12px; transition: background 0.2s; cursor: pointer;" onmouseover="this.style.background='var(--btn-secondary-bg)'" onmouseout="this.style.background='transparent'">
-                <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); display: grid; place-items: center; flex-shrink: 0;">
-                    <i data-lucide="trending-up" style="color: #10b981; width: 20px; height: 20px;"></i>
-                </div>
-                <div style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
-                        <span style="font-weight: 700; color: var(--text-main); font-size: 15px;">A社 3月分売上</span>
-                        <span style="font-size: 12px; color: var(--text-muted);">5h</span>
-                    </div>
-                    <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4;">
-                        入金確認。「売上高」に反映し、当月の目標達成率が85%に到達しました。
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 16px; font-weight: 700; color: #10b981;">+ ¥ 450,000</span>
-                        <div style="display: flex; gap: 16px; color: var(--text-muted);">
-                            <i data-lucide="message-circle" style="width: 16px; height: 16px;"></i>
-                            <i data-lucide="repeat" style="width: 16px; height: 16px;"></i>
-                            <i data-lucide="heart" style="width: 16px; height: 16px;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- Premium Multi-Modal Message Box (Floating Card) -->
-    <div id="neo-cockpit"
-        style="width: 100%; position: sticky; bottom: 90px; background: transparent; z-index: 900; display: block; padding: 8px 16px 12px 16px;">
-
-        <!-- Floating Card -->
-        <div style="background: var(--bg-color); border: 1px solid var(--btn-secondary-border); border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 6px rgba(0,0,0,0.06); overflow: hidden; position: relative;">
+        <!-- COCKPIT REPLACED TREND GRAPH -->
+        <div id="neo-cockpit" style="
+            display: block;
+            position: relative;
+            margin: 16px;
+            border-radius: 20px;
+            background: var(--chat-input-bg, rgba(24, 24, 28, 0.82));
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05),
+                        0 1px 0 rgba(255,255,255,0.05) inset, 0 0 0 1px rgba(255,255,255,0.05);
+            transition: box-shadow 0.25s ease, transform 0.25s ease;
+            overflow: hidden;">
 
             <!-- Trinity Auto-Input Preview -->
             <div id="trinity-preview"
                 style="display: flex; flex-wrap: wrap; gap: 5px; padding: 10px 16px 6px 16px; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; align-items: center; max-width: 100%;">
                 <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.1em; flex-shrink: 0;">DETECTED:</span>
-                <!-- タイトル -->
                 <span class="badge" style="background: rgba(29,155,240,0.12); color: #1D9BF0; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: inline-flex; align-items: center; gap: 3px; max-width: 180px;"><i data-lucide="tag" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-title" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</span></span>
-                <!-- 場所 -->
                 <span class="badge" id="preview-loc-badge" style="background: rgba(248,113,113,0.12); color: #f87171; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="map-pin" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-loc">-</span></span>
-                <!-- 日付 -->
                 <span class="badge" id="preview-date-badge" style="background: rgba(52,211,153,0.12); color: #34d399; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="calendar" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-date">-</span></span>
-                <!-- カテゴリー -->
                 <span class="badge" id="preview-cat-badge" style="background: rgba(251,191,36,0.12); color: #f59e0b; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="layers" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-cat">-</span></span>
-                <!-- 金額 -->
                 <span class="badge" id="preview-amount-badge" style="background: rgba(16,185,129,0.12); color: #10b981; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px; font-weight: 700;"><i data-lucide="coins" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-amount">-</span></span>
-                <!-- 固有名詞 -->
                 <span class="badge" id="preview-entity-badge" style="background: rgba(139,92,246,0.12); color: #8b5cf6; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="user" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-entity">-</span></span>
-                <!-- 売上/収入フラグ -->
                 <span class="badge" id="preview-revenue-badge" style="background: rgba(251,146,60,0.12); color: #fb923c; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px; font-weight: 700;"><i data-lucide="trending-up" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-revenue">売上</span></span>
-                <!-- 書類関連 -->
                 <span class="badge" id="preview-doc-badge" style="background: rgba(6,182,212,0.12); color: #06b6d4; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="file-text" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-doc">-</span></span>
             </div>
 
-            <textarea id="main-instruction-input" data-testid="dash-main-input" class="form-control"
-                placeholder="CEO、今日はどのプロジェクトを進めますか？"
-                style="width: 100%; border: none; padding: 14px 16px 8px 16px; background: transparent; color: var(--text-main); font-size: 14px; resize: none; min-height: 72px; line-height: 1.6; outline: none; transition: all 0.3s ease; box-sizing: border-box;"></textarea>
+            <!-- BRAND TAGLINE -->
+            <div style="text-align: center; margin-top: 8px; margin-bottom: -4px;">
+                <span style="font-size: 11px; font-weight: 600; color: var(--accent-neo-blue); letter-spacing: 0.05em; opacity: 0.9;">あなたの手のひらに、安心のマネーマネジメントを。</span>
+            </div>
+
+            <!-- 入力欄の左にマイク（SpeechRecognition / タップで開始・停止） -->
+            <div class="cockpit-input-row">
+                <button type="button" id="btn-voice" data-testid="dash-btn-voice" class="btn-cockpit-mic btn-mic" title="音声入力"
+                    aria-label="音声入力">
+                    <i data-lucide="mic" style="width: 20px; height: 20px;"></i>
+                </button>
+                <textarea id="main-instruction-input" data-testid="dash-main-input" class="form-control cockpit-instruction-textarea"
+                    placeholder="今日はどのプロジェクトを進めますか？"
+                    rows="2"></textarea>
+            </div>
 
             <!-- Action Chips -->
             <div id="cockpit-action-chips"
@@ -115,26 +80,16 @@
 
             <div id="cockpit-tools"
                 style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; padding: 8px 12px; width: 100%; box-sizing: border-box;">
-
                 <!-- Hidden OCR Input -->
                 <input type="file" id="ocr-upload" accept="image/*" style="display: none;">
-
-                <!-- [📷] カメラアイコン -->
+                <!-- [📷] カメラ -->
                 <button id="btn-camera" data-testid="dash-btn-camera" title="レシート読込 (OCR)"
                     style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; min-width: 40px; min-height: 40px; padding: 8px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
                     onmouseover="this.style.color='var(--text-main)';" onmouseout="this.style.color='var(--text-muted)';">
                     <i data-lucide="camera" style="width: 19px; height: 19px;"></i>
                 </button>
-
                 <div style="display: grid; grid-auto-flow: column; align-items: center; gap: 4px;">
-                    <!-- [🎤] マイクアイコン -->
-                    <button id="btn-voice" data-testid="dash-btn-voice" title="音声入力 (Push-To-Talk)"
-                        style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; min-width: 40px; min-height: 40px; padding: 8px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
-                        onmouseover="this.style.color='var(--text-main)';" onmouseout="this.style.color='var(--text-muted)';">
-                        <i data-lucide="mic" style="width: 19px; height: 19px;"></i>
-                    </button>
-
-                    <!-- [✈︎] 送信ボタン -->
+                    <!-- [✈︎] 送信 -->
                     <button id="btn-send" data-testid="dash-btn-send" title="送信"
                         style="background: var(--accent-neo-blue); color: white; border: none; border-radius: 50%; min-width: 40px; min-height: 40px; display: grid; place-items: center; cursor: pointer; box-shadow: 0 3px 10px rgba(29, 155, 240, 0.40); transition: transform 0.15s, box-shadow 0.15s;"
                         onmouseover="this.style.transform='scale(1.07)'; this.style.boxShadow='0 5px 16px rgba(29,155,240,0.5)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 3px 10px rgba(29,155,240,0.40)';">
@@ -143,5 +98,16 @@
                 </div>
             </div>
         </div>
+
+        <!-- Transaction Feed — populated by window.renderCockpitFeed() in home.js -->
+        <div id="cockpit-timeline-feed" style="display: flex; flex-direction: column;"></div>
+
+        <!-- GLOBAL FOOTER -->
+        <div style="padding: 40px 16px 80px 16px; text-align: center; opacity: 0.5;">
+            <p style="font-size: 11px; color: var(--text-muted); margin: 0; letter-spacing: 0.05em; font-weight: 500;">あなたの手のひらに、安心のマネーマネジメントを。</p>
+            <p style="font-size: 10px; color: var(--text-muted); margin: 6px 0 0 0;">&copy; Neo+ AI Business System</p>
+        </div>
     </div>
+    <!-- #neo-cockpit is a global fixed element defined in index.html.
+         It is shown/hidden by switchView() and is never a child of this view. -->
 </div>

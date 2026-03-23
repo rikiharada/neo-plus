@@ -6,31 +6,72 @@
 // Format numbers
 const fmt = new Intl.NumberFormat('ja-JP');
 
+// ── localStorage keys for user-configurable wallet targets ──────────
+const _WALLET_KEYS = {
+    targetProfit: 'neo_wallet_target_profit',
+    fixedCosts:   'neo_wallet_fixed_costs',
+    investment:   'neo_wallet_investment',
+};
+
+function _loadWalletConfig() {
+    return {
+        targetMonthlyProfit: Number(localStorage.getItem(_WALLET_KEYS.targetProfit)) || 1000000,
+        fixedCosts:          Number(localStorage.getItem(_WALLET_KEYS.fixedCosts))   || 120000,
+        investment:          Number(localStorage.getItem(_WALLET_KEYS.investment))   || 475000,
+    };
+}
+
+function _saveWalletConfig(cfg) {
+    localStorage.setItem(_WALLET_KEYS.targetProfit, cfg.targetMonthlyProfit);
+    localStorage.setItem(_WALLET_KEYS.fixedCosts,   cfg.fixedCosts);
+    localStorage.setItem(_WALLET_KEYS.investment,   cfg.investment);
+}
+
+/** Populate the edit inputs with current saved values */
+function _populateConfigInputs(cfg) {
+    const tp = document.getElementById('input-target-profit');
+    const fc = document.getElementById('input-fixed-costs');
+    const iv = document.getElementById('input-investment');
+    if (tp) tp.value = cfg.targetMonthlyProfit;
+    if (fc) fc.value = cfg.fixedCosts;
+    if (iv) iv.value = cfg.investment;
+}
+
+/** Compact display helper: ¥1,200,000 → ¥1.2M / ¥120k */
+function _fmtShort(n) {
+    if (n >= 1_000_000) return `¥${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (n >= 1_000)     return `¥${Math.round(n / 1000)}k`;
+    return `¥${fmt.format(n)}`;
+}
+
 export function initWalletView() {
     console.log("[Neo Wallet] Initializing...");
-    
+
     // Subscribe to GlobalStore changes to keep wallet updated
     if (window.GlobalStore) {
         window.GlobalStore.subscribe(renderWalletContent);
     }
-    
+
+    // Populate edit inputs with saved config BEFORE render
+    _populateConfigInputs(_loadWalletConfig());
+
     // Initial Render
     renderWalletContent();
-    
+
     // Re-initialize icons
     if (window.lucide) {
         window.lucide.createIcons();
     }
-    
+
     bindWalletEvents();
 }
 
 function renderWalletContent() {
     if (!window.GlobalStore) return;
     const state = window.GlobalStore.getState();
-    const transactions = state.transactions || [];
+    const transactions = state.activities || [];
     const projects = state.projects || [];
-    const config = window.GlobalStore.userConfig || { targetMonthlyProfit: 1000000 };
+    const config = _loadWalletConfig();
 
     // Anti-Hardcoding: Use user's actual data for calculations
     let totalRevenue = 0;
@@ -76,9 +117,19 @@ function renderWalletContent() {
     if (taxPrepEl && taxBarEl) {
         const estimatedTax = currentProfit > 0 ? currentProfit * 0.30 : 0;
         taxPrepEl.textContent = `¥${fmt.format(Math.floor(estimatedTax))}`;
-        // Simple visual bar logic
-        taxBarEl.style.width = Math.min(100, (estimatedTax / 300000) * 100) + '%'; 
+        taxBarEl.style.width = Math.min(100, (estimatedTax / 300000) * 100) + '%';
     }
+
+    // 3b. Update Fixed Costs & Investment displays (from config)
+    const fixedCostsEl = document.getElementById('wallet-fixed-costs-display');
+    const fixedBarEl   = document.getElementById('wallet-fixed-bar');
+    if (fixedCostsEl) fixedCostsEl.textContent = _fmtShort(config.fixedCosts);
+    if (fixedBarEl)   fixedBarEl.style.width = Math.min(100, (config.fixedCosts / totalRevenue) * 100 || 40) + '%';
+
+    const investmentEl  = document.getElementById('wallet-investment-display');
+    const investBarEl   = document.getElementById('wallet-investment-bar');
+    if (investmentEl) investmentEl.textContent = _fmtShort(config.investment);
+    if (investBarEl)  investBarEl.style.width = Math.min(100, (config.investment / config.targetMonthlyProfit) * 100 || 85) + '%';
 
     // 4. Update Summary Text
     const summaryEl = document.getElementById('wallet-tax-summary');
@@ -130,7 +181,27 @@ function bindWalletEvents() {
     const btnPdf = document.getElementById('btn-export-pdf-grid');
     if (btnPdf) {
         btnPdf.addEventListener('click', () => {
-             if (window.showNeoToast) window.showNeoToast('success', 'PDFエクスポート準備完了');
+            if (window.showNeoToast) window.showNeoToast('success', 'PDFエクスポート準備完了');
+        });
+    }
+
+    // Save wallet config from edit inputs
+    const btnSave = document.getElementById('btn-save-wallet-config');
+    if (btnSave) {
+        btnSave.addEventListener('click', () => {
+            const tp = Number(document.getElementById('input-target-profit')?.value) || 1000000;
+            const fc = Number(document.getElementById('input-fixed-costs')?.value)   || 120000;
+            const iv = Number(document.getElementById('input-investment')?.value)    || 475000;
+
+            _saveWalletConfig({ targetMonthlyProfit: tp, fixedCosts: fc, investment: iv });
+
+            // Re-render with new values
+            renderWalletContent();
+
+            if (window.showNeoToast) window.showNeoToast('success', '設定を保存しました');
         });
     }
 }
+
+// Expose globally for direct HTML use if needed
+window.saveWalletConfig = () => document.getElementById('btn-save-wallet-config')?.click();

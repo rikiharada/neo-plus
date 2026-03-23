@@ -356,7 +356,7 @@ async function extractTagsWithLLM(text) {
 
     if (!needsLLM) return layer1;
 
-    const apiKey = (typeof TIER_1_KEY !== 'undefined') ? TIER_1_KEY : null;
+    const apiKey = (typeof getGeminiApiKey === 'function') ? getGeminiApiKey() : null;
     if (!apiKey) return layer1;
 
     try {
@@ -395,7 +395,7 @@ async function extractTagsWithLLM(text) {
 出力: {"amounts":[{"label":"材料費","value":300000},{"label":"外注費","value":200000},{"label":"交通費","value":50000}],"amount":550000,"category":"材料費","intent":"ADD_EXPENSE","isRevenue":false,"date":null,"location":null,"projectName":"工事","entities":[],"docType":null}`;
 
         const resp = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

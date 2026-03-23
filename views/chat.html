@@ -1,6 +1,6 @@
-        <div id="view-chat" class="view hidden" style="background-color: var(--bg-color); display: flex; flex-direction: column; height: 100%;">
-            <!-- チャットヘッダー: テーマ対応 -->
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; position: sticky; top: 0; background: var(--chat-header-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); z-index: 20; border-bottom: 1px solid var(--chat-header-border);">
+        <div id="view-chat" class="view hidden" style="background-color: var(--bg-color);">
+            <!-- チャットヘッダー: sticky 無し（スクロールは #chat-messages のみ）css/chat.css .chat-header -->
+            <header class="chat-header" role="banner">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <img src="img/neo_avatar.jpg" alt="Neo" onerror="this.src=''; this.alt='N';" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent-neo-blue); object-fit: cover; box-shadow: 0 0 10px rgba(0,122,255,0.25);">
                     <div style="display: flex; flex-direction: column;">
@@ -12,53 +12,53 @@
                     <button class="theme-toggle" aria-label="Toggle Theme" style="background: transparent; color: var(--text-muted); border: none; cursor: pointer; padding: 4px;"><i data-lucide="sun" class="icon-sun"></i><i data-lucide="moon" class="icon-moon" style="display: none;"></i></button>
                     <button onclick="window.switchView('view-dash')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;"><i data-lucide="layout-dashboard" style="width: 20px; height: 20px;"></i></button>
                 </div>
-            </div>
+            </header>
 
-            <!-- Content Area -->
-            <div class="content-area" style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;">
-
-                <!-- スクロール可能なメッセージエリア -->
-                <div id="chat-messages" class="chat-scroll-area" style="flex: 1; overflow-y: auto;">
+            <!-- メッセージスクロールエリア (入力ボックスは fixed + visualViewport 連動) -->
+            <div class="content-area">
+                <div id="chat-messages" class="chat-scroll-area">
                     <!-- appendChatMessage() によって動的に追加 -->
                 </div>
+            </div>
 
-                <!-- 固定入力エリア: テーマ対応 -->
-                <div id="chat-input-container" class="chat-input-area" style="width: 100%; z-index: 10; padding: 6px 12px calc(env(safe-area-inset-bottom) + 10px) 12px; background: var(--chat-input-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--chat-input-border);">
-                    <div style="background: transparent; border: none; padding: 0 4px; display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 8px; position: relative;">
-                        <!-- [📷] カメラアイコン (Left side) -->
-                        <button id="btn-chat-camera" title="レシート読込 (OCR)"
-                            style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
+            <!-- ── 浮遊する固定入力エリア: ナビバー上に常時表示 ── -->
+            <div id="chat-input-container" class="chat-input-floating">
+                <div style="display: grid; grid-template-columns: auto 1fr auto; align-items: end; gap: 8px; position: relative;">
+                    <!-- [📷] カメラアイコン -->
+                    <button id="btn-chat-camera" title="レシート読込 (OCR)"
+                        style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s; flex-shrink: 0;"
+                        onmouseover="this.style.color='var(--text-main)';"
+                        onmouseout="this.style.color='var(--text-muted)';">
+                        <i data-lucide="camera" style="width: 20px; height: 20px;"></i>
+                    </button>
+
+                    <div style="display: flex; flex-direction: column; width: 100%; position: relative;">
+                        <!-- 文字数カウンター -->
+                        <span id="chat-char-counter" style="position: absolute; top: -22px; right: 0; font-size: 10px; font-weight: 700; color: var(--text-muted); transition: color 0.2s;">
+                            0 / 400
+                        </span>
+                        <textarea id="chat-input-field" data-testid="chat-main-input" maxlength="400"
+                            placeholder="要点を簡潔に。数字と結論を優先して。"
+                            style="background: transparent; border: none; padding: 10px 0; color: var(--text-main); font-size: 14px; font-family: var(--font-sans); outline: none; width: 100%; resize: none; overflow-y: hidden; min-height: 44px; max-height: 110px; line-height: 1.5; box-sizing: border-box;"
+                            rows="1"
+                            onkeydown="if(event.isComposing || event.keyCode === 229) return; if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); const val = this.value; this.value = ''; window.handleInstruction(val); }"
+                            oninput="window.updateChatCharCounter(this); this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 110) + 'px'; if(this.scrollHeight > 110) { this.style.overflowY = 'auto'; } else { this.style.overflowY = 'hidden'; }"></textarea>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                        <!-- [🎤] マイクアイコン -->
+                        <button id="btn-chat-voice" title="音声入力"
+                            style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
                             onmouseover="this.style.color='var(--text-main)';"
                             onmouseout="this.style.color='var(--text-muted)';">
-                            <i data-lucide="camera" style="width: 20px; height: 20px;"></i>
+                            <i data-lucide="mic" style="width: 20px; height: 20px;"></i>
                         </button>
-                        
-                        <div style="display: flex; flex-direction: column; width: 100%; position: relative;">
-                            <!-- Character Counter HUD -->
-                            <span id="chat-char-counter" style="position: absolute; top: -26px; right: 4px; font-size: 11px; font-weight: 700; color: var(--text-muted); transition: color 0.2s;">
-                                0 / 400
-                            </span>
-                            <textarea id="chat-input-field" data-testid="chat-main-input" maxlength="400" placeholder="要点を簡潔に。数字と結論を優先して。" 
-                                style="background: transparent; border: none; padding: 12px 0; color: var(--text-main); font-size: 14px; font-family: var(--font-sans); outline: none; width: 100%; resize: none; overflow-y: hidden; min-height: 48px; max-height: 120px; line-height: 1.5; box-sizing: border-box;"
-                                rows="1"
-                                onkeydown="if(event.isComposing || event.keyCode === 229) return; if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); const val = this.value; this.value = ''; window.handleInstruction(val); }"
-                                oninput="window.updateChatCharCounter(this); this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; if(this.scrollHeight > 120) { this.style.overflowY = 'auto'; } else { this.style.overflowY = 'hidden'; }"></textarea>
-                        </div>
-                        
-                        <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px;">
-                            <!-- [🎤] マイクアイコン (Right side) -->
-                            <button id="btn-chat-voice" title="音声入力 (Push-To-Talk)"
-                                style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
-                                onmouseover="this.style.color='var(--text-main)';"
-                                onmouseout="this.style.color='var(--text-muted)';">
-                                <i data-lucide="mic" style="width: 20px; height: 20px;"></i>
-                            </button>
-
-                            <!-- [✈︎] 送信アイコン (Right side) -->
-                            <button onclick="const input = document.getElementById('chat-input-field'); const val = input.value; input.value = ''; window.handleInstruction(val);" data-testid="chat-btn-send" style="width: 44px; height: 44px; border-radius: 50%; background: var(--accent-neo-blue); border: none; display: grid; place-items: center; color: white; cursor: pointer; box-shadow: 0 2px 10px rgba(29, 155, 240, 0.3);">
-                                <i data-lucide="send" style="width: 18px; height: 18px; stroke-width: 2.5px;"></i>
-                            </button>
-                        </div>
+                        <!-- [✈︎] 送信ボタン -->
+                        <button onclick="const input = document.getElementById('chat-input-field'); const val = input.value; input.value = ''; window.handleInstruction(val);"
+                            data-testid="chat-btn-send"
+                            style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-neo-blue); border: none; display: grid; place-items: center; color: white; cursor: pointer; box-shadow: 0 2px 12px rgba(0,122,255,0.4); flex-shrink: 0;">
+                            <i data-lucide="send" style="width: 17px; height: 17px; stroke-width: 2.5px;"></i>
+                        </button>
                     </div>
                 </div>
             </div>

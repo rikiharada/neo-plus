@@ -1,0 +1,83 @@
+/**
+ * チャット専用レイアウト
+ * --vv-keyboard-inset: pages/chat.js が visualViewport から設定（レイアウト下端から隠れる高さ px）
+ */
+
+#view-chat {
+  padding: 0 !important;
+  min-height: 0 !important;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box;
+}
+
+/* sticky にしない: スクロールは #chat-messages のみ。ヘッダーが動いてメッセージが動かない問題を防ぐ */
+.chat-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  background: var(--chat-header-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 10;
+  border-bottom: 1px solid var(--chat-header-border);
+}
+
+#view-chat .content-area {
+  padding: 0 !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+#view-chat #chat-messages.chat-scroll-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 16px 12px;
+  /* コンポーザー + ナビ or キーボード上の余白 */
+  padding-bottom: calc(max(178px + env(safe-area-inset-bottom, 0px), var(--vv-keyboard-inset, 0px) + 104px));
+}
+
+.chat-input-floating {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  max-width: calc(480px - 24px);
+  margin: 0 auto;
+  z-index: 10050;
+  bottom: calc(max(98px + env(safe-area-inset-bottom, 0px), var(--vv-keyboard-inset, 0px) + 12px));
+  padding: 8px 14px 10px;
+  border-radius: 22px;
+  background: var(--chat-input-bg, rgba(24, 24, 28, 0.82));
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.28),
+    0 4px 12px rgba(0, 0, 0, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.07) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.07);
+  transition: box-shadow 0.25s ease, bottom 0.12s ease-out;
+}
+
+.chat-input-floating:focus-within {
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.32),
+    0 6px 20px rgba(0, 122, 255, 0.15),
+    0 1px 0 rgba(255, 255, 255, 0.10) inset,
+    0 0 0 1px rgba(0, 122, 255, 0.25);
+  transform: translateY(-1px);
+}

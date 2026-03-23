@@ -59,6 +59,44 @@
                 <input type="text" id="doc-subject" class="form-control" placeholder="〇〇工事一式として" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
             </div>
 
+            <!-- 書類番号 -->
+            <div style="width: 100%; margin: 0 0 16px 0; padding: 0;">
+                <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0 0 8px 0; padding: 0; display: block; width: 100%;">書類番号</label>
+                <input type="text" id="doc-doc-number" class="form-control" placeholder="EST-20260321-01" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 14px; font-size: 15px; border: 1.5px solid #cbd5e1; border-radius: 12px; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+            </div>
+
+            <!-- 発行者情報（会社名・住所・社判） -->
+            <div style="width: 100%; margin: 0 0 16px 0; padding: 0;">
+                <button type="button" onclick="const s=document.getElementById('doc-issuer-body');const open=s.style.display!=='none';s.style.display=open?'none':'block';this.querySelector('.issuer-toggle-btn').style.background=open?'#f8fafc':'#fff';this.querySelector('.issuer-arrow').style.transform=open?'rotate(0deg)':'rotate(180deg)';" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:12px;cursor:pointer;font-size:13px;font-weight:700;color:#0f172a;" class="issuer-toggle-btn">
+                    <div style="display:flex;align-items:center;gap:8px;">🏢 発行者情報（会社名・住所・社判）</div>
+                    <span class="issuer-arrow" style="transition:transform 0.2s;font-size:11px;color:#64748b;">▼</span>
+                </button>
+                <div id="doc-issuer-body" style="display:none;padding:16px;background:#fff;border:1.5px solid #cbd5e1;border-top:none;border-radius:0 0 12px 12px;box-sizing:border-box;">
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:6px;">会社名 / 氏名</label>
+                        <input type="text" id="doc-company-name" class="form-control" placeholder="株式会社ネオプラス" oninput="window.saveCompanyInfo()" style="width:100%;box-sizing:border-box;padding:10px 12px;font-size:14px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;color:#0f172a;">
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:6px;">住所</label>
+                        <input type="text" id="doc-company-address" class="form-control" placeholder="〒000-0000 東京都〇〇区..." oninput="window.saveCompanyInfo()" style="width:100%;box-sizing:border-box;padding:10px 12px;font-size:14px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;color:#0f172a;">
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:6px;">電話番号</label>
+                        <input type="tel" id="doc-company-tel" class="form-control" placeholder="03-0000-0000" oninput="window.saveCompanyInfo()" style="width:100%;box-sizing:border-box;padding:10px 12px;font-size:14px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;color:#0f172a;">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:8px;">社判 / 個人印（最大3枚）</label>
+                        <!-- hidden file input for adding seals -->
+                        <input type="file" id="doc-seal-upload-new" accept="image/*" style="display:none;" onchange="window.handleSealUpload(event)">
+                        <!-- seal list: populated by renderSealList() -->
+                        <div id="doc-seal-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
+                        <button type="button" id="doc-seal-add-btn" onclick="document.getElementById('doc-seal-upload-new').click()" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:600;color:#475569;cursor:pointer;">
+                            📎 社判を追加
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- CONDITIONAL: Receipt Inputs -->
             <div id="doc-receipt-inputs" style="display: none; width: 100%; margin: 0 0 16px 0; padding: 0;">
                 <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0 0 8px 0; padding: 0; display: block; width: 100%;">但し書き</label>
@@ -148,6 +186,12 @@
                 <span id="doc-total-calc">¥0</span>
             </div>
 
+            <!-- 備考欄 -->
+            <div style="width: 100%; margin: 20px 0 0 0; padding: 0;">
+                <label style="font-size: 13px; font-weight: 700; color: #475569; margin: 0 0 8px 0; padding: 0; display: block; width: 100%;">備考</label>
+                <textarea id="doc-remarks" class="form-control" rows="3" placeholder="特記事項・支払い条件・注意事項など" oninput="window.updateDocPreview()" style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 14px; font-size: 14px; line-height: 1.6; border: 1.5px solid #cbd5e1; border-radius: 12px; resize: none; background: #fff; color: #0f172a; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);"></textarea>
+            </div>
+
             <!-- ADVANCED SETTINGS TOGGLES -->
             <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0; display: block; gap: 16px;">
                 <div style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center;">
@@ -186,7 +230,7 @@
 
             <!-- BOTTOM SECTION: CONFIRM BUTTON -->
             <div style="width: 100%; padding: 20px 0; margin: 0; box-sizing: border-box; display: flex; justify-content: center;">
-                <button onclick="document.getElementById('modal-doc-preview').classList.remove('hidden')" style="display: block; width: 90%; margin: 30px auto; background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; border: none; border-radius: 12px; padding: 18px; font-size: 16px; font-weight: 700; text-align: center; box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25), inset 0 2px 4px rgba(255,255,255,0.15); transition: transform 0.2s, box-shadow 0.2s;">
+                <button type="button" onclick="window.openDocGenPreview()" style="display: block; width: 90%; margin: 30px auto; background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; border: none; border-radius: 12px; padding: 18px; font-size: 16px; font-weight: 700; text-align: center; box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25), inset 0 2px 4px rgba(255,255,255,0.15); transition: transform 0.2s, box-shadow 0.2s;">
                     プレビュー →
                 </button>
             </div>

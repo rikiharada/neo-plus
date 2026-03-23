@@ -14,9 +14,11 @@
     </style>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="/css/index.css?v=FINAL_FORCE_RECOVERY_31">
-    <link rel="stylesheet" href="/css/layout.css?v=FINAL_FORCE_RECOVERY_31">
-    <link rel="stylesheet" href="/css/components.css?v=FINAL_FORCE_RECOVERY_31">
+    <link rel="stylesheet" href="/css/index.css?v=20260321-13">
+    <link rel="stylesheet" href="/css/layout.css?v=20260321-13">
+    <link rel="stylesheet" href="/css/chat.css?v=20260322-1">
+    <link rel="stylesheet" href="/css/desk.css?v=20260323-1">
+    <link rel="stylesheet" href="/css/components.css?v=20260321-13">
 
     <!-- Supabase SDK & Config -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -27,7 +29,7 @@
     <script src="/js/industries.js?v=2.6.5" defer></script>
     <script src="/js/GoldenKnowledge.js" defer></script>
     <!-- 8-Category Tag Extraction Engine (Layer 1 + Layer 2 LLM) -->
-    <script src="/pages/parseInputToData.js?v=1.0.0" defer></script>
+    <script src="/pages/parseInputToData.js?v=20260321-1" defer></script>
     
     <!-- Cloud Integration: Google Identity Services (GIS) Zero-Server Auth -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -64,12 +66,12 @@
 
     <!-- AUTHENTICATION GATEKEEPER (Phase 5) -->
     <div id="view-auth" class="hidden"
-        style="display: none; height: 100vh; background-color: var(--bg-color); place-items: center; padding: 24px;">
+        style="display: none; min-height: 100vh; background-color: var(--bg-color); place-items: center; padding: 24px; overflow-y: auto;">
         <div style="width: 100%; max-width: 400px; text-align: center;">
             <div style="margin-bottom: 40px;">
                 <h1 class="title" style="font-size: 36px; justify-content: center; margin-bottom: 8px;">Neo<sup
                         class="title-plus">+</sup></h1>
-                <p style="color: var(--text-muted); font-size: 14px;">CEO専用 AIコックピットへようこそ</p>
+                <p style="color: var(--text-muted); font-size: 14px;">あなたの手のひらに、安心のマネーマネジメントを。</p>
             </div>
 
             <div
@@ -106,7 +108,7 @@
         <!-- GLOBAL HEADER injected dynamically by lib/components.js -->
 
         <!-- Main Content Area Container (for the views) -->
-        <main id="main-content" style="position: relative; display: block; height: 100%; min-height: 100vh; padding-bottom: 80px;">
+        <main id="main-content" style="position: relative; display: block; height: 100%; min-height: 100vh; padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));">
 
             <!-- SETUP VIEW (GATEKEEPER V2) -->
             <div id="router-view-setup"></div>
@@ -144,6 +146,9 @@
 
             <!-- NEW: Settings View Router Anchor -->
             <div id="router-view-settings"></div>
+
+            <!-- AI Ledger Desk Router Anchor -->
+            <div id="router-view-desk"></div>
 
             <!-- GLOBAL DOCUMENT GENERATOR MODAL -->
             <div id="document-preview-modal" class="modal-overlay hidden" style="z-index: 99999; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); display: flex; flex-direction: column;">
@@ -297,8 +302,10 @@
     
 
     <!-- Delete Confirm Modal -->
-    
+
     </main>
+
+    <!-- /GLOBAL COCKPIT EXTRACTED TO HOME.HTML -->
 
     <!-- BOTTOM NAV BAR (Visible after setup) -->
     <!-- Removed: Replaced with dynamic JS renderBottomNav() -->
@@ -554,15 +561,15 @@
     </script>
 
     <!-- Core App Scripts -->
-    <script type="module" src="/lib/utils.js"></script>
-    <script type="module" src="/lib/cloud/googleDrive.js"></script>
-    <script src="/js/store.js?v=NEO_SAFE_11"></script>
-    <script src="/js/gemini.js?v=NEO_SAFE_PHASE4"></script>
-    <script src="/js/neo-brain.js?v=NEO_SAFE_11"></script>
-    <script src="/js/doc-engine.js?v=NEO_SAFE_11"></script>
-    <script src="/js/i18n.js?v=neo-99-RECOVERY11"></script>
-    <script type="module" src="/js/app.js?v=NEO_SAFE_11"></script>
-    <script type="module" src="/pages/chat.js?v=ROUTER_1"></script>
+    <script type="module" src="/lib/utils.js?v=NEO_SAFE_PHASE28"></script>
+    <script type="module" src="/lib/cloud/googleDrive.js?v=NEO_SAFE_PHASE28"></script>
+    <script src="/js/store.js?v=NEO_SAFE_PHASE28"></script>
+    <script src="/js/gemini.js?v=NEO_SAFE_PHASE28"></script>
+    <script src="/js/neo-brain.js?v=NEO_SAFE_PHASE28"></script>
+    <script src="/js/doc-engine.js?v=NEO_SAFE_PHASE28"></script>
+    <script src="/js/i18n.js?v=NEO_SAFE_PHASE28"></script>
+    <script type="module" src="/js/app.js?v=NEO_SAFE_PHASE28"></script>
+    <script type="module" src="/pages/chat.js?v=NEO_SAFE_PHASE28"></script>
 </body>
 
 
