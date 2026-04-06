@@ -1,16 +1,28 @@
-        <div id="view-chat" class="view hidden" style="background-color: var(--bg-color);">
-            <!-- チャットヘッダー: sticky 無し（スクロールは #chat-messages のみ）css/chat.css .chat-header -->
+        <div id="view-chat" class="view hidden" data-view-key="chat" data-view-instance-key="chat" style="background-color: var(--bg-color);">
+            <!-- チャットヘッダー: グローバルヘッダーと統一デザイン -->
             <header class="chat-header" role="banner">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <img src="img/neo_avatar.jpg" alt="Neo" onerror="this.src=''; this.alt='N';" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent-neo-blue); object-fit: cover; box-shadow: 0 0 10px rgba(0,122,255,0.25);">
-                    <div style="display: flex; flex-direction: column;">
-                        <span style="font-size: 15px; font-weight: 700; color: var(--text-main); line-height: 1.2;">Neo<sup style="color: var(--accent-neo-blue);">+</sup></span>
-                        <span id="neo-core-status" style="font-size: 11px; color: var(--text-muted); line-height: 1;">AI Core Active</span>
-                    </div>
+                <div class="chat-header-brand">
+                    <h1 class="title chat-header-title">Neo<sup class="title-plus">+</sup></h1>
                 </div>
-                <div style="display: flex; gap: 12px; align-items: center;">
-                    <button class="theme-toggle" aria-label="Toggle Theme" style="background: transparent; color: var(--text-muted); border: none; cursor: pointer; padding: 4px;"><i data-lucide="sun" class="icon-sun"></i><i data-lucide="moon" class="icon-moon" style="display: none;"></i></button>
-                    <button onclick="window.switchView('view-dash')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;"><i data-lucide="layout-dashboard" style="width: 20px; height: 20px;"></i></button>
+                <div class="chat-header-actions">
+                    <div style="display: grid; grid-auto-flow: column; align-items: center; gap: 10px; color: var(--text-muted);">
+                        <!-- システム稼働インジケーター（グローバルヘッダーと同一） -->
+                        <div class="system-health-indicator"
+                             style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.6); transition: background-color 0.3s ease, box-shadow 0.3s ease;"
+                             title="System Health: Online"></div>
+                        <!-- クラウド同期アイコン -->
+                        <div style="position: relative;">
+                            <i data-lucide="cloud-check" style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;" title="iCloud同期中"></i>
+                            <div class="scan-pulse"></div>
+                        </div>
+                        <!-- 設定ボタン -->
+                        <button class="chat-header-btn"
+                                onclick="window.switchView('view-settings')"
+                                aria-label="アカウント設定"
+                                title="アカウント設定">
+                            <i data-lucide="settings" style="width: 19px; height: 19px; stroke-width: 1.5px;"></i>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -38,7 +50,7 @@
                             0 / 400
                         </span>
                         <textarea id="chat-input-field" data-testid="chat-main-input" maxlength="400"
-                            placeholder="要点を簡潔に。数字と結論を優先して。"
+                            placeholder="テキストを入力"
                             style="background: transparent; border: none; padding: 10px 0; color: var(--text-main); font-size: 14px; font-family: var(--font-sans); outline: none; width: 100%; resize: none; overflow-y: hidden; min-height: 44px; max-height: 110px; line-height: 1.5; box-sizing: border-box;"
                             rows="1"
                             onkeydown="if(event.isComposing || event.keyCode === 229) return; if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); const val = this.value; this.value = ''; window.handleInstruction(val); }"

@@ -14,25 +14,73 @@ import '../lib/supabase-knowledge-client.js';
 loadUserProfile(); // 非同期でSupabaseからも取得（localStorage は即時反映済み）
 
 /** 知識専用クライアントで neo_global_lexicon のみ取得（ユーザーデータ init から分離） */
-async function loadNeoGlobalLexiconFromKnowledge() {
-    const kc = window.supabaseKnowledgeClient;
+async function initKnowledgeSupabase() {
+    const kc = window.supabaseKnowledgeClient || window.supabaseClient;
+    const mainClient = window.supabaseClient;
+    const configuredUrl = window.neoKnowledgeSupabaseUrl || '(unknown)';
+    const configuredMode = window.neoKnowledgeSupabaseMode || '(unknown)';
+    const configuredKeyMasked = window.neoKnowledgeSupabaseKeyMasked || '(unknown)';
+
+    try {
+        const lsUrl = localStorage.getItem('neo_knowledge_supabase_url') || '(empty)';
+        const lsKey = localStorage.getItem('neo_knowledge_supabase_anon_key') || '';
+        const lsKeyMasked = lsKey ? `${lsKey.slice(0, 6)}...${lsKey.slice(-4)} (len=${lsKey.length})` : '(empty)';
+        console.log('[Neo Global Agent][Debug] neo_knowledge_supabase_url(localStorage):', lsUrl);
+        console.log('[Neo Global Agent][Debug] neo_knowledge_supabase_anon_key(localStorage):', lsKeyMasked);
+        console.log('[Neo Global Agent][Debug] resolved knowledge endpoint:', configuredUrl, `(${configuredMode})`, configuredKeyMasked);
+    } catch {
+        /* ignore */
+    }
+
     if (!kc) {
         window.globalLexicon = [];
         return;
     }
-    const { data: lexData, error: lexErr } = await kc
-        .from('neo_global_lexicon')
-        .select('*')
-        .order('frequency', { ascending: false })
-        .limit(500);
-    if (!lexErr && lexData) {
-        window.globalLexicon = lexData;
-        console.log(`[Neo Global Agent] Cached ${window.globalLexicon.length} common business terms (knowledge client).`);
-    } else {
-        window.globalLexicon = [];
-        if (lexErr) console.warn('[Neo Global Agent] Lexicon fetch failed:', lexErr.message);
+
+    const fetchLexicon = async (client, label) => {
+        const { data, error } = await client
+            .from('neo_global_lexicon')
+            .select('*')
+            .order('frequency', { ascending: false })
+            .limit(500);
+        if (!error && data) {
+            window.globalLexicon = data;
+            console.log(`[Neo Global Agent] Cached ${window.globalLexicon.length} common business terms (${label}).`);
+            return true;
+        }
+        return { error };
+    };
+
+    const first = await fetchLexicon(kc, 'knowledge client');
+    if (first === true) return;
+
+    const lexErr = first?.error;
+    const isNetworkError = /Failed to fetch|TypeError|ERR_NAME_NOT_RESOLVED|NetworkError/i.test(String(lexErr?.message || lexErr || ''));
+    if (isNetworkError && mainClient && kc !== mainClient) {
+        console.warn('[Neo Global Agent] Knowledge endpoint fetch failed. Falling back to main Supabase endpoint:', lexErr?.message || lexErr);
+        const second = await fetchLexicon(mainClient, 'main supabase fallback');
+        if (second === true) {
+            window.supabaseKnowledgeClient = mainClient;
+            window.neoKnowledgeSupabaseMode = 'main_runtime_fallback';
+            return;
+        }
     }
+
+    window.globalLexicon = [];
+    if (lexErr) console.warn('[Neo Global Agent] Lexicon fetch failed:', lexErr.message || lexErr);
 }
+
+window.debugNeoKnowledgeConnection = async function debugNeoKnowledgeConnection() {
+    const url = window.neoKnowledgeSupabaseUrl || '(unknown)';
+    const mode = window.neoKnowledgeSupabaseMode || '(unknown)';
+    console.log('[Neo][Knowledge][Debug] url=', url, 'mode=', mode);
+    await initKnowledgeSupabase();
+    return {
+        url,
+        mode,
+        lexiconCount: Array.isArray(window.globalLexicon) ? window.globalLexicon.length : 0
+    };
+};
 
 /** 遅延ロード view HTML（サブパス配信で壊れないよう import.meta.url 基準） */
 function fetchNeoViewHtml(viewName) {
@@ -57,53 +105,6 @@ window.validateUserName = function (name) {
 window.uploadPdfToDrive = uploadPdfToDrive;
 
 // Issue Document Generator payload to Drive
-window.issueInvoiceFromPreview = async function() {
-    const previewContainer = document.querySelector('.invoice-a4');
-    if (!previewContainer) return;
-
-    // Provide visual feedback
-    const btn = document.querySelector('#document-preview-modal header button:last-child');
-    const originalText = btn.textContent;
-    btn.textContent = '保存中...';
-    btn.disabled = true;
-
-    try {
-        if (typeof html2pdf !== 'undefined') {
-            const opt = {
-                margin:       0,
-                filename:     `Invoice_${Date.now()}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-            };
-
-            const pdfWorker = await html2pdf().set(opt).from(previewContainer).outputPdf('blob');
-            const url = await window.uploadPdfToDrive(pdfWorker, `Invoice_${Date.now()}.pdf`);
-            console.log('Invoice successfully uploaded to Google Drive:', url);
-            
-            // Log to chat
-            const cv = document.getElementById('view-chat');
-            if (cv && !cv.classList.contains('hidden')) {
-                const msgs = document.getElementById('chat-messages');
-                if (msgs) {
-                    msgs.insertAdjacentHTML('beforeend', `<div class="chat-message message-neo"><div class="message-bubble">請求書を作成してDriveに保存しました！<br><a href="${url}" target="_blank" style="color:var(--accent-neo-cyan);">[プレビューを開く]</a></div></div>`);
-                    msgs.scrollTop = msgs.scrollHeight;
-                }
-            }
-        } else {
-            console.warn('html2pdf is not loaded. Falling back to native print dialog.');
-            window.print();
-        }
-    } catch (err) {
-        console.error('Invoice Generation failed:', err);
-        alert('請求書の保存に失敗しました: ' + err.message);
-    } finally {
-        btn.textContent = originalText;
-        btn.disabled = false;
-        document.getElementById('document-preview-modal').classList.add('hidden');
-    }
-};
-
 /**
  * 書類プレビュー・書類生成モーダルおよび主要オーバーレイを一括で閉じる。
  * ログアウト時は switchView が走らないため setup.js からも呼ぶ。
@@ -208,6 +209,187 @@ window.neoDangerZoneWipeUserLocalBody = neoDangerZoneWipeUserLocalBody;
 window.loadLocalBody();
 
 /**
+ * Supabase の project_id / projects.id を、mockDB のフォルダ行の id（ローカル）に正規化する。
+ * 数値のローカルIDと _toDbSafeId を使った DB 行の差異で明細が紐づかない問題を防ぐ。
+ */
+window.resolveLocalProjectId = function resolveLocalProjectId(dbPid) {
+    if (dbPid == null || dbPid === '') return dbPid;
+    const projs = window.mockDB?.projects || [];
+    const s = String(dbPid);
+    for (const p of projs) {
+        if (String(p.id) === s) return p.id;
+        if (p._dbSafeId != null && String(p._dbSafeId) === s) return p.id;
+        if (window._toDbSafeId && /^\d+$/.test(String(p.id ?? '')) && String(window._toDbSafeId(p.id)) === s) return p.id;
+    }
+    return dbPid;
+};
+
+/** Supabase の amount（numeric / text / null）を数値に統一 */
+function _parseActivityAmount(v) {
+    if (v == null || v === '') return 0;
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    const n = parseFloat(String(v).replace(/,/g, '').trim());
+    return Number.isFinite(n) ? n : 0;
+}
+// type="module" の dashboard-projects.js / projectdetail-core.js / db-sync.js から参照できるよう公開
+window._parseActivityAmount = _parseActivityAmount;
+
+/**
+ * ウォレット画面の集計・表示（dashboard-projects の renderProjects から load 前にも呼ばれるため window に登録）
+ */
+window.updateWalletDashboard = function updateWalletDashboard(totalProfit) {
+    const mockDB = window.mockDB;
+    if (!mockDB) return;
+
+    const globalProfitEl = document.getElementById('wallet-global-profit');
+    if (globalProfitEl) globalProfitEl.textContent = `¥${totalProfit.toLocaleString()}`;
+
+    let globalRevenue = 0;
+    let globalExpenses = 0;
+
+    mockDB.projects.forEach((proj) => {
+        const invoices = mockDB.documents.filter((d) => d.projectId === proj.id && d.type === 'invoice');
+        if (invoices.length > 0) {
+            globalRevenue += invoices.reduce((acc, curr) => acc + curr.amount, 0);
+        } else {
+            globalRevenue += proj.revenue || 1000000;
+        }
+    });
+
+    mockDB.activities.forEach((t) => {
+        if (!t.is_deleted && t.type !== 'income') {
+            globalExpenses += window._parseActivityAmount(t.amount);
+        }
+    });
+
+    const taxRate = 0.15;
+    const taxEst = Math.max(0, totalProfit * taxRate);
+
+    const taxPrepEl = document.getElementById('wallet-tax-prep');
+    const taxBarEl = document.getElementById('wallet-tax-bar');
+
+    if (taxPrepEl) taxPrepEl.textContent = `¥${Math.round(taxEst).toLocaleString()}`;
+    if (taxBarEl) {
+        const maxTaxTarget = 3000000;
+        const pct = Math.min(100, (taxEst / maxTaxTarget) * 100);
+        taxBarEl.style.width = `${pct}%`;
+    }
+
+    const taxSummaryEl = document.getElementById('wallet-tax-summary');
+    if (taxSummaryEl) {
+        taxSummaryEl.innerHTML = `CEO、現在の売上合計は <strong>¥${globalRevenue.toLocaleString()}</strong>、経費合計は <strong>¥${globalExpenses.toLocaleString()}</strong> です。<br>予測される申告所得は <strong>¥${totalProfit.toLocaleString()}</strong> となります。連携用のCSV出力が可能です。`;
+    }
+
+    const cfContainer = document.getElementById('wallet-cf-container');
+    if (cfContainer) {
+        cfContainer.innerHTML = '';
+        const today = new Date();
+        const forecastMonths = [
+            `${(today.getMonth() + 2) % 12 || 12}月`,
+            `${(today.getMonth() + 3) % 12 || 12}月`,
+            `${(today.getMonth() + 4) % 12 || 12}月`
+        ];
+
+        forecastMonths.forEach((m, idx) => {
+            const isCurrent = idx === 0;
+            const incomeH = 60 + Math.random() * (40 - idx * 10);
+            const expH = 30 + Math.random() * 20;
+            cfContainer.innerHTML += `
+                    <div class="cf-bar-group ${isCurrent ? 'active' : ''}" style="${!isCurrent ? 'opacity: 0.7' : ''}">
+                        <div class="cf-bar income" style="height: ${incomeH}%;"></div>
+                        <div class="cf-bar expense" style="height: ${expH}%;"></div>
+                        <span class="cf-label ${isCurrent ? 'active-label' : ''}">${m}</span>
+                    </div>
+                `;
+        });
+
+        const totalPredictions = mockDB.activities.length;
+        const totalCorrections = mockDB.activities.filter((t) => t.is_user_corrected && !t.is_deleted).length;
+
+        let accuracy = 100;
+        if (totalPredictions > 0) {
+            accuracy = Math.round(((totalPredictions - totalCorrections) / totalPredictions) * 100);
+        }
+
+        const accuracyColor = accuracy >= 95 ? '#10b981' : accuracy >= 80 ? '#f59e0b' : '#ef4444';
+
+        cfContainer.insertAdjacentHTML('beforebegin', `
+                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 16px; margin-bottom: 24px; padding: 12px 16px; border-radius: 12px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between;">
+                    <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
+                        <i data-lucide="brain-circuit" style="width: 20px; height: 20px; color: ${accuracyColor};"></i>
+                        <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">AI 学習仕訳精度 (IQ)</span>
+                    </div>
+                    <div style="font-size: 16px; font-weight: 800; color: ${accuracyColor};">
+                        ${accuracy}<span style="font-size: 12px; margin-left: 2px;">%</span>
+                    </div>
+                </div>
+            `);
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    const progressCircle = document.getElementById('wallet-ring-progress');
+    if (progressCircle) {
+        const baseOffset = 628;
+        const target = mockDB.userConfig.targetMonthlyProfit || 1000000;
+        const progress = Math.min(1, Math.max(0, totalProfit / target));
+        const dashOffset = baseOffset - baseOffset * progress;
+        setTimeout(() => {
+            progressCircle.style.strokeDashoffset = dashOffset;
+        }, 50);
+    }
+};
+
+/** 診断ログ用（長すぎる JSON を短縮） */
+function _neoJsonStringifyForLog(obj, maxLen = 3500) {
+    try {
+        const s = JSON.stringify(obj, (_k, v) => (typeof v === 'bigint' ? v.toString() : v));
+        return s.length > maxLen ? `${s.slice(0, maxLen)}…(truncated)` : s;
+    } catch (e) {
+        return `[stringify failed: ${e && e.message ? e.message : e}]`;
+    }
+}
+
+/** 現在の Supabase ユーザー UID（session → getUser）— RLS / user_id 付与に必須 */
+/**
+ * activities.user_id が NULL の行を現在の UID で更新（同一 project_id の孤児行の救済。RLS 許可範囲のみ）
+ */
+/** プロジェクト一覧・ウォレットと明細の「経費」を揃える（income 以外を合算。type 欠損も拾う） */
+/** Supabase activities 行 → mockDB 用（projectId は UI 用のローカル id） */
+/**
+ * リモート取得後も mockDB に残す未同期行を落とさない（GlobalStore Brain Sync 用）
+ */
+window.mergeActivitiesRemoteAndLocal = function mergeActivitiesRemoteAndLocal(localBefore, remoteRows) {
+    const remoteList = (remoteRows || []).map((r) => window.mapActivityRowToMock(r));
+    const remoteIdSet = new Set(remoteList.map((r) => String(r.id)));
+    const localOnly = (Array.isArray(localBefore) ? localBefore : []).filter((loc) => {
+        if (!loc) return false;
+        if (loc.id == null || loc.id === '') return true;
+        return !remoteIdSet.has(String(loc.id));
+    });
+    const merged = [...remoteList, ...localOnly];
+    merged.sort((a, b) => {
+        const ta = new Date(String(a.date || '').replace(/\//g, '-')).getTime();
+        const tb = new Date(String(b.date || '').replace(/\//g, '-')).getTime();
+        return (Number.isNaN(tb) ? 0 : tb) - (Number.isNaN(ta) ? 0 : ta);
+    });
+    return merged;
+};
+
+/**
+ * 経費同期・Realtime 後にプロジェクト詳細を開いていればその場で再描画
+ */
+window._refreshProjectDetailIfOpen = function _refreshProjectDetailIfOpen(projectId) {
+    if (projectId == null || projectId === '') return;
+    try {
+        if (String(window.currentOpenProjectId) !== String(projectId)) return;
+        if (typeof window.openProjectDetail !== 'function') return;
+        window.openProjectDetail(projectId, { navigate: false, skipFetch: false });
+    } catch {
+        /* ignore */
+    }
+};
+
+/**
  * プロジェクト名 → ID（load イベント前から利用可。チャット経由の経費で projectId 欠落を防ぐ）
  */
 window.findProjectIdByName = function (text) {
@@ -271,7 +453,9 @@ window.resolveExpenseProjectId = function (intentLike = {}, hintText = '') {
     id = tryName(quoted);
     if (id != null) return id;
 
-    if (hintText) {
+    const explicitName = String(intentLike.project_name || intentLike.projectName || '').trim();
+    // intent にプロジェクト名が付いているのに解決できない場合、全文あいまい検索で別フォルダに誤結合しない
+    if (hintText && !explicitName) {
         id = canon(window.findProjectIdByName(hintText));
         if (id != null) return id;
     }
@@ -279,193 +463,100 @@ window.resolveExpenseProjectId = function (intentLike = {}, hintText = '') {
     id = canon(window.currentOpenProjectId);
     if (id != null) return id;
 
-    if (projects.length === 1) return projects[0].id;
+    // どの条件にも合致しない場合は、アプリ上で一番上の（最も最近参照された）プロジェクトをデフォルト先とする
+    if (projects.length > 0) return projects[0].id;
     return null;
 };
 
 // PostgreSQL integer 型の上限(2^31-1=2,147,483,647)に収まるIDを生成するヘルパー
-// Date.now() はms単位で超過するため、秒単位に変換 + 下8桁をランダム化して衝突回避
+// ms を秒にすると同時に作成した複数レコードの ID が重複するため、剰余でミリ秒の差異を維持する。
 window._toDbSafeId = (localId) => {
     const n = Number(localId);
+    if (Number.isNaN(n)) return localId;
     if (n > 2147483647) {
-        // ms タイムスタンプ → 秒単位に変換して範囲内に収める
-        return Math.floor(n / 1000) % 2000000000 + Math.floor(Math.random() * 1000);
+        // % 2147483647 で上限内に収めつつミリ秒単位の+1を維持する（約24日周期での重複はupsertでカバー）
+        return n % 2147483647;
     }
     return n;
 };
 
-window.insertProject = async (proj) => {
-    // 同じ名前のプロジェクトが既に存在する場合は重複挿入しない
-    const isDuplicate = window.mockDB.projects.some(
-        p => p.name && proj.name && p.name.trim() === proj.name.trim()
-    );
-    if (isDuplicate) {
-        console.warn('[insertProject] Duplicate name detected, skipping insert:', proj.name);
-        return Promise.resolve(proj);
-    }
-    window.mockDB.projects.unshift(proj);
-    window.persistLocalBody();
-
-    window.pendingProjectInserts = window.pendingProjectInserts || {};
-    if (window.supabaseClient) {
-        const safeId = window._toDbSafeId(proj.id);
-        // Brain Sync: Background Async (Fire & Forget), do not block UI
-        window.pendingProjectInserts[proj.id] = window.supabaseClient.from('projects').insert([{
-            id: safeId,
-            name: proj.name,
-            category: proj.category || 'other',
-            color: proj.color || '#8E8E93',
-            status: proj.status || 'active',
-            location: proj.location || '-',
-            created_at: proj.startDate ? new Date(proj.startDate.replace(/-/g, '/')).toISOString() : new Date().toISOString()
-        }]).then(({ error }) => {
-            if (error) console.error('Brain Sync Error (Project):', JSON.stringify(error));
-            else console.log('Brain Sync OK (Project)');
-            delete window.pendingProjectInserts[proj.id];
-        });
-    }
-    return Promise.resolve(proj);
+/** 数値ローカルIDのプロジェクトに Supabase 用の安定した project_id を付与（重複返却時も FK と一致させる） */
+window._attachDbSafeIdIfNeeded = function _attachDbSafeIdIfNeeded(proj) {
+    if (!proj || proj._dbSafeId != null) return;
+    const s = String(proj.id ?? '').trim();
+    if (/^\d+$/.test(s)) proj._dbSafeId = window._toDbSafeId(proj.id);
 };
 
-window.insertTransaction = async (tx) => {
-    if (!window.mockDB.activities) window.mockDB.activities = [];
-
-    let projectId = tx.projectId ?? tx.project_id;
-    if (projectId == null || projectId === '') {
-        const name = tx.projectName || tx.project_name;
-        if (name && typeof window.findProjectIdByName === 'function') {
-            projectId = window.findProjectIdByName(name);
-        }
+/**
+ * activities 挿入前に projects 行を必ず存在させる（非同期 INSERT 失敗・待機漏れでの FK 23503 を防ぐ）
+ * @param {object|null} meta mockDB のプロジェクト行、または最低限の { name, category, ... }
+ */
+async function _ensureSupabaseProjectRowForActivity(meta, dbProjectId) {
+    if (!window.supabaseClient || dbProjectId == null || dbProjectId === '') {
+        return { ok: true };
     }
-    if ((projectId == null || projectId === '') && typeof window.resolveExpenseProjectId === 'function') {
-        projectId = window.resolveExpenseProjectId(tx, tx.originalInput || '');
-    }
-    if (projectId == null || projectId === '') {
-        const projs = window.mockDB?.projects || [];
-        if (window.currentOpenProjectId != null && projs.some((p) => String(p.id) === String(window.currentOpenProjectId))) {
-            projectId = window.currentOpenProjectId;
-        }
-    }
-    if (projectId == null || projectId === '') {
-        const projs = window.mockDB?.projects || [];
-        if (projs.length === 1) projectId = projs[0].id;
-    }
-
-    const plist = window.mockDB?.projects || [];
-    const canonProj = plist.find((p) => String(p.id) === String(projectId));
-    if (canonProj) projectId = canonProj.id;
-
-    const normalized = { ...tx, projectId };
-
-    window.mockDB.activities.push(normalized);
-    window.persistLocalBody();
-
-    if (window.supabaseClient) {
-        if (projectId == null || projectId === '') {
-            console.warn('[insertTransaction] projectId missing; local activity saved but Supabase activities row skipped (FK).');
-            return Promise.resolve(normalized);
-        }
-
-        // FK Safety: Await parent project insert if it's currently pending
-        if (window.pendingProjectInserts && window.pendingProjectInserts[projectId]) {
-            console.log(`[Brain Sync] Delaying Activity insert to ensure Project exists (FK safety)`);
-            await window.pendingProjectInserts[projectId].catch(() => {});
-        }
-
-        // UUID / 文字列IDはそのまま。数値ローカルIDのみ _toDbSafeId（Number(UUID)→NaN 防止）
-        const dbProjectId = (() => {
-            const s = String(projectId).trim();
-            if (!/^\d+$/.test(s)) return projectId;
-            return window._toDbSafeId ? window._toDbSafeId(projectId) : Number(projectId);
-        })();
-
-        const dbActivityId = (() => {
-            const id = normalized.id;
-            if (id == null) return id;
-            const s = String(id).trim();
-            if (!/^\d+$/.test(s)) return id;
-            return window._toDbSafeId ? window._toDbSafeId(id) : Number(id);
-        })();
-
-        // Retrieve exact session scope for deterministic Database binds
-        const { data: { session } } = await window.supabaseClient.auth.getSession();
-        const uid = session?.user?.id || null;
-
-        const dbDate = normalized.date ? new Date(String(normalized.date).replace(/\//g, '-')).toISOString() : new Date().toISOString();
-        const dbAmount = Number(normalized.amount) || 0;
-
-        const basePayload = {
-            project_id: dbProjectId,
-            type: normalized.type,
-            category: normalized.category,
-            title: normalized.title,
-            amount: dbAmount,
-            date: dbDate,
+    const m = meta || {};
+    try {
+        // _resolveSupabaseAuthUid throws Error('AUTH_REQUIRED') if no uid — no null check needed
+        const uid = await window._resolveSupabaseAuthUid();
+        const row = {
+            id: dbProjectId,
+            name: m.name || 'プロジェクト',
+            category: m.category || 'other',
+            color: m.color || '#8E8E93',
+            status: m.status || 'active',
+            location: m.location || '-',
             user_id: uid
         };
+        const { error } = await window.supabaseClient
+            .from('projects')
+            .upsert([row], { onConflict: 'id' });
+        if (error) {
+            console.warn('[insertTransaction] projects upsert failed:', JSON.stringify(error));
+            return { ok: false, error };
+        }
+        return { ok: true };
+    } catch (e) {
+        console.warn('[insertTransaction] _ensureSupabaseProjectRowForActivity:', e);
+        return { ok: false, error: e };
+    }
+}
 
-        // 1. Brain Sync: Activity Log
-        window.supabaseClient.from('activities').insert([{
-            ...basePayload,
-            id: dbActivityId,
-            is_bookkeeping: normalized.isBookkeeping ?? normalized.is_bookkeeping ?? false
-        }]).then(({ error }) => {
-            if (error) console.error('Brain Sync Error (Activity):', JSON.stringify(error));
-            else console.log('Brain Sync OK (Activity)');
-        });
+/** pendingProjectInserts のキーが string / number でずれても拾う */
+function _getPendingProjectInsertPromise(projectId) {
+    const m = window.pendingProjectInserts;
+    if (!m || projectId == null || projectId === '') return null;
+    return m[projectId] ?? m[String(projectId)] ?? m[Number(projectId)] ?? null;
+}
 
-        // 2. Ledger Sync: Transactions DB
-        window.supabaseClient.from('transactions').insert([basePayload]).then(({ error, data }) => {
-            if (error) console.error('Ledger Sync Error (Transaction):', JSON.stringify(error));
-            else {
-                console.log('Ledger Sync OK (Transaction)');
-                if (data && data[0]) {
-                    // Tag original mockDB item with physical ledger ID if necessary
-                    normalized.transaction_ledger_id = data[0].id;
-                }
+/** ホームの cockpit-timeline-feed を mockDB と同期（経費計上・リモート取得後の更新漏れ防止） */
+window._refreshCockpitActivityFeed = function _refreshCockpitActivityFeed() {
+    try {
+        if (typeof window.renderCockpitFeed === 'function') window.renderCockpitFeed(0);
+    } catch {
+        /* ignore */
+    }
+};
+
+// NeoBus Central Router for Data Updates
+window.addEventListener('DOMContentLoaded', () => {
+    if (window.NeoBus) {
+        window.NeoBus.on('NEO_DATA_UPDATED', () => {
+            console.log('[NeoBus] Data update received. Syncing views...');
+            if (typeof window._refreshCockpitActivityFeed === 'function') {
+                window._refreshCockpitActivityFeed();
+            }
+            if (window.currentOpenProjectId && typeof window.openProjectDetail === 'function') {
+                window.openProjectDetail(window.currentOpenProjectId);
+            } else if (typeof window.renderProjects === 'function' && window.mockDB && window.mockDB.projects) {
+                window.renderProjects(window.mockDB.projects);
             }
         });
     }
-    return Promise.resolve(normalized);
-};
+});
 
-window.updateTransaction = async (txId, updates) => {
-    // Local Update
-    const tx = window.mockDB.activities.find(t => t.id === txId);
-    if (!tx) return;
-
-    // Merge updates
-    const originalTitle = tx.title;
-    const originalAmount = tx.amount;
-
-    if (updates.category) tx.category = updates.category;
-    if (updates.title) tx.title = updates.title;
-    if (updates.amount !== undefined) tx.amount = Number(updates.amount);
-
-    tx.is_user_corrected = true; // Flag for Ground Truth Cache Priority
-
-    // Sync to Supabase if exists
-    if (window.supabaseClient) {
-        try {
-            // Note: Since our MVP frontend doesn't strictly pull unique Postgres UUIDs back to mockDB.id on insert,
-            // we will search and update by original title and amount as a composite fallback for the prototype.
-            // In a production app, the insertTransaction should return the actual DB UUID to keep them synced.
-            const query = window.supabaseClient.from('activities').update({
-                category: tx.category,
-                title: tx.title,
-                amount: tx.amount,
-                is_user_corrected: true
-            }).match({
-                title: originalTitle,
-                amount: originalAmount,
-                date: tx.date
-            });
-            await query;
-            console.log("Supabase updateTransaction success:", tx.title, "updates:", updates);
-        } catch (e) { console.error('Supabase Update Error:', e); }
-    }
-};
-
+window._getPendingProjectInsertPromise = _getPendingProjectInsertPromise;
+window._ensureSupabaseProjectRowForActivity = _ensureSupabaseProjectRowForActivity;
 
 window.parseCommand = function (text) {
     let result = { date: null, location: null, title: text, category: "雑費", amount: null };
@@ -573,8 +664,8 @@ window.createProject = window.createProject || function (title, pDate, pLoc) {
     window.currentOpenProjectId = newProjId;
 
     // 即時UI更新
-    if (typeof renderProjects === 'function') {
-        renderProjects(mockDB.projects);
+    if (typeof window.renderProjects === 'function') {
+        window.renderProjects(window.mockDB.projects);
     }
     return newProj;
 };
@@ -678,7 +769,7 @@ window.handleCompoundAction = async function(rawText) {
         }
 
         // 3. Re-render projects list
-        if (typeof renderProjects === 'function') renderProjects(window.mockDB.projects);
+        if (typeof window.renderProjects === 'function') window.renderProjects(window.mockDB.projects);
         window.dispatchEvent(new CustomEvent('neo-render-projects', { detail: { projects: window.mockDB?.projects } }));
 
         // 4. Neo Bubble notification + Feed confirmation message
@@ -709,7 +800,11 @@ window.handleCompoundAction = async function(rawText) {
         const previewContainer = document.getElementById('trinity-preview');
         if (previewContainer) previewContainer.style.opacity = '0';
 
-        if (window.switchView) window.switchView('view-dash');
+        if (window.openProjectDetail) {
+            window.openProjectDetail(newProj.id, { navigate: true, skipFetch: false });
+        } else if (window.switchView) {
+            window.switchView('view-dash');
+        }
         return;
     }
 
@@ -891,7 +986,7 @@ window.addEventListener('load', async () => {
         localStorage.setItem('fini_theme_v2', theme);
 
         // Update all theme toggle buttons
-        const toggleBtns = document.querySelectorAll('.theme-toggle');
+        const toggleBtns = document.querySelectorAll('[data-theme-toggle="1"]');
         const isDark = theme === 'dark';
 
         toggleBtns.forEach(btn => {
@@ -929,7 +1024,7 @@ window.addEventListener('load', async () => {
 
     // Setup theme toggle listeners
     document.addEventListener('click', (e) => {
-        if (e.target.closest('.theme-toggle')) {
+        if (e.target.closest('[data-theme-toggle="1"]')) {
             toggleTheme();
         }
     });
@@ -1011,14 +1106,41 @@ window.addEventListener('load', async () => {
             return;
         }
 
-        // 強制的にすべてのビューを非表示にする
-        const allViewIds = ['view-dash', 'view-sites', 'view-expense', 'view-wallet', 'view-settings', 'view-project-detail', 'view-chat', 'view-account', 'view-desk'];
-        allViewIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.classList.add('hidden');
-                el.style.display = 'none';
-                el.style.opacity = '0';
+        // 強制的に全ビューをリセット（ID固定リストではなく .view 全量）
+        document.querySelectorAll('.view').forEach((el) => {
+            el.classList.add('hidden');
+            el.classList.remove('is-active');
+            el.style.display = 'none';
+            el.style.opacity = '0';
+            el.style.zIndex = '1';
+        });
+
+        // 非アクティブ側の router anchor をクリアして古いDOMを除去（重複描画の根本対策）
+        const routeAnchorByView = {
+            'view-dash': 'router-view-dash',
+            'view-chat': 'router-view-chat',
+            'view-sites': 'router-view-sites',
+            'view-project-detail': 'router-view-sites',
+            'view-wallet': 'router-view-wallet',
+            'view-settings': 'router-view-settings',
+            'view-account': 'router-view-settings',
+            'view-desk': 'router-view-desk'
+        };
+        const keepAnchorId = routeAnchorByView[targetId] || null;
+        const allAnchors = [
+            'router-view-dash',
+            'router-view-chat',
+            'router-view-sites',
+            'router-view-wallet',
+            'router-view-settings',
+            'router-view-desk'
+        ];
+        allAnchors.forEach((anchorId) => {
+            if (anchorId === keepAnchorId) return;
+            const anchor = document.getElementById(anchorId);
+            if (!anchor) return;
+            if (anchor.childElementCount > 0) {
+                anchor.innerHTML = '';
             }
         });
 
@@ -1044,6 +1166,7 @@ window.addEventListener('load', async () => {
                 }
                 if (viewDom) {
                     viewDom.classList.remove('hidden');
+                    viewDom.classList.add('is-active');
                     // Special case for chat which needs flex
                     viewDom.style.display = (expectedViewId === 'view-chat') ? 'flex' : 'block';
                     viewDom.style.opacity = '1';
@@ -1064,9 +1187,18 @@ window.addEventListener('load', async () => {
                         
                         // IDを再付与 (内容物が自身のIDを持たない場合をケア)
                         if (!document.getElementById(expectedViewId)) {
-                             // Inject the ID directly into the anchor to preserve selection reference
-                             routerAnchor.id = expectedViewId;
-                             routerAnchor.classList.add('view');
+                             // NOTE: routerAnchor 自体の id を変更すると、次回以降 targetContainerId 参照が壊れる。
+                             // 最初の .view へ expectedViewId を付与してルーティング安定性を守る。
+                             const firstView = routerAnchor.querySelector('.view');
+                             if (firstView) {
+                                firstView.id = expectedViewId;
+                             }
+                        }
+
+                        // 毎回ユニークインスタンスキーを付与（状態混在の診断・追跡用）
+                        const loadedView = document.getElementById(expectedViewId);
+                        if (loadedView) {
+                            loadedView.setAttribute('data-view-instance-key', `${expectedViewId}-${Date.now()}`);
                         }
 
                         if (jsModulePath) {
@@ -1128,6 +1260,7 @@ window.addEventListener('load', async () => {
                     const sitesEl = document.getElementById('view-sites');
                     if (sitesEl) { sitesEl.classList.add('hidden'); sitesEl.style.display = 'none'; }
                     pDetail.classList.remove('hidden');
+                    pDetail.classList.add('is-active');
                     pDetail.style.display = 'block';
                     pDetail.style.opacity = '1';
                 } else {
@@ -1140,6 +1273,7 @@ window.addEventListener('load', async () => {
                             const sitesEl = document.getElementById('view-sites');
                             if (sitesEl) { sitesEl.classList.add('hidden'); sitesEl.style.display = 'none'; }
                             detail.classList.remove('hidden');
+                            detail.classList.add('is-active');
                             detail.style.display = 'block';
                             detail.style.opacity = '1';
                         } else if (retries > 0) {
@@ -1171,12 +1305,13 @@ window.addEventListener('load', async () => {
                 const tg = document.getElementById(targetId);
                 if (tg) {
                     tg.classList.remove('hidden');
+                    tg.classList.add('is-active');
                     tg.style.display = 'block';
                 }
                 break;
         }
 
-        const targetViewElement = document.getElementById(targetId) || document.getElementById('router-view-settings');
+        const targetViewElement = document.getElementById(targetId);
 
         if (targetViewElement && !targetViewElement.classList.contains('hidden')) {
             targetViewElement.style.opacity = '0';
@@ -1268,6 +1403,70 @@ window.addEventListener('load', async () => {
     // Expose to window for inline onclick in HTML
     window.switchView = switchView;
 
+    // One-touch bridge: intent -> document generator with prefill + folder provisioning
+    window.openDocumentGenFromIntent = async (payload = {}) => {
+        const projectId = payload.projectId != null ? payload.projectId : window.currentOpenProjectId;
+        const projectName = (payload.projectName || '').trim();
+        const sourceText = (payload.sourceText || '').trim();
+        const docType = payload.docType || 'invoice';
+
+        if (projectId != null) window.currentOpenProjectId = projectId;
+
+        // Provision Drive folder if cloud sync is available (best effort)
+        if (projectName && window.NeoCloudSync?.listFilesInFolder) {
+            try {
+                await window.NeoCloudSync.listFilesInFolder('Documents', projectName, 'application/pdf');
+            } catch (e) {
+                console.warn('[DocIntent] Drive folder provisioning skipped:', e?.message || e);
+            }
+        }
+
+        const ensureDocGenModal = async () => {
+            if (document.getElementById('modal-doc-gen')) return true;
+            try {
+                const res = await fetch('/views/document-gen.html', { credentials: 'same-origin' });
+                if (!res.ok) return false;
+                const html = await res.text();
+                const host = document.getElementById('router-modal-doc-gen') || document.body;
+                host.insertAdjacentHTML('beforeend', html);
+                return !!document.getElementById('modal-doc-gen');
+            } catch (e) {
+                console.warn('[DocIntent] document-gen modal preload failed:', e?.message || e);
+                return false;
+            }
+        };
+
+        const hasModal = await ensureDocGenModal();
+        if (hasModal && typeof window.openDocGenModal === 'function') {
+            await window.openDocGenModal();
+        } else if (typeof window.switchView === 'function') {
+            window.switchView('view-invoice');
+        }
+
+        const applyPrefill = () => {
+            if (typeof window.switchDocTab === 'function') {
+                const normalizedDocType =
+                    docType === 'estimate' || docType === 'invoice' || docType === 'receipt' || docType === 'delivery'
+                        ? docType
+                        : 'invoice';
+                window.switchDocTab(normalizedDocType);
+                window.currentDocType = normalizedDocType;
+            }
+
+            const subjectInput = document.getElementById('doc-subject');
+            if (subjectInput) {
+                subjectInput.value = projectName || sourceText || subjectInput.value || '';
+            }
+            const remarksInput = document.getElementById('doc-remarks');
+            if (remarksInput && sourceText) {
+                remarksInput.value = sourceText;
+            }
+            if (typeof window.updateDocPreview === 'function') window.updateDocPreview();
+        };
+
+        setTimeout(applyPrefill, 50);
+    };
+
     // AI Cockpit Toggle has been moved to pages/home.js
 
     window.neoGetCockpitInput = function neoGetCockpitInput() {
@@ -1279,124 +1478,7 @@ window.addEventListener('load', async () => {
     };
 
     /** SpeechRecognition シングルトン + #btn-voice の遅延バインド（ダッシュ遅延ロード対応） */
-    function setupNeoCockpitSpeechRecognition() {
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!window.__neoCockpitSpeechState) {
-            window.__neoCockpitSpeechState = {
-                rec: null,
-                listening: false,
-                voicePrefix: '',
-                voiceAccum: ''
-            };
-        }
-        const state = window.__neoCockpitSpeechState;
-
-        const showVoiceStartHint = () => {
-            const b = document.getElementById('neo-fab-bubble');
-            if (b) {
-                b.textContent = '音声入力開始';
-                b.classList.add('show');
-                setTimeout(() => b.classList.remove('show'), 3500);
-            }
-        };
-
-        const setMicsRecording = (on) => {
-            document.querySelectorAll('#btn-voice').forEach((mic) => {
-                mic.classList.toggle('recording', on);
-                if (on) mic.style.color = '#FF3B30';
-                else mic.style.color = '';
-            });
-        };
-
-        const onMicClick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (!state.rec) return;
-            const input = window.neoGetCockpitInput();
-            if (state.listening) {
-                try { state.rec.stop(); } catch (_) { /* already stopped */ }
-                return;
-            }
-            showVoiceStartHint();
-            const base = input ? input.value : '';
-            state.voicePrefix = base && !/\s$/.test(base) ? `${base} ` : base;
-            state.voiceAccum = '';
-            try {
-                state.rec.start();
-            } catch (err) {
-                console.warn('[Neo Speech]', err);
-                state.listening = false;
-                setMicsRecording(false);
-            }
-        };
-
-        document.querySelectorAll('#btn-voice:not([data-neo-voice-bound])').forEach((mic) => {
-            mic.dataset.neoVoiceBound = '1';
-            if (!SR) {
-                mic.disabled = true;
-                mic.setAttribute('aria-disabled', 'true');
-                mic.title = 'このブラウザでは音声入力を利用できません';
-                return;
-            }
-            mic.disabled = false;
-            mic.removeAttribute('aria-disabled');
-            mic.title = '音声入力（タップで開始・停止）';
-            mic.addEventListener('click', onMicClick);
-        });
-
-        if (!SR || state.rec) return;
-
-        state.rec = new SR();
-        state.rec.lang = 'ja-JP';
-        state.rec.continuous = true;
-        state.rec.interimResults = true;
-
-        state.rec.onstart = () => {
-            state.listening = true;
-            setMicsRecording(true);
-        };
-
-        state.rec.onresult = (event) => {
-            const input = window.neoGetCockpitInput();
-            if (!input) return;
-            let interim = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                const chunk = event.results[i][0].transcript;
-                if (event.results[i].isFinal) state.voiceAccum += chunk;
-                else interim += chunk;
-            }
-            input.value = state.voicePrefix + state.voiceAccum + interim;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.style.height = 'auto';
-            input.style.height = `${Math.min(input.scrollHeight, 220)}px`;
-        };
-
-        state.rec.onerror = (event) => {
-            console.warn('[Neo Speech]', event.error);
-            state.listening = false;
-            setMicsRecording(false);
-            if (event.error === 'not-allowed') {
-                const b = document.getElementById('neo-fab-bubble');
-                if (b) {
-                    b.textContent = 'マイクの許可が必要です。ブラウザの設定から許可してください。';
-                    b.classList.add('show');
-                    setTimeout(() => b.classList.remove('show'), 5000);
-                }
-            }
-        };
-
-        state.rec.onend = () => {
-            state.listening = false;
-            setMicsRecording(false);
-            const input = window.neoGetCockpitInput();
-            if (input) {
-                input.style.height = 'auto';
-                input.style.height = `${Math.min(input.scrollHeight, 220)}px`;
-            }
-        };
-    }
-
-    window.bindCockpitInputs = () => {
+window.bindCockpitInputs = () => {
         const instructionInputs = document.querySelectorAll('#main-instruction-input');
         const btnAttachImages = [document.getElementById('btn-attach-image'), document.getElementById('btn-camera')].filter(Boolean);
         const btnSendInstructions = [document.getElementById('btn-send-instruction'), document.getElementById('btn-send')].filter(Boolean);
@@ -1599,8 +1681,7 @@ window.addEventListener('load', async () => {
                 if (!rawText) return;
                 input.value = '';
                 input.dispatchEvent(new Event('input', { bubbles: true }));
-                if (window.handleCompoundAction) window.handleCompoundAction(rawText);
-                else if (window.handleInstruction) window.handleInstruction(rawText);
+                if (window.handleInstruction) window.handleInstruction(rawText);
             });
         });
 
@@ -1636,9 +1717,9 @@ window.addEventListener('load', async () => {
         }
 
         // Safety enforced physical UI update
-        if (typeof renderProjects === 'function') {
+        if (typeof window.renderProjects === 'function') {
             console.log("[DEBUG] Current mockDB.projects before render:", mockDB.projects);
-            renderProjects(mockDB.projects);
+            window.renderProjects(mockDB.projects);
             console.log("[DEBUG] Render successful");
         }
 
@@ -1861,20 +1942,7 @@ window.addEventListener('load', async () => {
         }
     };
 
-    window.closeDocGenModal = () => {
-        const modal = document.getElementById('modal-doc-gen');
-        if (modal) {
-            modal.classList.add('hidden');
-        }
-        const modalPreview = document.getElementById('modal-doc-preview');
-        if (modalPreview) {
-            modalPreview.classList.add('hidden');
-        }
-        document.body.style.overflow = '';
-        if (window.switchView) window.switchView('view-dash');
-    };
-
-    window.saveDocument = async () => {
+window.saveDocument = async () => {
         let subtotal = 0;
         document.querySelectorAll('.item-price-input').forEach(el => subtotal += parseInt(el.value || '0', 10));
 
@@ -1967,141 +2035,7 @@ window.addEventListener('load', async () => {
     };
 
     const originalDocOpen = window.openDocGenModal;
-    window.openDocGenModal = () => {
-        const modal = document.getElementById('modal-doc-gen');
-        if (modal) {
-            modal.classList.remove('hidden');
-            window.switchDocTab('estimate');
-            document.getElementById('doc-client-name').value = '';
-            document.getElementById('doc-subject').value = document.getElementById('detail-project-name')?.textContent || '';
-            document.getElementById('doc-issue-date').value = new Date().toISOString().split('T')[0];
-
-            // Load unbilled activities and push them natively into the invoice
-            const container = document.getElementById('doc-line-items-container');
-            if (container) {
-                container.innerHTML = '';
-                // Extract pending transactions
-                let pendingTxs = [];
-                if (window.mockDB && window.mockDB.activities && window.currentOpenProjectId) {
-                    pendingTxs = window.mockDB.activities.filter(t => t.projectId === window.currentOpenProjectId && !t.is_deleted);
-                }
-
-                if (pendingTxs.length > 0) {
-                    // 1. Instantly show a skeleton loading state
-                    container.innerHTML = `
-                        <div class="line-item" style="opacity: 0.6; pointer-events: none;">
-                            <div class="input-group">
-                                <label>内容</label>
-                                <input type="text" class="form-control item-name-input" value="AIが実費・人工を集計中..." disabled style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #f8fafc; color: #64748b;">
-                            </div>
-                            <div class="input-group qty">
-                                <label>数量</label>
-                                <input type="number" class="form-control item-qty-input" value="1" disabled style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: center; background: #f8fafc; color: #64748b;">
-                            </div>
-                            <div class="input-group price" style="position: relative; width: 100%;">
-                                <label>単価</label>
-                                <input type="text" class="form-control item-price-input" value="0" disabled style="width: 100%; box-sizing: border-box; margin: 0; padding: 12px 24px 12px 12px; font-size: 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; text-align: right; background: #f8fafc; color: #64748b;">
-                                <span style="position: absolute; right: 8px; top: 38px; font-size: 12px; color: #94a3b8; pointer-events: none;">円</span>
-                            </div>
-                            <button type="button" class="delete-button" disabled>×</button>
-                        </div>
-                    `;
-                    window.updateDocPreview();
-
-                    // 2. Call AI parsing asynchronously
-                    setTimeout(async () => {
-                        try {
-                            const industry = window.mockDB?.userConfig?.industry || 'general';
-                            let parsedItems = null;
-
-                            if (typeof window.parseReceiptRecords === 'function') {
-                                parsedItems = await window.parseReceiptRecords(pendingTxs, industry);
-                            }
-
-                            container.innerHTML = ''; // Clear loading skeleton
-
-                            if (parsedItems && parsedItems.length > 0) {
-                                // Render AI Normalized Items
-                                parsedItems.forEach(item => {
-                                    const pName = item.item_name || '未分類項';
-                                    const pPrice = parseInt(item.price || '0', 10);
-                                    container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(pName, pPrice, 1, true)); // isAI = true
-
-                                    // Extreme DOM Assurance
-                                    console.assert(container.lastElementChild.querySelector('input.item-name-input').value === pName, "CRITICAL ERROR: AI injected row failed to persist in DOM.");
-                                });
-                            } else {
-                                // Fallback: Render Raw Traansactions if AI fails
-                                pendingTxs.forEach(tx => {
-                                    const pName = tx.title || '';
-                                    const pPrice = parseInt(tx.amount || '0', 10);
-                                    container.insertAdjacentHTML('beforeend', window.generateDocLineHTML(pName, pPrice, 1));
-                                });
-                            }
-                            window.updateDocPreview();
-
-                        } catch (err) {
-                            console.error('[Document AI] Parsing failed', err);
-                            // Loud Error UI (No silent fallback per CEO orders)
-                            container.innerHTML = `
-                                <div class="line-item" style="grid-template-columns: 1fr; margin-bottom: 24px;">
-                                    <div style="background: #fef2f2; border: 2px solid #ef4444; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(239,68,68,0.15);">
-                                        <h4 style="color: #ef4444; font-weight: 800; font-size: 18px; margin: 0 0 8px 0; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
-                                            🚨 API Key Error
-                                        </h4>
-                                        <p style="color: #7f1d1d; font-size: 14px; margin: 0; line-height: 1.5; font-weight: 600;">
-                                            Gemini AIとの通信に失敗しました。APIキーが設定されていないか、上限に達しています。<br>
-                                            <span style="font-size: 12px; opacity: 0.8; margin-top: 8px; display: block; font-family: monospace;">Detail: ${err.message || 'Unknown Network Error'}</span>
-                                        </p>
-                                    </div>
-                                    <button type="button" onclick="window.addDocLineItem()" style="width: 100%; padding: 14px; background: #fff; border: 1.5px solid #cbd5e1; border-radius: 12px; font-weight: 700; color: #475569; margin-top: 16px;">
-                                        手動で明細を入力する
-                                    </button>
-                                </div>
-                            `;
-                            window.updateDocPreview();
-                        }
-                    }, 100);
-
-                } else {
-                    // Default fallback (No transactions)
-                    container.innerHTML = window.generateDocLineHTML('一式', 0, 1);
-                }
-            }
-
-            // Load Bank Info from History
-            const savedBankInfo = localStorage.getItem('neo_bank_info');
-            if (savedBankInfo) {
-                const bankInput = document.getElementById('doc-bank-info');
-                if (bankInput) bankInput.value = savedBankInfo;
-            }
-
-            // Initialize Focus Auto-Scroll (Ultimate Input Feel)
-            if (!window.docGenFocusScrollInitialized) {
-                const inputs = modal.querySelectorAll('.doc-gen-inputs input, .doc-gen-inputs textarea, .doc-gen-inputs select');
-                inputs.forEach(el => {
-                    el.addEventListener('focus', function () {
-                        setTimeout(() => {
-                            this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 300); // Wait for mobile keyboard to appear
-                    });
-                });
-
-                // Save Bank Info on change
-                const bankInputEl = document.getElementById('doc-bank-info');
-                if (bankInputEl) {
-                    bankInputEl.addEventListener('input', (e) => {
-                        localStorage.setItem('neo_bank_info', e.target.value);
-                    });
-                }
-
-                window.docGenFocusScrollInitialized = true;
-            }
-
-            window.updateDocPreview();
-        }
-    };
-    const triggerNeoSyncGlow = () => {
+const triggerNeoSyncGlow = () => {
         const iconsToGlow = document.querySelectorAll('[data-target="view-sites"] i, [data-target="view-wallet"] i');
         iconsToGlow.forEach(icon => {
             icon.classList.add('neo-sync-glow');
@@ -2404,13 +2338,13 @@ window.addEventListener('load', async () => {
                 filterDropdown.classList.add('hidden');
 
                 // Apply Filter Logic
-                applyProjectFilter(filterType);
+                window.applyProjectFilter(filterType);
             });
         });
 
         const periodInput = document.getElementById('filter-period');
         if (periodInput) {
-            periodInput.addEventListener('change', () => applyProjectFilter());
+            periodInput.addEventListener('change', () => window.applyProjectFilter());
         }
 
         const searchInput = document.getElementById('filter-search-input');
@@ -2423,338 +2357,28 @@ window.addEventListener('load', async () => {
                 } else {
                     searchClearBtn.classList.add('hidden');
                 }
-                applyProjectFilter();
+                window.applyProjectFilter();
             });
 
             searchClearBtn.addEventListener('click', () => {
                 searchInput.value = '';
                 searchClearBtn.classList.add('hidden');
-                applyProjectFilter();
+                window.applyProjectFilter();
             });
         }
     };
 
-    const applyProjectFilter = (filterType, resetPage = true) => {
-        let sortedFiltered = [...mockDB.projects];
-
-        if (resetPage) {
-            currentProjectPage = 1;
-        }
-
-        // CEO Fix: Default sort should ALWAYS be Created At (newest) first.
-        // If the raw mockDB.projects array is passed, we clone and sort it desc by ID.
-        if (projectsToRender === mockDB.projects) {
-            projectsToRender = [...mockDB.projects].sort((a, b) => b.id - a.id);
-        }
-
-        if (!filterType) {
-            const activeSortOpt = document.querySelector('#filter-dropdown .filter-option.active');
-            filterType = activeSortOpt ? activeSortOpt.getAttribute('data-filter') : 'newest';
-        }
-
-        // Apply Text Search Filter (Name or Location)
-        const searchInput = document.getElementById('filter-search-input');
-        let isFilteredBySearch = false;
-        if (searchInput && searchInput.value.trim()) {
-            const query = searchInput.value.trim().toLowerCase();
-            sortedFiltered = sortedFiltered.filter(p => {
-                const nameMatch = (p.name || '').toLowerCase().includes(query);
-                const locMatch = (p.location || '').toLowerCase().includes(query);
-                return nameMatch || locMatch;
-            });
-            isFilteredBySearch = true;
-        }
-
-        // Apply Time Period Filter
-        const periodInput = document.getElementById('filter-period');
-        let isFilteredByDate = false;
-        if (periodInput && periodInput.value) {
-            const [yearStr, monthStr] = periodInput.value.split('-');
-            const fYear = parseInt(yearStr, 10);
-            const fMonth = parseInt(monthStr, 10);
-
-            sortedFiltered = sortedFiltered.filter(p => {
-                const pDate = new Date(p.lastUpdated || p.id);
-                return pDate.getFullYear() === fYear && (pDate.getMonth() + 1) === fMonth;
-            });
-            isFilteredByDate = true;
-        }
-
-        // Highlight the filter button if any filter is applied
-        const btnFilterProjects = document.getElementById('btn-filter-projects');
-        if (btnFilterProjects) {
-            if (filterType !== 'newest' || isFilteredByDate || isFilteredBySearch) {
-                btnFilterProjects.classList.add('filter-active');
-            } else {
-                btnFilterProjects.classList.remove('filter-active');
-            }
-        }
-
-        // Apply Sorting Logic
-        if (filterType === 'newest') {
-            sortedFiltered.sort((a, b) => b.id - a.id);
-        } else if (filterType === 'date-desc') {
-            sortedFiltered.sort((a, b) => new Date(b.lastUpdated || b.id) - new Date(a.lastUpdated || a.id));
-        } else if (filterType === 'cost-desc') {
-            sortedFiltered.sort((a, b) => {
-                const costA = mockDB.activities.filter(t => t.projectId === a.id && !t.is_deleted && t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-                const costB = mockDB.activities.filter(t => t.projectId === b.id && !t.is_deleted && t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-                return costB - costA;
-            });
-        }
-
-        // Re-render the list
-        renderProjects(sortedFiltered, false);
-    };
-
-    // Render Projects (Bank Account style list)
-    const renderProjects = (projectsToRender, resetPage = true) => {
-        const container = document.getElementById('project-list-container');
-        const paginationContainer = document.getElementById('project-pagination-container');
-        if (!container) return;
-
-        if (resetPage) {
-            currentProjectPage = 1;
-        }
-
-        // CEO Fix: Default sort should ALWAYS be Created At (newest) first.
-        // If the raw mockDB.projects array is passed, we clone and sort it desc by ID.
-        if (projectsToRender === mockDB.projects) {
-            projectsToRender = [...mockDB.projects].sort((a, b) => b.id - a.id);
-        }
-
-        container.innerHTML = '';
-        if (paginationContainer) paginationContainer.innerHTML = '';
-
-        let totalAgencyProfit = 0;
-
-        if (projectsToRender.length === 0) {
-            container.innerHTML = '<p style="padding: var(--spacing-lg); color: var(--text-muted); text-align: center;">プロジェクトはありません</p>';
-            const totalWealthEl = document.getElementById('total-wealth-balance');
-            if (totalWealthEl) totalWealthEl.textContent = '¥0';
-            return;
-        }
-
-        // --- Pagination Logic (Max 10 per page) ---
-        const ITEMS_PER_PAGE = 10;
-        const totalPages = Math.ceil(projectsToRender.length / ITEMS_PER_PAGE);
-
-        // Safety check if currentProjectPage exceeds new totalPages
-        if (currentProjectPage > totalPages) {
-            currentProjectPage = Math.max(1, totalPages);
-        }
-
-        const startIndex = (currentProjectPage - 1) * ITEMS_PER_PAGE;
-        const endIndex = startIndex + ITEMS_PER_PAGE;
-        const pagedProjects = projectsToRender.slice(startIndex, endIndex);
-
-        pagedProjects.forEach(proj => {
-            // Calculate Profit Balance
-            const mockRevenue = proj.revenue || 1000000;
-            const expenses = mockDB.activities.filter(t => t.projectId === proj.id && !t.is_deleted && t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
-            const labor = mockDB.activities.filter(t => t.projectId === proj.id && !t.is_deleted && t.type === 'labor').reduce((acc, curr) => acc + curr.amount, 0); // Mock logic
-
-            const totalCost = expenses + labor;
-            const projectProfit = mockRevenue - totalCost;
-
-            totalAgencyProfit += projectProfit;
-
-            // Componentized Neo-Sync v2.0 Project Card Generation
-            const card = createProjectCard(proj);
-
-            // Inherit the Total Cost display logic to keep Dashboard metrics intact
-            const displayCost = `コスト: ¥${totalCost.toLocaleString()}`;
-            const costBadge = document.createElement('div');
-            costBadge.style.cssText = 'position: absolute; top: 16px; right: 16px; font-size: 11px; padding: 4px 8px; font-weight: 500; background: rgba(0,0,0,0.05); color: var(--text-muted); border-radius: 12px;';
-            costBadge.textContent = displayCost;
-            card.appendChild(costBadge);
-
-            container.appendChild(card);
-        });
-
-        // --- Render Pagination Controls ---
-        if (paginationContainer && totalPages > 1) {
-            const btnPrev = document.createElement('button');
-            btnPrev.innerHTML = '<i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i> 前へ';
-            btnPrev.style.cssText = `background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px; opacity: ${currentProjectPage === 1 ? '0.3' : '1'}; pointer-events: ${currentProjectPage === 1 ? 'none' : 'auto'}; transition: transform 0.1s;`;
-            btnPrev.onmousedown = () => btnPrev.style.transform = 'scale(0.95)';
-            btnPrev.onmouseup = () => btnPrev.style.transform = 'scale(1)';
-            btnPrev.onmouseleave = () => btnPrev.style.transform = 'scale(1)';
-            btnPrev.onclick = () => {
-                if (currentProjectPage > 1) {
-                    currentProjectPage--;
-                    renderProjects(projectsToRender, false);
-                    document.querySelector('.content-area').scrollTo({ top: 0, behavior: 'smooth' });
-                }
-            };
-
-            const pageIndicator = document.createElement('span');
-            pageIndicator.style.cssText = 'font-size: 14px; font-weight: 600; color: var(--text-main); min-width: 50px; text-align: center; letter-spacing: 0.05em;';
-            pageIndicator.textContent = `${currentProjectPage} / ${totalPages}`;
-
-            const btnNext = document.createElement('button');
-            btnNext.innerHTML = '次へ <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>';
-            btnNext.style.cssText = `background: var(--btn-secondary-bg); border: 1.2px solid var(--btn-secondary-border); color: var(--text-main); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 4px; opacity: ${currentProjectPage === totalPages ? '0.3' : '1'}; pointer-events: ${currentProjectPage === totalPages ? 'none' : 'auto'}; transition: transform 0.1s;`;
-            btnNext.onmousedown = () => btnNext.style.transform = 'scale(0.95)';
-            btnNext.onmouseup = () => btnNext.style.transform = 'scale(1)';
-            btnNext.onmouseleave = () => btnNext.style.transform = 'scale(1)';
-            btnNext.onclick = () => {
-                if (currentProjectPage < totalPages) {
-                    currentProjectPage++;
-                    renderProjects(projectsToRender, false);
-                    document.querySelector('.content-area').scrollTo({ top: 0, behavior: 'smooth' });
-                }
-            };
-
-            paginationContainer.appendChild(btnPrev);
-            paginationContainer.appendChild(pageIndicator);
-            paginationContainer.appendChild(btnNext);
-        }
-
-        // Update Total Wealth Header
-        const totalWealthEl = document.getElementById('total-wealth-balance');
-        if (totalWealthEl) {
-            totalWealthEl.textContent = `¥${totalAgencyProfit.toLocaleString()}`;
-        }
-
-        // --- NEW: Update Wallet Dashboard (Healthcare UI + Tax Hub) --
-        updateWalletDashboard(totalAgencyProfit);
-
-
-        if (window.lucide) {
-            window.lucide.createIcons();
-        }
-    };
-
-    // CEO Fix: Securely expose renderProjects via an Event Listener instead of a global Object reference
+// Render Projects (Bank Account style list)
+// CEO Fix: Securely expose renderProjects via an Event Listener instead of a global Object reference
     window.addEventListener('neo-render-projects', (e) => {
         const projects = e.detail?.projects || mockDB.projects;
-        renderProjects(projects);
+        if (typeof window.renderProjects === 'function') window.renderProjects(projects);
     });
-
-    // Direct global exposure so project.js / other modules can call renderProjects immediately
-    window.renderProjects = (projects) => {
-        const data = projects ?? window.GlobalStore?.state?.projects ?? mockDB.projects ?? [];
-        renderProjects(data);
-    };
-
-    // Wallet Dashboard Logic
-    const updateWalletDashboard = (totalProfit) => {
-        const globalProfitEl = document.getElementById('wallet-global-profit');
-        if (globalProfitEl) globalProfitEl.textContent = `¥${totalProfit.toLocaleString()}`;
-
-        // Calculate global revenue & expenses from mockDB
-        let globalRevenue = 0;
-        let globalExpenses = 0;
-
-        mockDB.projects.forEach(proj => {
-            const invoices = mockDB.documents.filter(d => d.projectId === proj.id && d.type === 'invoice');
-            if (invoices.length > 0) {
-                globalRevenue += invoices.reduce((acc, curr) => acc + curr.amount, 0);
-            } else {
-                globalRevenue += (proj.revenue || 1000000);
-            }
-        });
-
-        // Add all expenses
-        mockDB.activities.forEach(t => {
-            if (t.type === 'expense' || t.type === 'labor') {
-                globalExpenses += t.amount;
-            }
-        });
-
-        // Calculate tax prep mock (e.g. roughly 15% of profit, depends on industry IRL)
-        const mockIndustry = mockDB.userConfig.industry || 'general';
-        const taxRate = 0.15;
-        const taxEst = Math.max(0, totalProfit * taxRate);
-
-        const taxPrepEl = document.getElementById('wallet-tax-prep');
-        const taxBarEl = document.getElementById('wallet-tax-bar');
-
-        if (taxPrepEl) taxPrepEl.textContent = `¥${Math.round(taxEst).toLocaleString()}`;
-        if (taxBarEl) {
-            const maxTaxTarget = 3000000;
-            const pct = Math.min(100, (taxEst / maxTaxTarget) * 100);
-            taxBarEl.style.width = `${pct}%`;
-        }
-
-        // Update Summary Text
-        const taxSummaryEl = document.getElementById('wallet-tax-summary');
-        if (taxSummaryEl) {
-            taxSummaryEl.innerHTML = `CEO、現在の売上合計は <strong>¥${globalRevenue.toLocaleString()}</strong>、経費合計は <strong>¥${globalExpenses.toLocaleString()}</strong> です。<br>予測される申告所得は <strong>¥${totalProfit.toLocaleString()}</strong> となります。連携用のCSV出力が可能です。`;
-        }
-
-        // --- NEW: 3-Month AI Forecast Wave ---
-        const cfContainer = document.getElementById('wallet-cf-container');
-        if (cfContainer) {
-            cfContainer.innerHTML = '';
-            // Generate labels for Next Month, +2, +3
-            const today = new Date();
-            const forecastMonths = [
-                `${(today.getMonth() + 2) % 12 || 12}月`,
-                `${(today.getMonth() + 3) % 12 || 12}月`,
-                `${(today.getMonth() + 4) % 12 || 12}月`
-            ];
-
-            forecastMonths.forEach((m, idx) => {
-                // Diminishing certainty
-                const isCurrent = idx === 0;
-                const incomeH = 60 + Math.random() * (40 - idx * 10); // Slowly decreases/randomizes
-                const expH = 30 + Math.random() * 20;
-                cfContainer.innerHTML += `
-                    <div class="cf-bar-group ${isCurrent ? 'active' : ''}" style="${!isCurrent ? 'opacity: 0.7' : ''}">
-                        <div class="cf-bar income" style="height: ${incomeH}%;"></div>
-                        <div class="cf-bar expense" style="height: ${expH}%;"></div>
-                        <span class="cf-label ${isCurrent ? 'active-label' : ''}">${m}</span>
-                    </div>
-                `;
-            });
-
-            // --- NEW: AI Accuracy (IQ) Tracker ---
-            // Calculate how many times the AI ran vs how many times the user corrected it
-            // Assuming most transactions in prototype came from AI/input unless stated
-            const totalPredictions = mockDB.activities.length;
-            const totalCorrections = mockDB.activities.filter(t => t.is_user_corrected && !t.is_deleted).length;
-
-            let accuracy = 100;
-            if (totalPredictions > 0) {
-                accuracy = Math.round(((totalPredictions - totalCorrections) / totalPredictions) * 100);
-            }
-
-            const accuracyColor = accuracy >= 95 ? '#10b981' : (accuracy >= 80 ? '#f59e0b' : '#ef4444');
-
-            cfContainer.insertAdjacentHTML('beforebegin', `
-                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 16px; margin-bottom: 24px; padding: 12px 16px; border-radius: 12px; display: grid; grid-auto-flow: column; justify-content: start; align-items: center; justify-content: space-between;">
-                    <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: 8px;">
-                        <i data-lucide="brain-circuit" style="width: 20px; height: 20px; color: ${accuracyColor};"></i>
-                        <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">AI 学習仕訳精度 (IQ)</span>
-                    </div>
-                    <div style="font-size: 16px; font-weight: 800; color: ${accuracyColor};">
-                        ${accuracy}<span style="font-size: 12px; margin-left: 2px;">%</span>
-                    </div>
-                </div>
-            `);
-            if (window.lucide) window.lucide.createIcons();
-        }
-
-        // --- NEW: Progress Ring vs Target Profit ---
-        const progressCircle = document.getElementById('wallet-ring-progress');
-        if (progressCircle) {
-            const baseOffset = 628;
-            const target = mockDB.userConfig.targetMonthlyProfit || 1000000;
-            const progress = Math.min(1, Math.max(0, totalProfit / target));
-            const dashOffset = baseOffset - (baseOffset * progress);
-            setTimeout(() => {
-                progressCircle.style.strokeDashoffset = dashOffset;
-            }, 50);
-        }
-    };
-
 
     // Make project cards clickable to detail
     window.saveProjectNote = async (newText) => {
         if (!currentOpenProjectId) return;
-        const proj = mockDB.projects.find(p => p.id === currentOpenProjectId);
+        const proj = mockDB.projects.find((p) => String(p.id) === String(currentOpenProjectId));
         if (proj) {
             proj.note = newText;
 
@@ -2777,492 +2401,9 @@ window.addEventListener('load', async () => {
     const bindProjectClicks = () => {
         // In a real app we'd bind to actual project list items
         // For prototype, if they click the "プロジェクト" feature card in dash, load Project 1
-        window.openProjectDetail = (projectId) => {
-            currentOpenProjectId = projectId;
-            const proj = mockDB.projects.find(p => p.id === projectId);
-            if (!proj) return;
-
-            // Update Color Bar
-            const catColors = {
-                it: '#3b82f6',
-                transportation: '#f59e0b',
-                accounting: '#8b5cf6',
-                construction: '#10b981',
-                design: '#ec4899',
-                other: '#6b7280'
-            };
-            const cColor = proj.color || catColors[proj.category] || '#9ca3af';
-            const colorBar = document.getElementById('detail-color-bar');
-            if (colorBar) colorBar.style.backgroundColor = cColor;
-
-            // Calc financials
-            // Expenses: Any transaction that isn't explicitly income
-            const expenses = mockDB.activities.filter(t => String(t.projectId) === String(projectId) && !t.is_deleted && t.type !== 'income').reduce((acc, curr) => acc + curr.amount, 0);
-
-            // Incomes: Manual income transactions + Document invoices
-            const incomesFromTx = mockDB.activities.filter(t => String(t.projectId) === String(projectId) && !t.is_deleted && t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-            const invoices = mockDB.documents.filter(d => String(d.projectId) === String(projectId) && d.type === 'invoice');
-            const invoiceSum = invoices.length > 0 ? invoices.reduce((acc, curr) => acc + curr.amount, 0) : 0;
-
-            const revenue = (incomesFromTx + invoiceSum) > 0 ? (incomesFromTx + invoiceSum) : (proj.revenue || 0);
-            const profit = revenue - expenses;
-            const margin = revenue > 0 ? Math.round((profit / revenue) * 100) : 0;
-
-            // Target gauge logic (mock target of 1,000,000 or dynamic based on project if we had it)
-            const targetProfit = 1000000;
-            const progressPercent = Math.min(100, Math.max(0, (profit / targetProfit) * 100));
-
-            // Update UI
-            document.getElementById('detail-project-name').textContent = proj.name;
-            const tagsCont = document.getElementById('detail-project-tags');
-            if (tagsCont) {
-                let tagsHtml = '';
-                if (proj.startDate) tagsHtml += `<span class="tag tag-blue" style="font-size:10px; padding:2px 6px; border-radius:4px;"><i data-lucide="calendar" style="width:10px;height:10px;margin-right:2px;"></i>${proj.startDate}</span>`;
-                if (proj.location)  tagsHtml += `<span class="tag" style="background:var(--bg-color); color:var(--text-main); font-size:10px; padding:2px 6px; border-radius:4px;"><i data-lucide="map-pin" style="width:10px;height:10px;margin-right:2px;color:var(--accent-neo-blue);"></i>${proj.location}</span>`;
-                if (proj.category && proj.category !== 'other') tagsHtml += `<span class="tag" style="background:var(--btn-secondary-bg); color:var(--text-muted); font-size:10px; padding:2px 6px; border-radius:4px;">${proj.category}</span>`;
-                tagsCont.innerHTML = tagsHtml;
-                if (window.lucide) window.lucide.createIcons();
-            }
-            const revEl = document.getElementById('detail-revenue');
-            if (revEl) revEl.textContent = `¥${revenue.toLocaleString()}`;
-            const expEl = document.getElementById('detail-expense');
-            if (expEl) expEl.textContent = `¥${expenses.toLocaleString()}`;
-
-            // Formula mini-indicators
-            const revMiniEl = document.getElementById('detail-revenue-mini');
-            if (revMiniEl) revMiniEl.textContent = `¥${revenue.toLocaleString()}`;
-            const expMiniEl = document.getElementById('detail-expense-mini');
-            if (expMiniEl) expMiniEl.textContent = `¥${expenses.toLocaleString()}`;
-
-            const profEl = document.getElementById('detail-profit');
-            if (profEl) profEl.textContent = `¥${profit.toLocaleString()}`;
-
-            // Update Dashboard Note
-            const noteEl = document.getElementById('detail-project-note');
-            if (noteEl) {
-                noteEl.value = proj.note || '';
-                // Auto-resize textarea height
-                setTimeout(() => {
-                    noteEl.style.height = '';
-                    noteEl.style.height = noteEl.scrollHeight + 'px';
-                }, 10);
-            }
-
-            // --- Update PDF Document Count & Empty States ---
-            const docCountEl = document.getElementById('detail-doc-count');
-            const galleryEl = document.getElementById('detail-photo-gallery');
-            
-            // Safe initialize mock files
-            if (!window.mockDB.files) window.mockDB.files = [];
-            const projectFiles = window.mockDB.files.filter(f => f.projectId === projectId);
-            
-            // 1. Render PDFs
-            const pdfFiles = projectFiles.filter(f => f.type === 'Documents');
-            if (docCountEl) {
-                if (pdfFiles.length > 0) {
-                    let pdfHtml = `<div style="display:flex; flex-direction:column; gap:8px;">`;
-                    pdfFiles.forEach(f => {
-                        pdfHtml += `<a href="${f.webViewLink}" target="_blank" style="display:flex; align-items:center; gap:8px; padding:8px; background:var(--btn-secondary-bg); border-radius:8px; text-decoration:none; color:var(--text-main); border:1px solid var(--btn-secondary-border); font-size:12px;">
-                            <i data-lucide="file-text" style="width:14px;height:14px;color:#ef4444;"></i>
-                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f.name}</span>
-                        </a>`;
-                    });
-                    pdfHtml += `</div>`;
-                    docCountEl.innerHTML = pdfHtml;
-                } else {
-                    docCountEl.innerHTML = `<div style="font-size: 11px; font-weight: 400; color: var(--text-muted); margin-top: 4px;">データなし</div>`;
-                }
-            }
-
-            // 2. Render Photos
-            const photoFiles = projectFiles.filter(f => f.type === 'Photos');
-            if (galleryEl) {
-                if (photoFiles.length > 0) {
-                    let photoHtml = '';
-                    photoFiles.forEach(f => {
-                        const thumb = f.thumbnailLink || 'https://via.placeholder.com/80';
-                        photoHtml += `<a href="${f.webViewLink}" target="_blank" style="display:block; width:48px; height:48px; border-radius:8px; overflow:hidden; border:1px solid rgba(0,0,0,0.1); flex-shrink:0;">
-                            <img src="${thumb}" style="width:100%; height:100%; object-fit:cover;" title="${f.name}">
-                        </a>`;
-                    });
-                    galleryEl.innerHTML = `<div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:4px;">${photoHtml}</div>`;
-                } else {
-                    galleryEl.innerHTML = `<div style="font-size: 11px; font-weight: 400; color: var(--text-muted); margin-top: 4px;">データなし</div>`;
-                }
-            }
-
-            // Update Margin Gauge & Percent
-            const marginPercentEl = document.getElementById('detail-margin-percent');
-            if (marginPercentEl) marginPercentEl.textContent = `${margin}%`;
-            const marginGaugeEl = document.getElementById('detail-margin-gauge');
-            // Animate gauge width
-            if (marginGaugeEl) {
-                // Reset to 0 briefly to trigger CSS transition every open
-                marginGaugeEl.style.width = '0%';
-                setTimeout(() => {
-                    marginGaugeEl.style.width = `${progressPercent}%`;
-                }, 50);
-            }
-
-            // Build timeline (Combined documents and transactions)
-            const tlContainer = document.getElementById('activity-list-container');
-            let combined = [];
-            if (tlContainer) {
-                tlContainer.innerHTML = '';
-
-                // Unpaid Alert
-                if (proj.hasUnpaid) {
-                    const alertHtml = `
-                        <div class="alert-banner" style="margin-bottom: var(--spacing-sm);">
-                            <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i>
-                            <span>未入金の請求があります</span>
-                        </div>
-                    `;
-                    tlContainer.insertAdjacentHTML('beforeend', alertHtml);
-                }
-
-                combined = [...mockDB.activities.filter(t => String(t.projectId) === String(projectId) && !t.is_deleted), ...mockDB.documents.filter(d => String(d.projectId) === String(projectId))];
-                // Sort descending (basic string comparison for mock dates)
-                combined.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                if (combined.length === 0) {
-                    tlContainer.innerHTML += '<div style="width: 100%; text-align: center;"><p style="color: var(--text-muted); font-size: 13px; padding: 20px 0; margin: 0;">履歴はありません。</p></div>';
-                } else {
-                    combined.forEach(item => {
-                        // Use unified Transaction Row factory
-                        // Documents use a generic form, Transactions use the full form
-                        if (!item.amount && !item.category) {
-                           // It's a document. For now, keep a simple item or map it to the row factory
-                           // Mocking a document shape for the generic row factory
-                           const docTx = {
-                               id: item.id,
-                               title: item.title,
-                               date: item.date,
-                               amount: 0,
-                               type: 'document',
-                               category: '書類'
-                           };
-                           const row = createTransactionRow(docTx, true);
-                           tlContainer.appendChild(row);
-                        } else {
-                           // It's a standard transaction
-                           const row = createTransactionRow(item, true, (tx) => {
-                               // Ensure we only open the modal for editables
-                               if (tx.type === 'expense' || tx.type === 'income' || tx.type === 'labor') {
-                                   window.openEditExpenseModal(tx.id);
-                               }
-                           });
-                           // To match the original timeline CSS hook used for filtering
-                           row.classList.add('activity-list-item'); 
-                           tlContainer.appendChild(row);
-                        }
-                    });
-                }
-            }
-
-            // Inline search listener setup
-            const searchInput = document.getElementById('passbook-search');
-            if (searchInput) {
-                searchInput.value = ''; // clear on open
-                searchInput.oninput = (e) => {
-                    const term = e.target.value.toLowerCase();
-                    const items = tlContainer.querySelectorAll('.activity-list-item');
-                    items.forEach(item => {
-                        const text = item.textContent.toLowerCase();
-                        item.style.display = text.includes(term) ? 'grid' : 'none';
-                    });
-                };
-            }
-
-            // Custom Expense Edit Modal Logic
-            window.openEditExpenseModal = (txId) => {
-                const tx = mockDB.activities.find(t => t.id == txId);
-                if (!tx || (tx.type !== 'expense' && tx.type !== 'income' && tx.type !== 'labor')) return; // Limit to editables
-
-                const idEl = document.getElementById('edit-tx-id');
-                const titleEl = document.getElementById('edit-tx-title');
-                const amountEl = document.getElementById('edit-tx-amount');
-                const catSelect = document.getElementById('edit-tx-category');
-                const modal = document.getElementById('modal-edit-expense');
-
-                if (!modal || !idEl || !titleEl || !amountEl) {
-                    console.error('DOM Error: Edit Expense Modal elements not found.');
-                    return;
-                }
-
-                idEl.value = tx.id;
-                titleEl.value = tx.title || '';
-                amountEl.value = tx.amount || 0;
-
-                if (catSelect) catSelect.value = tx.category || '雑費';
-
-                modal.classList.remove('hidden');
-                modal.classList.add('show');
-            };
-
-            window.closeEditExpenseModal = () => {
-                const modal = document.getElementById('modal-edit-expense');
-                if (!modal) return;
-
-                modal.classList.remove('show');
-
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 300);
-            };
-
-            window.deleteTransaction = async () => {
-                const idEl = document.getElementById('edit-tx-id');
-                if (!idEl || !idEl.value) return;
-                const txId = idEl.value;
-
-                const tx = mockDB.activities.find(t => t.id == txId);
-                if (tx) {
-                    tx.is_deleted = true; // Local Logical Delete
-
-                    // Persistent Supabase Delete Sync
-                    if (window.supabaseClient) {
-                        try {
-                            const query = window.supabaseClient.from('activities').update({
-                                is_deleted: true
-                            }).match({
-                                title: tx.title,
-                                amount: tx.amount,
-                                date: tx.date
-                            });
-                            await query;
-                            console.log("[Neo AI] Supabase DELETE sync success:", tx.title);
-                        } catch (e) { console.error('Supabase Delete Error:', e); }
-                    }
-                }
-
-                window.closeEditExpenseModal();
-
-                // Recalculate all totals and re-render UI exactly as requested
-                renderProjects(mockDB.projects);
-                if (currentOpenProjectId) {
-                    window.openProjectDetail(currentOpenProjectId);
-                }
-
-                const neoFabBubble = document.getElementById('neo-fab-bubble');
-                if (neoFabBubble) {
-                    neoFabBubble.textContent = `⚡️ 項目を削除して、合計値を再計算したよ。`;
-                    neoFabBubble.classList.add('show');
-                    setTimeout(() => neoFabBubble.classList.remove('show'), 3000);
-                }
-            };
-
-            window.saveEditedExpense = async () => {
-                const txId = document.getElementById('edit-tx-id').value;
-                const newTitle = document.getElementById('edit-tx-title').value.trim();
-                const newAmount = document.getElementById('edit-tx-amount').value;
-                const newCategory = document.getElementById('edit-tx-category').value;
-
-                if (!newTitle) {
-                    alert('内容を入力してください');
-                    return;
-                }
-
-                await window.updateTransaction(Number(txId), {
-                    title: newTitle,
-                    amount: newAmount,
-                    category: newCategory
-                });
-
-                window.closeEditExpenseModal();
-
-                // Re-render the detail view to reflect changes and potentially update Neo's hints
-                window.openProjectDetail(currentOpenProjectId);
-            };
-
-            // ---- NEO CONFIRMATION GATE LOGIC ----
-            window.aiCorrectionLog = JSON.parse(localStorage.getItem('neo_ai_corrections') || '[]');
-
-            window.cancelNeoConfirm = () => {
-                document.getElementById('modal-neo-confirm').classList.add('hidden');
-                window.pendingAiDecision = null;
-                const neoBubble = document.getElementById('neo-fab-bubble');
-                if (neoBubble) {
-                    neoBubble.classList.remove('show');
-                }
-            };
-
-            window.saveNeoConfirm = () => {
-                if (!window.pendingAiDecision) return;
-
-                const confirmedTitle = document.getElementById('confirm-tx-title').value;
-                const confirmedAmount = parseInt(document.getElementById('confirm-tx-amount').value, 10) || 0;
-                const confirmedCategory = document.getElementById('confirm-tx-category').value;
-                const originalCategory = document.getElementById('confirm-tx-original-category').value;
-
-                // 1. Semantic Correction Learning Loop
-                if (confirmedCategory !== originalCategory) {
-                    console.log(`[Neo AI Learning] User corrected category: ${originalCategory} -> ${confirmedCategory} for input: "${window.pendingAiDecision.originalInput}"`);
-
-                    // Simple learning: record the correction mapping
-                    window.aiCorrectionLog.push({
-                        input_snippet: window.pendingAiDecision.originalInput.substring(0, 20),
-                        corrected_to: confirmedCategory
-                    });
-
-                    // Keep log concise
-                    if (window.aiCorrectionLog.length > 20) {
-                        window.aiCorrectionLog.shift();
-                    }
-                    localStorage.setItem('neo_ai_corrections', JSON.stringify(window.aiCorrectionLog));
-
-                    // Fire-and-forget async contribution to Global Lexicon (Crowdsourced Intelligence)
-                    if (window.contributeToGlobalLexicon) {
-                        window.contributeToGlobalLexicon(window.pendingAiDecision.originalInput, confirmedCategory);
-                    }
-                }
-
-                // 2. Apply confirmed data
-                const hintInput = window.pendingAiDecision.originalInput || '';
-                const finalTransaction = {
-                    ...window.pendingAiDecision,
-                    title: confirmedTitle,
-                    amount: confirmedAmount,
-                    type: confirmedCategory
-                };
-
-                // Remove temporary keys before inserting
-                delete finalTransaction.projectName;
-                delete finalTransaction.originalInput;
-
-                if ((finalTransaction.projectId == null || finalTransaction.projectId === '') && typeof window.resolveExpenseProjectId === 'function') {
-                    finalTransaction.projectId = window.resolveExpenseProjectId(finalTransaction, hintInput);
-                }
-
-                // 3. Save officially
-                window.insertTransaction(finalTransaction);
-
-                try {
-                    const savedTxs = JSON.parse(localStorage.getItem('neo_transactions') || '[]');
-                    savedTxs.push(finalTransaction);
-                    localStorage.setItem('neo_transactions', JSON.stringify(savedTxs));
-                } catch (e) { console.error("Local storage save failed:", e); }
-
-                renderProjects(window.mockDB.projects);
-                window.updateGlobalProfitDisplay();
-
-                document.getElementById('modal-neo-confirm').classList.add('hidden');
-                window.pendingAiDecision = null;
-
-                if (window.currentOpenProjectId != null && typeof window.openProjectDetail === 'function') {
-                    window.openProjectDetail(window.currentOpenProjectId);
-                }
-
-                const neoBubble = document.getElementById('neo-fab-bubble');
-                if (neoBubble) {
-                    neoBubble.textContent = `了解！「${confirmedTitle}（¥${confirmedAmount.toLocaleString()}）」を記録したよ✨`;
-                    neoBubble.classList.add('show');
-                    setTimeout(() => { neoBubble.classList.remove('show'); }, 4000);
-                }
-            };
-
-            // ---- GLOBAL LEXICON CONTRIBUTION ENGINE ----
-            window.contributeToGlobalLexicon = async (originalInput, correctedCategory) => {
-                if (!window.supabaseClient || typeof extractPureBusinessTerm !== 'function') return;
-                try {
-                    // Start Secondary AI Data Cleansing to protect PII
-                    const pureTerm = await extractPureBusinessTerm(originalInput);
-
-                    if (!pureTerm || pureTerm.length < 2) return;
-
-                    // [REJECTION_PROTOCOL] Check
-                    if (pureTerm === "[REJECT]" || pureTerm.includes("[REJECT]")) {
-                        console.warn("[Neo Global Agent] Contribution REJECTED to protect PII or filter toxicity. Skipping upload.");
-                        return;
-                    }
-
-                    console.log("[Neo Global Agent] Extracted pure term for communal DB:", pureTerm);
-
-                    // Check existing dictionary via Supabase
-                    const kc = window.supabaseKnowledgeClient || window.supabaseClient;
-                    const { data: existing } = await kc
-                        .from('neo_global_lexicon')
-                        .select('id, frequency')
-                        .eq('keyword', pureTerm)
-                        .eq('category', correctedCategory)
-                        .single();
-
-                    if (existing) {
-                        await kc
-                            .from('neo_global_lexicon')
-                            .update({ frequency: existing.frequency + 1 })
-                            .eq('id', existing.id);
-                    } else {
-                        await kc
-                            .from('neo_global_lexicon')
-                            .insert([{
-                                keyword: pureTerm,
-                                category: correctedCategory,
-                                frequency: 1
-                            }]);
-                    }
-                    console.log("[Neo Global Agent] Successfully contributed to collective intelligence.");
-                } catch (e) {
-                    console.error("[Neo Global Agent] Contribution failed silently:", e);
-                }
-            };
-            // ------------------------------------
-
-            // Populate Profit AI Hints
-            const aiHintsContainer = document.getElementById('profit-ai-hints');
-            if (aiHintsContainer) {
-                aiHintsContainer.innerHTML = '';
-                const hints = [];
-
-                // Hint 1: Based on margin
-                if (margin > 30) {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="check-circle-2" style="width: 16px; height: 16px; color: #10b981;  margin-top: 2px;"></i><span>大変優秀な利益率（${margin}％）です。この人員配置パターンを別の現場でも横展開しましょう。</span></li>`);
-                } else if (margin > 0) {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="trending-up" style="width: 16px; height: 16px; color: var(--accent-neo-blue);  margin-top: 2px;"></i><span>資材（経費）の仕入れ先を1社にまとめると、あと3%〜5%の利益改善が見込めます。</span></li>`);
-                } else {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; color: #f59e0b;  margin-top: 2px;"></i><span>現在赤字ペースです。追加請求の交渉か、直近の人工（稼働）の削減を推奨します。</span></li>`);
-                }
-
-                // Hint 2: Unpaid check
-                if (proj.hasUnpaid) {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="clock" style="width: 16px; height: 16px; color: #f43f5e;  margin-top: 2px;"></i><span>未入金の請求書が1件あります。キャッシュフロー悪化を防ぐため、本日中にリマインド連絡を。</span></li>`);
-                } else {
-                    hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="shield-check" style="width: 16px; height: 16px; color: var(--accent-neo-blue);  margin-top: 2px;"></i><span>過去の請求はすべて入金済みです（iCloudデータ同期確認済）。健全な資金繰りです。</span></li>`);
-                }
-
-                // Hint 3: Generic AI insight
-                hints.push(`<li style="font-size: 13px; color: var(--text-main); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;"><i data-lucide="lightbulb" style="width: 16px; height: 16px; color: #f59e0b;  margin-top: 2px;"></i><span>類似規模の過去プロジェクトと比較して、発注書の作成タイミングが平均2日遅れています。</span></li>`);
-
-                aiHintsContainer.innerHTML = hints.join('');
-            }
-
-            // Neo Suggestion
-            const neoBubble = document.getElementById('neo-fab-bubble');
-            if (neoBubble) {
-                let msg = `現在の利益率は${margin}％。次は資材の一括発注でさらに＋3%を目指そう！`;
-                if (proj.hasUnpaid) {
-                    msg = '未入金の請求書があります！すぐリマインド連絡（＋アクション）をしよう！';
-                } else if (combined.length === 0) {
-                    msg = 'まずは見積書を作成して、プロジェクトを前に進めよう（＋）！';
-                }
-                const originalText = neoBubble.textContent;
-                neoBubble.textContent = msg;
-                neoBubble.classList.add('show');
-                setTimeout(() => {
-                    neoBubble.classList.remove('show');
-                    setTimeout(() => { neoBubble.textContent = originalText; }, 300);
-                }, 4000);
-            }
-
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
-
-            switchView('view-project-detail');
-        };
 
         // Render projects on init
-        renderProjects([...mockDB.projects]);
+        if (typeof window.renderProjects === 'function') window.renderProjects([...mockDB.projects]);
 
         // Hijack Dashboard card to click the first project for demo, or switch view directly to sites
         const sitesCard = document.querySelector('[data-target="view-sites"]');
@@ -3400,7 +2541,7 @@ window.addEventListener('load', async () => {
 
                         let bubbleProjStr = '';
                         if (currentOpenProjectId) {
-                            const proj = mockDB.projects.find(p => p.id === currentOpenProjectId);
+                            const proj = mockDB.projects.find((p) => String(p.id) === String(currentOpenProjectId));
                             if (proj) {
                                 bubbleProjStr = `（保存先: ${proj.name}）`;
                                 const newTx = {
@@ -3412,7 +2553,7 @@ window.addEventListener('load', async () => {
                                     date: new Date().toLocaleDateString('ja-JP').replace(/\//g, '/')
                                 };
                                 mockDB.activities.unshift(newTx);
-                                renderProjects(mockDB.projects); // update wallet and lists
+                                if (typeof window.renderProjects === 'function') window.renderProjects(mockDB.projects); // update wallet and lists
                             }
                         }
 
@@ -3471,7 +2612,7 @@ window.addEventListener('load', async () => {
         const modalEditProject = document.getElementById('modal-edit-project');
 
         // Populate edit fields
-        const proj = mockDB.projects.find(p => p.id === projectId);
+        const proj = mockDB.projects.find((p) => String(p.id) === String(projectId));
         if (proj && modalEditProject) {
             const editName = document.getElementById('edit-proj-name');
             if (editName) editName.value = proj.name || '';
@@ -3519,7 +2660,7 @@ window.addEventListener('load', async () => {
             }
 
             // Update DB
-            const projIndex = mockDB.projects.findIndex(p => p.id === currentOpenProjectId);
+            const projIndex = mockDB.projects.findIndex((p) => String(p.id) === String(currentOpenProjectId));
             if (projIndex !== -1) {
                 mockDB.projects[projIndex].name = name;
                 mockDB.projects[projIndex].location = loc;
@@ -3548,7 +2689,7 @@ window.addEventListener('load', async () => {
                 const actionMenu = document.getElementById('project-action-menu');
                 if (actionMenu) actionMenu.classList.add('hidden');
 
-                renderProjects(mockDB.projects); // Ensure sites view is refreshed with new info
+                if (typeof window.renderProjects === 'function') window.renderProjects(mockDB.projects); // Ensure sites view is refreshed with new info
                 window.openProjectDetail(currentOpenProjectId);
 
                 // Neoのフィードバック
@@ -3606,13 +2747,18 @@ window.addEventListener('load', async () => {
         // Persistent deletion from Server DB
         if (window.supabaseClient) {
             try {
+                // _resolveSupabaseAuthUid throws Error('AUTH_REQUIRED') if no uid
+                const delUid = await window._resolveSupabaseAuthUid();
                 // Delete project
                 await window.supabaseClient.from('projects').delete().eq('id', projectId);
-                // Clean up related data
-                await window.supabaseClient.from('activities').delete().eq('project_id', projectId);
+                await window.supabaseClient.from('activities').delete().eq('project_id', projectId).eq('user_id', delUid);
                 await window.supabaseClient.from('documents').delete().eq('project_id', projectId);
             } catch (err) {
-                console.error('[Database] Failed to permanently delete project:', err);
+                if (err?.message === 'AUTH_REQUIRED') {
+                    console.warn('[Database] No auth session; skipping server-side project deletion.');
+                } else {
+                    console.error('[Database] Failed to permanently delete project:', err);
+                }
             }
         }
 
@@ -3628,7 +2774,7 @@ window.addEventListener('load', async () => {
         }
 
         // Render updated list and return to sites view
-        renderProjects(mockDB.projects);
+        if (typeof window.renderProjects === 'function') window.renderProjects(mockDB.projects);
         document.querySelector('[data-target="view-sites"]').click();
     };
 
@@ -3956,7 +3102,7 @@ window.addEventListener('load', async () => {
         }
 
         // Re-render completely so Wallet global totals update
-        renderProjects(mockDB.projects);
+        if (typeof window.renderProjects === 'function') window.renderProjects(mockDB.projects);
 
         // Re-open exactly the current project to refresh the timeline
         window.openProjectDetail(currentOpenProjectId);
@@ -4392,7 +3538,7 @@ window.addEventListener('load', async () => {
     }
 
     // --- SUPABASE REAL-TIME BINDING ---
-    const initSupabaseData = async () => {
+    const initUserSupabase = async () => {
         try {
             if (!window.supabaseClient) {
                 // Soft warn instead of error
@@ -4422,45 +3568,36 @@ window.addEventListener('load', async () => {
                 }));
             }
 
-            // Fetch Activities — ローカル（未同期・オフライン入力）を丸ごと捨てないようマージ
-            const { data: actData, error: actErr } = await window.supabaseClient.from('activities').select('*');
+            // Fetch Activities — 現在ユーザーの行のみ（RLS と一致）
+            // _resolveSupabaseAuthUid throws Error('AUTH_REQUIRED') if session unavailable
+            let actData = null, actErr = null;
+            try {
+                const bootUid = await window._resolveSupabaseAuthUid();
+                const actResult = await window.supabaseClient.from('activities').select('*').eq('user_id', bootUid);
+                actData = actResult.data;
+                actErr = actResult.error;
+            } catch (bootErr) {
+                if (bootErr?.message === 'AUTH_REQUIRED') {
+                    console.warn('[Neo Boot] No auth session; skipping activities fetch.');
+                } else {
+                    console.error('[Neo Boot] Activities fetch error:', bootErr);
+                }
+            }
             if (!actErr && actData) {
-                const mapActivityRow = (a) => ({
-                    id: a.id,
-                    projectId: a.project_id,
-                    type: a.type,
-                    category: a.category,
-                    title: a.title,
-                    amount: parseFloat(a.amount) || 0,
-                    date: a.date,
-                    receiptUrl: a.receipt_url,
-                    isBookkeeping: a.is_bookkeeping,
-                    is_deleted: a.is_deleted || false
-                });
-                const remoteList = actData.map(mapActivityRow);
-                const remoteIdSet = new Set(remoteList.map((r) => String(r.id)));
-
                 const localBefore = Array.isArray(window.mockDB.activities) ? window.mockDB.activities : [];
-                const localOnly = localBefore.filter((loc) => {
-                    if (!loc) return false;
-                    if (loc.id == null || loc.id === '') return true;
-                    return !remoteIdSet.has(String(loc.id));
-                });
-
-                window.mockDB.activities = [...remoteList, ...localOnly];
-                window.mockDB.activities.sort((a, b) => {
-                    const ta = new Date(String(a.date || '').replace(/\//g, '-')).getTime();
-                    const tb = new Date(String(b.date || '').replace(/\//g, '-')).getTime();
-                    return (Number.isNaN(tb) ? 0 : tb) - (Number.isNaN(ta) ? 0 : ta);
-                });
+                const merged =
+                    typeof window.mergeActivitiesRemoteAndLocal === 'function'
+                        ? window.mergeActivitiesRemoteAndLocal(localBefore, actData)
+                        : localBefore;
+                window.mockDB.activities = merged;
 
                 window.persistLocalBody();
-                console.log(`[Neo Boot] Activities merged: remote=${remoteList.length}, kept local-only=${localOnly.length}`);
+                console.log(`[Neo Boot] Activities merged: remote=${actData.length}, total=${merged.length}`);
             } else if (actErr) {
                 console.warn('[Neo Boot] Activities fetch failed; keeping local mockDB.activities:', actErr.message);
             }
 
-            // Fetch Documents（ユーザーデータのみ — 語彙は loadNeoGlobalLexiconFromKnowledge）
+            // Fetch Documents（ユーザーデータのみ — 語彙は initKnowledgeSupabase）
             const { data: docData, error: docErr } = await window.supabaseClient.from('documents').select('*');
             if (!docErr && docData) {
                 window.mockDB.documents = docData.map(d => ({
@@ -4469,11 +3606,20 @@ window.addEventListener('load', async () => {
             }
 
             // Re-render dashboard
-            if (typeof renderProjects === 'function') {
-                renderProjects(window.mockDB.projects);
+            if (typeof window.renderProjects === 'function') {
+                window.renderProjects(window.mockDB.projects);
             }
             if (typeof window.updateSitesList === 'function') {
                 window.updateSitesList();
+            }
+            window._refreshCockpitActivityFeed();
+            if (window.currentOpenProjectId && typeof window._refreshProjectDetailIfOpen === 'function') {
+                window._refreshProjectDetailIfOpen(window.currentOpenProjectId);
+            }
+            
+            // Activate GlobalStore Realtime Subscriptions
+            if (window.GlobalStore && typeof window.GlobalStore.initRealtimeSync === 'function') {
+                window.GlobalStore.initRealtimeSync();
             }
 
         } catch (e) {
@@ -4481,11 +3627,11 @@ window.addEventListener('load', async () => {
         }
     };
 
-    window.refreshNeoUserDataFromRemote = initSupabaseData;
-    window.refreshNeoKnowledgeFromRemote = loadNeoGlobalLexiconFromKnowledge;
+    window.refreshNeoUserDataFromRemote = initUserSupabase;
+    window.refreshNeoKnowledgeFromRemote = initKnowledgeSupabase;
 
     // ユーザーデータと語彙（知識クライアント）を並列取得
-    Promise.all([initSupabaseData(), loadNeoGlobalLexiconFromKnowledge()]).catch((e) =>
+    Promise.all([initUserSupabase(), initKnowledgeSupabase()]).catch((e) =>
         console.error('[Neo Boot] Supabase / knowledge init failed', e)
     );
 
@@ -4742,10 +3888,16 @@ window.addEventListener('load', async () => {
     // seamlessly when background Supabase Sync completes or expenses are logged.
     // ==========================================
     if (window.GlobalStore && window.GlobalStore.subscribe) {
+        // 再入ガード: openProjectDetail が内部で updateState を呼ぶ可能性があるため
+        // ロック中はサブスクライバを再実行しない（Maximum call stack size exceeded 対策）
+        let _detailRefreshLock = false;
         window.GlobalStore.subscribe(() => {
+            if (_detailRefreshLock) return;
             const detailView = document.getElementById('view-project-detail');
             if (window.currentOpenProjectId && detailView && !detailView.classList.contains('hidden')) {
-                window.openProjectDetail(window.currentOpenProjectId);
+                _detailRefreshLock = true;
+                Promise.resolve(window.openProjectDetail(window.currentOpenProjectId))
+                    .finally(() => { _detailRefreshLock = false; });
             }
         });
     }
@@ -4827,15 +3979,19 @@ window.addEventListener('load', async () => {
 
         // Send ZERO-SERVER Payload to Supabase Fire & Forget
         if (window.supabaseClient) {
-            window.supabaseClient.from('files').insert({
-                project_id: projectId,
-                file_id: fileId,
-                file_name: fileName,
-                web_view_link: webViewLink,
-                thumbnail_link: thumbnailLink || null,
-                doc_type: folderType
-            }).then(({error}) => {
-                if(error) console.error("Supabase File Sync Failed", error);
+            window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+                const uid = session?.user?.id || null;
+                window.supabaseClient.from('files').insert({
+                    project_id: projectId,
+                    file_id: fileId,
+                    file_name: fileName,
+                    web_view_link: webViewLink,
+                    thumbnail_link: thumbnailLink || null,
+                    doc_type: folderType,
+                    user_id: uid
+                }).then(({error}) => {
+                    if(error) console.error("Supabase File Sync Failed", error);
+                });
             });
         }
 

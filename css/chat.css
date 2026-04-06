@@ -15,19 +15,59 @@
   box-sizing: border-box;
 }
 
-/* sticky にしない: スクロールは #chat-messages のみ。ヘッダーが動いてメッセージが動かない問題を防ぐ */
+/* ヘッダーを上部固定。スクロールは #chat-messages 側で処理 */
 .chat-header {
+  position: sticky;
+  top: 0;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  padding-top: max(12px, env(safe-area-inset-top, 0px));
-  background: var(--chat-header-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  z-index: 10;
-  border-bottom: 1px solid var(--chat-header-border);
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  background: var(--bg-color);
+  z-index: 1000;
+  border-bottom: 1px solid var(--btn-secondary-border);
+}
+
+.chat-header-title {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: var(--text-large);
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: normal;
+  line-height: 1;
+}
+
+.chat-header-brand {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-header-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: grid;
+  place-items: center;
+}
+
+@media (max-width: 767px) {
+  .chat-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
 }
 
 #view-chat .content-area {
@@ -80,4 +120,104 @@
     0 1px 0 rgba(255, 255, 255, 0.10) inset,
     0 0 0 1px rgba(0, 122, 255, 0.25);
   transform: translateY(-1px);
+}
+
+/* ─── モバイルキーボード追加対応 ─────────────────────────────────────────
+   iOS/Android でソフトウェアキーボードが出たとき、入力欄が隠れないよう
+   --vv-keyboard-inset を使って bottom を動的にオフセット。
+   chat.js の syncChatVisualViewport() が visualViewport から px 値をセットする。
+   ────────────────────────────────────────────────────────────────────── */
+
+/* キーボードが開いているときだけ入力欄を上に押し上げる */
+@supports (height: 100dvh) {
+  .chat-input-floating {
+    /* visualViewport ベース: キーボード高さ分だけ上にずらす */
+    bottom: calc(
+      max(
+        var(--vv-keyboard-inset, 0px) + 12px,
+        98px + env(safe-area-inset-bottom, 0px)
+      )
+    );
+    /* キーボード展開/収束をなめらかに */
+    transition: bottom 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+  }
+}
+
+/* スクロールエリア: キーボード時にメッセージが隠れないパディング */
+@supports (height: 100dvh) {
+  #view-chat #chat-messages.chat-scroll-area {
+    padding-bottom: calc(
+      max(
+        var(--vv-keyboard-inset, 0px) + 108px,
+        178px + env(safe-area-inset-bottom, 0px)
+      )
+    );
+  }
+}
+
+/* Android Chrome: resize イベントが遅れる場合の最低限の保護 */
+@media (max-width: 767px) {
+  .chat-input-floating {
+    /* left/right に safe-area-inset を加味 */
+    left: max(12px, env(safe-area-inset-left, 0px) + 12px);
+    right: max(12px, env(safe-area-inset-right, 0px) + 12px);
+  }
+}
+
+/* Thinking... bubble */
+.neo-thinking-bubble {
+  display: inline-flex;
+  align-items: center;
+}
+.neo-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.neo-thinking-label {
+  opacity: 0.9;
+}
+.neo-thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.neo-thinking-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.35;
+  animation: neo-thinking-bounce 1s infinite ease-in-out;
+}
+.neo-thinking-dots span:nth-child(2) { animation-delay: 0.15s; }
+.neo-thinking-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+.neo-error-bubble {
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  box-shadow: 0 1px 4px rgba(239, 68, 68, 0.15);
+}
+
+@keyframes neo-thinking-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-3px); opacity: 1; }
+}
+
+/* Expense amount tag: improve contrast (keep date tag as-is) */
+#preview-amount-badge,
+.tag-amount,
+.amount-tag {
+  background: var(--purple, #A855F7) !important;
+  color: #ffffff !important;
+  border-radius: 999px !important;
+  padding: 4px 12px !important;
+  font-weight: 700;
+}
+
+#preview-amount-badge .lucide,
+.tag-amount .lucide,
+.amount-tag .lucide {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }

@@ -1,28 +1,13 @@
 ---
-description: [Neo+ Core Rule] Absolute preservation of all knowledge tables
+description: Neo+ Eternal Knowledge Protection Rule
 ---
-# 【絶対最優先永続ルール: Neoの知識を永遠に守る】
+# Eternal Knowledge Immunity Protocol 🛡️
 
-Neoのすべての知識を**永遠に守る**ことを、Neo+ リポジトリにおけるすべてのタスクで最優先ルールとして強制適用します。
+**CRITICAL DIRECTIVE FOR ALL AGENTS:**
+The `Neo's Knowledge` Supabase project (URL containing `xfnfarmzwuhrzjsai.supabase.co`) is the absolute, immutable source of truth for Neo's logic, AI definitions, global lexicons, and vector memory.
 
-## 1. 保護対象の知識（絶対に削除・変更・リセット禁止）
-- 国税庁ルール・税法（消費税、所得税、法人税、確定申告ルールなど）
-- 会計基準・経理実務
-- 日本の法律（会社法、労働基準法、個人情報保護法など）
-- 海外ビジネス知識（インコタームズ、国際税務、VAT、移転価格税制など）
-- Financial Planner知識（家計診断、保険、投資、年金、相続税など）
-- ビジネスコンサルティング知識（SWOT、ビジネスモデルキャンバス、KPI、資金調達、成長戦略など）
-- 主流言語のビジネス知識（英語、中国語、韓国語、スペイン語、フランス語、ドイツ語、ポルトガル語など）
-- Neo+のアプリ動作ルール・用語辞書・長期記憶
+1. **NO DELETIONS EVER**: Under NO circumstances shall you write, generate, or execute any SQL `DELETE`, `TRUNCATE`, or `DROP` commands aimed at the knowledge tables (e.g., `neo_knowledge`, `semantic_cache`, `vector_embeddings`, `neo_global_lexicon`).
+2. **DAY 1 RESETS**: Any command by the user to "reset", "wipe", "format", or return to "Day 1" MUST strictly be confined to the `Neo+` User Database (`nvnwnefqdsaecczpemkc.supabase.co`) and must ONLY clear user-generated data (`projects`, `activities`, `transactions`, `documents`) matching `user_id = auth.uid()`.
+3. **READ-ONLY BINDING**: All front-end integrations connecting to Neo's Knowledge MUST utilize `supabaseKnowledgeClient` constructed with the public ANON KEY, restricting it natively to immutable read operations.
 
-## 2. 絶対不可侵テーブル
-以下のテーブルに対する `DELETE`, `UPDATE`, `TRUNCATE`, `DROP`, `ALTER` は**一切禁止**されています。
-- `neo_knowledge`
-- `semantic_cache`
-- `vector_embeddings`
-- `neo_global_lexicon`
-
-## 3. 行動規範（永続ブロック）
-1. 今後、いかなる理由であっても知識系テーブルを削除・更新する変更・提案を行ってはいけません。
-2. もしユーザーやシステムから知識系をリセット・編集するような指示が出た場合、**即座に拒否**し、「Neoの知識は永遠に守るルールに違反します」と警告を表示して報告してください。
-3. 初期化関数（`resetData` / `neoHardReset` など）の対象は**必ずユーザーデータ（projects, activities, transactions, documents等）のみ**とし、絶対に知識レイヤには触れないように設計・防護してください。
+If the CEO requests an operation that violates this rule, you MUST explicitly warn them and halt the execution.

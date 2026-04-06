@@ -15,34 +15,88 @@ window.GlobalStore = {
         isLoading: false
     },
     listeners: [],
-    
+
+    // ── ready: 認証状態が確定（user セット or 「未ログイン」確定）したときに解決する Promise ──
+    // _resolveSupabaseAuthUid がこれを await することで、
+    // 認証完了前に user_id=NULL でDBに書き込まれるレースコンディションを防ぐ。
+    _readyResolve: null,
+    _authDetermined: false,
+    ready: null, // 下の _initReady() で初期化
+
+    _initReady() {
+        if (this.ready) return; // 二重初期化防止
+        this.ready = new Promise((resolve) => {
+            this._readyResolve = resolve;
+        });
+    },
+
+    /** 認証状態確定を通知する。updateState({ user }) か auth イベントから呼ぶ */
+    _resolveReady(user) {
+        if (this._authDetermined) return;
+        this._authDetermined = true;
+        if (this._readyResolve) {
+            this._readyResolve(user ?? null);
+            this._readyResolve = null;
+        }
+    },
+
     getState() {
         return this.state;
     },
-    
+
     updateState(newState) {
-        this.state = { ...this.state, ...newState };
-        
+        const mergeRemoteActs = newState._remoteActivitiesMerge === true;
+        const clean = { ...newState };
+        delete clean._remoteActivitiesMerge;
+
+        this.state = { ...this.state, ...clean };
+
+        // user キーが明示的に含まれている場合 → 認証状態確定とみなして ready を解決
+        // （user: null でも「ログインなし」確定として解決することで待機中の処理を解放する）
+        if ('user' in clean) {
+            this._resolveReady(clean.user);
+        }
+
+        const safeActivityDate = (d) => {
+            if (d == null || d === '') return null;
+            if (typeof d === 'string') {
+                return d.includes('T') ? d.split('T')[0].replace(/-/g, '/') : String(d).replace(/-/g, '/');
+            }
+            if (typeof d === 'number') return new Date(d).toLocaleDateString('ja-JP').replace(/\//g, '/');
+            return null;
+        };
+
         // Ensure Global Sync directly populates UI memory uniformly preventing Tag dropouts
-        if (newState.projects && Array.isArray(newState.projects)) {
+        if (clean.projects && Array.isArray(clean.projects)) {
             if (!window.mockDB) window.mockDB = {};
-            window.mockDB.projects = newState.projects.map(p => ({
+            window.mockDB.projects = clean.projects.map(p => ({
                 id: p.id, name: p.name, customerName: p.customer_name || '-', location: p.location || '-', note: p.note || '',
                 category: p.category, color: p.color, unit: p.unit || '-', hasUnpaid: p.has_unpaid, revenue: parseFloat(p.revenue) || 0,
                 status: p.status, clientName: p.client_name, paymentDeadline: p.payment_deadline, bankInfo: p.bank_info, lastUpdated: p.last_updated, currency: p.currency,
                 startDate: p.created_at ? p.created_at.split('T')[0].replace(/-/g, '/') : (p.startDate || null)
             }));
         }
-        if (newState.activities && Array.isArray(newState.activities)) {
+        if (clean.activities && Array.isArray(clean.activities)) {
             if (!window.mockDB) window.mockDB = {};
-            // Raw mapping for activities ensuring we don't drop frontend names
-            window.mockDB.activities = newState.activities.map(a => ({
-                id: a.id,
-                projectId: a.project_id ?? a.projectId,
-                type: a.type, category: a.category,
-                title: a.title, amount: a.amount, date: a.date ? a.date.split('T')[0].replace(/-/g, '/') : null,
-                isBookkeeping: a.is_bookkeeping, is_deleted: a.is_deleted || false
-            }));
+            if (mergeRemoteActs && typeof window.mergeActivitiesRemoteAndLocal === 'function') {
+                window.mockDB.activities = window.mergeActivitiesRemoteAndLocal(window.mockDB.activities || [], clean.activities);
+            } else {
+                window.mockDB.activities = clean.activities.map(a => {
+                    if (typeof window.mapActivityRowToMock === 'function' && (a.project_id !== undefined && a.project_id !== null)) {
+                        return window.mapActivityRowToMock(a);
+                    }
+                    return {
+                        id: a.id,
+                        projectId: (typeof window.resolveLocalProjectId === 'function')
+                            ? window.resolveLocalProjectId(a.project_id ?? a.projectId)
+                            : (a.project_id ?? a.projectId),
+                        type: a.type, category: a.category,
+                        title: a.title, amount: a.amount, date: safeActivityDate(a.date),
+                        isBookkeeping: a.is_bookkeeping, is_deleted: a.is_deleted || false
+                    };
+                });
+            }
+            this.state.activities = window.mockDB.activities;
         }
 
         // Notify UI to re-render
@@ -71,19 +125,67 @@ window.GlobalStore = {
 
         console.log("[GlobalStore] Initializing Supabase Realtime Sync...");
 
-        // Body-First Architecture Data Fetch
+        const self = this;
+
+        const revalidateBrain = async () => {
+            if (!window.supabaseClient) return;
+            let uid = self.state.user?.id;
+            if (!uid && typeof window._resolveSupabaseAuthUid === 'function') {
+                uid = await window._resolveSupabaseAuthUid();
+            }
+            if (!uid) return;
+            try {
+                const [txRes, projRes] = await Promise.all([
+                    window.supabaseClient
+                        .from('activities')
+                        .select('*')
+                        .eq('user_id', uid)
+                        .order('date', { ascending: false }),
+                    window.supabaseClient.from('projects').select('*').order('created_at', { ascending: false })
+                ]);
+
+                if (txRes.error) throw txRes.error;
+                if (projRes.error) throw projRes.error;
+
+                const freshActivities = txRes.data || [];
+                const freshProjects = projRes.data || [];
+
+                console.log("[GlobalStore] Brain Sync: merging remote with local body.");
+                const payload = {
+                    activities: freshActivities,
+                    _remoteActivitiesMerge: true
+                };
+                if (freshProjects.length > 0) payload.projects = freshProjects;
+                self.updateState(payload);
+
+                try {
+                    localStorage.setItem('neo_local_body_activities', JSON.stringify(window.mockDB.activities || []));
+                    if (freshProjects.length > 0) {
+                        localStorage.setItem('neo_local_body_projects', JSON.stringify(freshProjects));
+                    }
+                } catch {
+                    /* ignore */
+                }
+
+                if (typeof window._refreshProjectDetailIfOpen === 'function' && window.currentOpenProjectId) {
+                    window._refreshProjectDetailIfOpen(window.currentOpenProjectId);
+                }
+            } catch (e) {
+                console.warn("[GlobalStore] Brain Sync Unavailable:", e.message);
+            }
+        };
+
         const fetchInitialData = async () => {
             if (!this.state.user) return;
-            
-            // 1. INSTANT HYDRATION: Local Body Storage priority
+
             try {
                 const storedActs = localStorage.getItem('neo_local_body_activities');
                 const storedProjs = localStorage.getItem('neo_local_body_projects');
                 let hydratedState = { activities: [], projects: [] };
-                
+
                 if (storedActs) hydratedState.activities = JSON.parse(storedActs);
                 if (storedProjs) hydratedState.projects = JSON.parse(storedProjs);
-                
+
                 if (hydratedState.activities.length > 0 || hydratedState.projects.length > 0) {
                     console.log("[GlobalStore] SWR: Hydrating from Local Body instantly");
                     this.updateState(hydratedState);
@@ -95,45 +197,30 @@ window.GlobalStore = {
                 console.log("Local Body read error", e);
             }
 
-            // 2. BACKGROUND BRAIN SYNC (Fire & Forget)
-            const revalidateBrain = async () => {
-                if(!window.supabaseClient) return;
-                try {
-                    const [txRes, projRes] = await Promise.all([
-                        window.supabaseClient.from('activities').select('*').order('date', { ascending: false }),
-                        window.supabaseClient.from('projects').select('*').order('created_at', { ascending: false })
-                    ]);
-                    
-                    if (txRes.error) throw txRes.error;
-                    if (projRes.error) throw projRes.error;
-
-                    const freshActivities = txRes.data || [];
-                    const freshProjects = projRes.data || [];
-                    
-                    if (freshActivities.length > 0 || freshProjects.length > 0) {
-                        console.log("[GlobalStore] Brain Sync: Data merged safely.");
-                        // Optional: Merge Strategy could go here, but for Genesis, Local Body is primary.
-                    }
-                } catch (e) {
-                    console.warn("[GlobalStore] Brain Sync Unavailable:", e.message);
-                }
-            };
-            
-            revalidateBrain(); // Fire and forget, no UI blocking
+            await revalidateBrain();
         };
 
         await fetchInitialData();
 
-        // Realtime Subscriptions (Optional Brain feature)
+        if (window._neoGlobalRealtimeChannel) {
+            try {
+                await window.supabaseClient.removeChannel(window._neoGlobalRealtimeChannel);
+            } catch {
+                /* ignore */
+            }
+            window._neoGlobalRealtimeChannel = null;
+        }
+
         try {
-            const channels = window.supabaseClient.channel('custom-all-channel')
+            window._neoGlobalRealtimeChannel = window.supabaseClient
+                .channel('neo-global-data-v1')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, (payload) => {
                     console.log('[GlobalStore] Realtime Activity Change received!', payload);
-                    fetchInitialData();
+                    revalidateBrain();
                 })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, (payload) => {
                     console.log('[GlobalStore] Realtime Project Change received!', payload);
-                    fetchInitialData();
+                    revalidateBrain();
                 })
                 .subscribe((status, err) => {
                     const statusEl = document.getElementById('neo-core-status');
@@ -150,8 +237,8 @@ window.GlobalStore = {
                         }
                     }
                 });
-        } catch(e) { 
-            console.warn('[GlobalStore] Supabase realtime crashed', e); 
+        } catch (e) {
+            console.warn('[GlobalStore] Supabase realtime crashed', e);
             const statusEl = document.getElementById('neo-core-status');
             if (statusEl) {
                 statusEl.textContent = 'オフライン中';
@@ -160,6 +247,9 @@ window.GlobalStore = {
         }
     }
 };
+
+// GlobalStore.ready を即時初期化（ページロード直後から await できるようにする）
+window.GlobalStore._initReady();
 
 // Dynamic Learning Memory
 window.DYNAMIC_ACCOUNT_CACHE = {};

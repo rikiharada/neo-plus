@@ -124,7 +124,7 @@ function setupHomeListeners() {
         // No duplicate listener needed here.
 
         // Trigger command with Enter key (IME-safe: skip during Japanese composition)
-        // Route through handleCompoundAction — handles project+multi-expense in one input
+        // Route through handleInstruction to enable full AI pipeline
         dashInput.addEventListener('keydown', (e) => {
             if (e.isComposing || e.keyCode === 229) return;
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -132,8 +132,7 @@ function setupHomeListeners() {
                 const textValue = dashInput.value.trim();
                 if (!textValue) return;
                 dashInput.value = '';
-                const handler = window.handleCompoundAction || window.handleInstruction;
-                if (handler) handler(textValue);
+                if (window.handleInstruction) window.handleInstruction(textValue);
             }
         });
     }

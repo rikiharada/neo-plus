@@ -112,7 +112,7 @@
                 <i data-lucide="moon" class="icon-moon" style="width: 20px; height: 20px; color: #6366f1; display: none;"></i>
                 <span style="font-size: 14px; font-weight: 500;">ダークモード切替</span>
             </div>
-            <button class="theme-toggle" style="background:none; border:none; cursor:pointer; color: var(--text-muted);">
+            <button class="theme-toggle" data-theme-toggle="1" style="background:none; border:none; cursor:pointer; color: var(--text-muted);">
                 <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
             </button>
         </label>
@@ -186,8 +186,64 @@
         </div>
     </div>
     <div class="settings-group">
-        <button class="btn-huge btn-secondary" onclick="window.resetSetup()">
+        <button class="btn-huge btn-secondary" onclick="window.showResetConfirmModal()">
             ♻️ アプリ初期化 (Reset)
         </button>
+    </div>
+</div>
+
+<!-- ── アプリ初期化 確認モーダル ──────────────────────────────────── -->
+<div id="modal-reset-confirm"
+     style="display:none; position:fixed; inset:0; z-index:99999;
+            background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);
+            -webkit-backdrop-filter:blur(4px);
+            align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
+    <div style="background:var(--bg-color); border-radius:20px; padding:28px 24px;
+                max-width:340px; width:100%; box-shadow:0 24px 64px rgba(0,0,0,0.3);
+                border:1px solid var(--btn-secondary-border); text-align:center;">
+        <div style="width:52px;height:52px;border-radius:50%;background:rgba(239,68,68,0.1);
+                    display:grid;place-items:center;margin:0 auto 16px;">
+            <i data-lucide="trash-2" style="width:24px;height:24px;color:#ef4444;stroke-width:2px;"></i>
+        </div>
+        <h3 style="margin:0 0 8px;font-size:17px;font-weight:700;color:var(--text-main);">
+            アプリを初期化しますか？
+        </h3>
+        <p style="margin:0 0 20px;font-size:13px;color:var(--text-muted);line-height:1.6;">
+            以下のデータが<strong style="color:#ef4444;">完全に削除</strong>されます。<br>
+            この操作は取り消せません。
+        </p>
+        <ul style="text-align:left;margin:0 0 24px;padding:0 0 0 4px;
+                   list-style:none;font-size:13px;color:var(--text-muted);
+                   display:flex;flex-direction:column;gap:6px;">
+            <li style="display:flex;align-items:center;gap:8px;">
+                <i data-lucide="folder" style="width:14px;height:14px;color:#ef4444;flex-shrink:0;"></i>フォルダ（プロジェクト）
+            </li>
+            <li style="display:flex;align-items:center;gap:8px;">
+                <i data-lucide="receipt" style="width:14px;height:14px;color:#ef4444;flex-shrink:0;"></i>経費・取引履歴
+            </li>
+            <li style="display:flex;align-items:center;gap:8px;">
+                <i data-lucide="file-text" style="width:14px;height:14px;color:#ef4444;flex-shrink:0;"></i>書類データ
+            </li>
+            <li style="display:flex;align-items:center;gap:8px;">
+                <i data-lucide="settings" style="width:14px;height:14px;color:#ef4444;flex-shrink:0;"></i>ローカルキャッシュ・設定
+            </li>
+        </ul>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <button id="btn-reset-exec"
+                    onclick="window.hideResetConfirmModal(); window.resetSetup();"
+                    style="width:100%;padding:14px;border-radius:12px;
+                           background:#ef4444;color:#fff;border:none;
+                           font-size:15px;font-weight:700;cursor:pointer;
+                           transition:opacity 0.15s;">
+                初期化する
+            </button>
+            <button onclick="window.hideResetConfirmModal();"
+                    style="width:100%;padding:14px;border-radius:12px;
+                           background:var(--btn-secondary-bg);color:var(--text-main);
+                           border:1px solid var(--btn-secondary-border);
+                           font-size:15px;font-weight:600;cursor:pointer;">
+                キャンセル
+            </button>
+        </div>
     </div>
 </div>

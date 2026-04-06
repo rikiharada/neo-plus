@@ -71,7 +71,7 @@
             <div style="margin-bottom: 40px;">
                 <h1 class="title" style="font-size: 36px; justify-content: center; margin-bottom: 8px;">Neo<sup
                         class="title-plus">+</sup></h1>
-                <p style="color: var(--text-muted); font-size: 14px;">あなたの手のひらに、安心のマネーマネジメントを。</p>
+                <p style="color: var(--text-muted); font-size: 14px;">確かなマネーマネジメントを、あなたと共に。</p>
             </div>
 
             <div
@@ -561,15 +561,27 @@
     </script>
 
     <!-- Core App Scripts -->
-    <script type="module" src="/lib/utils.js?v=NEO_SAFE_PHASE28"></script>
-    <script type="module" src="/lib/cloud/googleDrive.js?v=NEO_SAFE_PHASE28"></script>
-    <script src="/js/store.js?v=NEO_SAFE_PHASE28"></script>
-    <script src="/js/gemini.js?v=NEO_SAFE_PHASE28"></script>
-    <script src="/js/neo-brain.js?v=NEO_SAFE_PHASE28"></script>
-    <script src="/js/doc-engine.js?v=NEO_SAFE_PHASE28"></script>
-    <script src="/js/i18n.js?v=NEO_SAFE_PHASE28"></script>
-    <script type="module" src="/js/app.js?v=NEO_SAFE_PHASE28"></script>
-    <script type="module" src="/pages/chat.js?v=NEO_SAFE_PHASE28"></script>
+    <script type="module" src="/lib/utils.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/lib/cloud/googleDrive.js?v=NEO_SAFE_PHASE30"></script>
+    <script src="/js/store.js?v=NEO_SAFE_PHASE30"></script>
+    <script src="/js/gemini.js?v=NEO_SAFE_PHASE30"></script>
+    <script src="/js/neo-brain.js?v=NEO_SAFE_PHASE30"></script>
+    <script src="/js/doc-engine.js?v=NEO_SAFE_PHASE30"></script>
+    <script src="/js/i18n.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/js/registry.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/js/constants.js?v=NEO_SAFE_PHASE30"></script>
+    <!-- app.js: components の window.createProjectCard、_attachDbSafeIdIfNeeded、_refreshCockpitActivityFeed 等を先に登録 -->
+    <script type="module" src="/js/app.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/views/components/modals.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/views/view-invoice.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/views/projectdetail-core.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/views/projectdetail/projectdetail-modals.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/views/projectdetail/projectdetail-ai.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/views/dashboard-projects.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/pages/cockpit-voice.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/pages/db-sync.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/pages/chat-intents.js?v=NEO_SAFE_PHASE30"></script>
+    <script type="module" src="/pages/chat.js?v=NEO_SAFE_PHASE30"></script>
 </body>
 
 

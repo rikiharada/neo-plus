@@ -179,24 +179,31 @@ function bindStampOverlayControls() {
     if (ySlider) ySlider.addEventListener('input', updatePosition);
 }
 
-// Global reset exposed
-window.resetSetup = async () => {
-    const confirmed = confirm(
-        "⚠️ 全データを完全に消去します。\n\n" +
-        "・フォルダ（プロジェクト）\n" +
-        "・経費・取引履歴\n" +
-        "・書類データ\n" +
-        "・ローカルキャッシュ・設定\n\n" +
-        "この操作は取り消せません。本当に初期化しますか？"
-    );
-    if (!confirmed) return;
+// ── モーダル表示/非表示（account.html 内の #modal-reset-confirm を操作） ──
+window.showResetConfirmModal = () => {
+    const m = document.getElementById('modal-reset-confirm');
+    if (!m) return;
+    m.style.display = 'flex';
+    if (window.lucide) window.lucide.createIcons();
+    // モーダル外クリックで閉じる（重複バインド防止）
+    if (!m._outsideClickBound) {
+        m._outsideClickBound = true;
+        m.addEventListener('click', (e) => { if (e.target === m) window.hideResetConfirmModal(); });
+    }
+};
 
-    // ボタンをローディング表示に変更
-    const btn = document.querySelector('[onclick="window.resetSetup()"]');
-    const originalText = btn ? btn.innerHTML : '';
-    if (btn) {
-        btn.innerHTML = '⏳ リセット中...';
-        btn.disabled = true;
+window.hideResetConfirmModal = () => {
+    const m = document.getElementById('modal-reset-confirm');
+    if (m) m.style.display = 'none';
+};
+
+// ── 実際のリセット処理（モーダル内「初期化する」ボタンから呼ばれる） ──
+window.resetSetup = async () => {
+    // 実行ボタンをローディング表示に切り替え
+    const execBtn = document.getElementById('btn-reset-exec');
+    if (execBtn) {
+        execBtn.textContent = '⏳ リセット中...';
+        execBtn.disabled = true;
     }
 
     try {
@@ -204,7 +211,6 @@ window.resetSetup = async () => {
         if (typeof window.neoHardReset === 'function') {
             await window.neoHardReset();
         } else {
-            // フォールバック: ローカルのみクリア
             if (typeof window.neoDangerZoneWipeUserLocalBody === 'function') {
                 window.neoDangerZoneWipeUserLocalBody({ context: 'manual_reset' });
             }
@@ -217,10 +223,15 @@ window.resetSetup = async () => {
         window.location.reload();
     } catch (e) {
         console.error('[Reset] エラー:', e);
-        if (btn) {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+        // エラー時はモーダルを閉じてメッセージ表示
+        window.hideResetConfirmModal();
+        if (execBtn) { execBtn.textContent = '初期化する'; execBtn.disabled = false; }
+        // alert の代わりにNeoバブルでエラー通知
+        const neoBubble = document.getElementById('neo-fab-bubble');
+        if (neoBubble) {
+            neoBubble.textContent = 'リセット中にエラーが発生しました。ページを手動でリロードしてください。';
+            neoBubble.classList.add('show');
+            setTimeout(() => neoBubble.classList.remove('show'), 7000);
         }
-        alert('リセット中にエラーが発生しました。ページを手動でリロードしてください。\n' + (e?.message || e));
     }
 };
