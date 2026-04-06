@@ -1,3 +1,7 @@
+/**
+ * チャット＋コックピット経由の handleInstruction（単一モジュール）。
+ * NeoChat クラス等の別断片をここに混ぜないこと（Illegal return / ブレース不整合の原因になる）。
+ */
 import { supabase } from '../lib/supabase-client.js';
 import { understandIntent } from '../lib/core/intentRouter.js';
 import { generateAndUploadPDF } from '../lib/export/pdfGenerator.js';
@@ -191,6 +195,20 @@ export async function handleInstruction(text, hasImage = false) {
     if (!text && !hasImage) return;
     if (isProcessingInstruction) return;
 
+    /** ダッシュ（コックピット）からの入力のみ：認証確定前は送信しない（AUTH_REQUIRED 連鎖防止） */
+    const _cockpitAuthGate = () => {
+        const cv = document.getElementById('view-chat');
+        return !cv || cv.classList.contains('hidden');
+    };
+    if (
+        _cockpitAuthGate() &&
+        window.supabaseClient &&
+        typeof window._ensureAuthReadyForMutation === 'function'
+    ) {
+        const ok = await window._ensureAuthReadyForMutation();
+        if (!ok) return;
+    }
+
     const instructionInput = document.getElementById('main-instruction-input') || document.getElementById('chat-input-field');
     const instructionMics = document.querySelectorAll('#btn-chat-voice, .btn-mic');
     const btnAttachImages = document.querySelectorAll('#btn-chat-camera, .btn-attach-image');
@@ -362,9 +380,23 @@ export async function handleInstruction(text, hasImage = false) {
             if (window.switchView) window.switchView('view-dash');
         };
 
-        /** Supabase 複合経路: 文字列 UUID（十分な長さ）のみ bulk insert 可 */
-        const isCompoundRemoteUuid = (pid) =>
-            typeof pid === 'string' && pid.length >= 20 && pid !== 'undefined' && pid !== 'null';
+        /**
+         * Supabase が返す projects.id は UUID 文字列の場合もあれば bigint（数値）の場合もある。
+         * 旧 isCompoundRemoteUuid（長さ>=20 の文字列のみ）は bigint で誤判定していた。
+         */
+        const isValidRemoteProjectIdFromDb = (id) => {
+            if (id == null || id === '') return false;
+            if (typeof id === 'number' && Number.isFinite(id) && id > 0) return true;
+            const s = String(id).trim();
+            if (s === 'undefined' || s === 'null' || s === '') return false;
+            if (
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s)
+            ) {
+                return true;
+            }
+            if (/^\d+$/.test(s)) return true;
+            return s.length >= 20;
+        };
 
         window.__compoundDbProjectId = null;
         window.__compoundLocalMode = false;
@@ -393,11 +425,21 @@ export async function handleInstruction(text, hasImage = false) {
                 console.log('Compound: Creating project...');
                 const newProjectName = (intent.project_name || '名称未設定プロジェクト').trim();
                 const loc = (intent.location && String(intent.location).trim()) || '-';
-                const sessionWrap = window.supabaseClient ? await window.supabaseClient.auth.getSession() : null;
-                let uid = sessionWrap?.data?.session?.user?.id || null;
-                if (!uid && window.supabaseClient) {
-                    const { data: gu } = await window.supabaseClient.auth.getUser();
-                    uid = gu?.user?.id ?? null;
+                let uid = null;
+                if (window.supabaseClient && typeof window._resolveSupabaseAuthUid === 'function') {
+                    try {
+                        uid = await window._resolveSupabaseAuthUid();
+                    } catch (e) {
+                        console.error('[Neo] CREATE_PROJECT: Skipping Supabase INSERT — could not resolve UID', e);
+                    }
+                }
+                if (
+                    uid &&
+                    typeof window._isValidSupabaseAuthUid === 'function' &&
+                    !window._isValidSupabaseAuthUid(uid)
+                ) {
+                    console.error('[Neo] CREATE_PROJECT: Skipping Supabase INSERT — invalid UID');
+                    uid = null;
                 }
 
                 const createdAtIso = (() => {
@@ -431,15 +473,18 @@ export async function handleInstruction(text, hasImage = false) {
                         return;
                     }
                     const row = data[0];
-                    if (!isCompoundRemoteUuid(String(row.id))) {
+                    if (!isValidRemoteProjectIdFromDb(row.id)) {
                         console.error('Compound failed: invalid project_id from DB, staying on dashboard', row.id);
                         showCompoundFail();
                         return;
                     }
-                    console.log(`Compound: Got real project_id = ${row.id}`);
+                    console.log(
+                        `[Neo] CREATE_PROJECT OK — project id=${row.id} (type=${typeof row.id}) user_id=${row.user_id ?? uid}`
+                    );
 
                     savedProj = {
                         id: row.id,
+                        user_id: row.user_id ?? uid,
                         name: row.name,
                         customerName: '-',
                         location: row.location || loc,
@@ -537,6 +582,14 @@ export async function handleInstruction(text, hasImage = false) {
                           ];
 
                 const today = new Date().toLocaleDateString('ja-JP').replace(/\//g, '/');
+                /** intent の日付（例: 2026/04/20）を mock / insertTransaction に渡す（常に今日にしない） */
+                const expenseDateDisplay = (() => {
+                    if (intent?.date && typeof intent.date === 'string') {
+                        const s = intent.date.trim();
+                        if (s) return s.replace(/-/g, '/');
+                    }
+                    return today;
+                })();
                 const baseMeta = {
                     type: intent.type || 'expense',
                     category: intent.category || 'その他',
@@ -560,11 +613,21 @@ export async function handleInstruction(text, hasImage = false) {
 
                 if (silentLike) {
                     try {
-                        const sessionWrap = window.supabaseClient ? await window.supabaseClient.auth.getSession() : null;
-                        let uid = sessionWrap?.data?.session?.user?.id || null;
-                        if (!uid && window.supabaseClient) {
-                            const { data: gu } = await window.supabaseClient.auth.getUser();
-                            uid = gu?.user?.id ?? null;
+                        let uid = null;
+                        if (window.supabaseClient && typeof window._resolveSupabaseAuthUid === 'function') {
+                            try {
+                                uid = await window._resolveSupabaseAuthUid();
+                            } catch (e) {
+                                console.error('[Neo] ADD_EXPENSE bulk: Skipping remote INSERT — could not resolve UID', e);
+                            }
+                        }
+                        if (
+                            uid &&
+                            typeof window._isValidSupabaseAuthUid === 'function' &&
+                            !window._isValidSupabaseAuthUid(uid)
+                        ) {
+                            console.error('[Neo] ADD_EXPENSE bulk: invalid UID — remote path disabled');
+                            uid = null;
                         }
 
                         const rowsToSave = [];
@@ -590,7 +653,7 @@ export async function handleInstruction(text, hasImage = false) {
                             category: baseMeta.category,
                             title: row.title,
                             amount: row.amount,
-                            date: today,
+                            date: expenseDateDisplay,
                             isBookkeeping: baseMeta.isBookkeeping,
                             originalInput: text
                         });
@@ -604,6 +667,8 @@ export async function handleInstruction(text, hasImage = false) {
                                 await window.insertTransaction(txPayload(row));
                             }
                             window.dispatchEvent(new CustomEvent('neo-render-projects', { detail: { projects: window.mockDB.projects } }));
+                            window._refreshCockpitActivityFeed?.();
+                            window.renderCockpitFeed?.(0);
                             if (window.switchView) window.switchView('view-dash');
                             const nb = document.getElementById('neo-fab-bubble');
                             if (nb) {
@@ -621,7 +686,7 @@ export async function handleInstruction(text, hasImage = false) {
                                 );
                             }
                             finishCompoundState();
-                        } else if (isCompoundRemoteUuid(String(projId))) {
+                        } else if (isValidRemoteProjectIdFromDb(projId)) {
                             if (!uid) {
                                 console.error('[Neo] ADD_EXPENSE bulk: no auth uid — cannot set user_id on activities');
                                 showCompoundFail('セッションを確認してください（経費の user_id を保存できません）。');
@@ -636,19 +701,29 @@ export async function handleInstruction(text, hasImage = false) {
                                 category: baseMeta.category,
                                 title: row.title,
                                 amount: row.amount,
-                                date: new Date().toISOString(),
+                                date: (() => {
+                                    if (intent?.date && typeof intent.date === 'string') {
+                                        const s = intent.date.trim();
+                                        const jp = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+                                        if (jp) {
+                                            const y = jp[1];
+                                            const m = jp[2].padStart(2, '0');
+                                            const d = jp[3].padStart(2, '0');
+                                            return new Date(`${y}-${m}-${d}T12:00:00.000Z`).toISOString();
+                                        }
+                                    }
+                                    return new Date().toISOString();
+                                })(),
                                 is_bookkeeping: baseMeta.isBookkeeping,
                                 is_deleted: false
                             }));
 
-                            console.log(
-                                '[Neo] Compound bulk insert — Inserting with user_id:',
-                                uid,
-                                '| project_id:',
-                                projId,
-                                '| rowCount:',
-                                bulkActivities.length
-                            );
+                            console.log('[Neo] Compound bulk insert — payload sample:', {
+                                user_id: uid,
+                                project_id: projId,
+                                project_id_type: typeof projId,
+                                rowCount: bulkActivities.length
+                            });
 
                             const { data: insertedRows, error: insErr } = await window.supabaseClient
                                 .from('activities')
@@ -662,6 +737,17 @@ export async function handleInstruction(text, hasImage = false) {
                             }
 
                             const insN = Array.isArray(insertedRows) ? insertedRows.length : 0;
+                            const bulkDbRows = Array.isArray(insertedRows) ? insertedRows : insertedRows ? [insertedRows] : [];
+                            console.log('[Neo] bulk INSERT DB returned row(s):', {
+                                count: insN,
+                                rows: bulkDbRows.map((r) => ({
+                                    id: r.id,
+                                    project_id: r.project_id,
+                                    project_id_type: typeof r.project_id,
+                                    user_id: r.user_id,
+                                    user_id_type: typeof r.user_id
+                                }))
+                            });
                             console.log(
                                 `[Insert Success] user_id = ${uid} | project_id = ${projId} | rows inserted = ${insN}`
                             );
@@ -679,10 +765,14 @@ export async function handleInstruction(text, hasImage = false) {
                                     await new Promise((resolve) => setTimeout(resolve, 50));
                                 }
 
+                                const verifyPids =
+                                    typeof window._neoExpandProjectIdCandidates === 'function'
+                                        ? window._neoExpandProjectIdCandidates([projId])
+                                        : [projId];
                                 const { data: vd, error: selErr } = await window.supabaseClient
                                     .from('activities')
                                     .select('*')
-                                    .eq('project_id', projId)
+                                    .in('project_id', verifyPids)
                                     .eq('user_id', uid);
 
                                 if (selErr) {
@@ -724,6 +814,8 @@ export async function handleInstruction(text, hasImage = false) {
                             }
 
                             window.dispatchEvent(new CustomEvent('neo-render-projects', { detail: { projects: window.mockDB.projects } }));
+                            window._refreshCockpitActivityFeed?.();
+                            window.renderCockpitFeed?.(0);
 
                             await new Promise((resolve) => setTimeout(resolve, 50));
 
@@ -755,6 +847,8 @@ export async function handleInstruction(text, hasImage = false) {
                                 await window.insertTransaction(txPayload(row));
                             }
                             window.dispatchEvent(new CustomEvent('neo-render-projects', { detail: { projects: window.mockDB.projects } }));
+                            window._refreshCockpitActivityFeed?.();
+                            window.renderCockpitFeed?.(0);
                             if (typeof window.openProjectDetail === 'function') {
                                 await window.openProjectDetail(projId, { navigate: true, skipFetch: false });
                             }

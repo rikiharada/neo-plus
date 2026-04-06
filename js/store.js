@@ -70,7 +70,10 @@ window.GlobalStore = {
         if (clean.projects && Array.isArray(clean.projects)) {
             if (!window.mockDB) window.mockDB = {};
             window.mockDB.projects = clean.projects.map(p => ({
-                id: p.id, name: p.name, customerName: p.customer_name || '-', location: p.location || '-', note: p.note || '',
+                id: p.id,
+                name: p.name,
+                user_id: p.user_id,
+                customerName: p.customer_name || '-', location: p.location || '-', note: p.note || '',
                 category: p.category, color: p.color, unit: p.unit || '-', hasUnpaid: p.has_unpaid, revenue: parseFloat(p.revenue) || 0,
                 status: p.status, clientName: p.client_name, paymentDeadline: p.payment_deadline, bankInfo: p.bank_info, lastUpdated: p.last_updated, currency: p.currency,
                 startDate: p.created_at ? p.created_at.split('T')[0].replace(/-/g, '/') : (p.startDate || null)
@@ -130,10 +133,19 @@ window.GlobalStore = {
         const revalidateBrain = async () => {
             if (!window.supabaseClient) return;
             let uid = self.state.user?.id;
-            if (!uid && typeof window._resolveSupabaseAuthUid === 'function') {
-                uid = await window._resolveSupabaseAuthUid();
+            if (uid && typeof window._isValidSupabaseAuthUid === 'function' && !window._isValidSupabaseAuthUid(uid)) {
+                uid = null;
             }
-            if (!uid) return;
+            if (!uid && typeof window._resolveSupabaseAuthUid === 'function') {
+                try {
+                    uid = await window._resolveSupabaseAuthUid();
+                } catch {
+                    return;
+                }
+            }
+            if (!uid || (typeof window._isValidSupabaseAuthUid === 'function' && !window._isValidSupabaseAuthUid(uid))) {
+                return;
+            }
             try {
                 const [txRes, projRes] = await Promise.all([
                     window.supabaseClient
@@ -141,7 +153,11 @@ window.GlobalStore = {
                         .select('*')
                         .eq('user_id', uid)
                         .order('date', { ascending: false }),
-                    window.supabaseClient.from('projects').select('*').order('created_at', { ascending: false })
+                    window.supabaseClient
+                        .from('projects')
+                        .select('*')
+                        .eq('user_id', uid)
+                        .order('created_at', { ascending: false })
                 ]);
 
                 if (txRes.error) throw txRes.error;
@@ -167,8 +183,10 @@ window.GlobalStore = {
                     /* ignore */
                 }
 
-                if (typeof window._refreshProjectDetailIfOpen === 'function' && window.currentOpenProjectId) {
-                    window._refreshProjectDetailIfOpen(window.currentOpenProjectId);
+                if (typeof window._emitNeoDataUpdated === 'function') {
+                    window._emitNeoDataUpdated({ kind: 'realtime', source: 'GlobalStore.revalidateBrain' });
+                } else if (window.NeoBus && typeof window.NeoBus.emit === 'function') {
+                    window.NeoBus.emit('NEO_DATA_UPDATED', { kind: 'realtime', source: 'GlobalStore.revalidateBrain' });
                 }
             } catch (e) {
                 console.warn("[GlobalStore] Brain Sync Unavailable:", e.message);

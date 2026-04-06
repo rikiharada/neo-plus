@@ -3,7 +3,10 @@ window.resolveProjectIdForExpenseIntent = function resolveProjectIdForExpenseInt
     if (typeof window.resolveExpenseProjectId === 'function') {
         return window.resolveExpenseProjectId(intent, userText || '');
     }
-    const projects = window.mockDB?.projects || [];
+    const projects =
+        typeof window._getProjectsScopedToCurrentUser === 'function'
+            ? window._getProjectsScopedToCurrentUser()
+            : window.mockDB?.projects || [];
     if (!projects.length) return null;
     const matches = (id) => id != null && id !== '' && projects.some((p) => String(p.id) === String(id));
     if (intent.project_id != null && matches(intent.project_id)) {

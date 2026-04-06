@@ -361,9 +361,13 @@ window.renderCockpitFeed = function(page = 0) {
         .filter(t => !t.is_deleted)
         .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
-    // プロジェクトIDマップ
+    // プロジェクトIDマップ（string / number のキー両方 — activity.projectId の型ゆれ対応）
     const projMap = {};
-    projects.forEach(p => { projMap[p.id] = p.name; });
+    projects.forEach((p) => {
+        const name = p.name || '';
+        projMap[String(p.id)] = name;
+        if (p._dbSafeId != null) projMap[String(p._dbSafeId)] = name;
+    });
 
     if (all.length === 0) {
         feed.innerHTML = `
@@ -385,7 +389,8 @@ window.renderCockpitFeed = function(page = 0) {
     const pageItems = all.slice(safePage * _FEED_PAGE_SIZE, (safePage + 1) * _FEED_PAGE_SIZE);
 
     feed.innerHTML = pageItems.map(t => {
-        const projName = t.projectName || projMap[t.projectId] || '';
+        const projName =
+            t.projectName || projMap[String(t.projectId)] || projMap[t.projectId] || '';
         return _buildFeedItemHTML({
             id:          t.id,
             type:        t.type === 'income' ? 'revenue' : (t.type || 'expense'),

@@ -67,37 +67,106 @@
     <!-- AUTHENTICATION GATEKEEPER (Phase 5) -->
     <div id="view-auth" class="hidden"
         style="display: none; min-height: 100vh; background-color: var(--bg-color); place-items: center; padding: 24px; overflow-y: auto;">
-        <div style="width: 100%; max-width: 400px; text-align: center;">
+        <div class="auth-view-inner" style="width: 100%; max-width: 400px; text-align: center;">
+
+            <!-- ロゴ -->
             <div style="margin-bottom: 40px;">
                 <h1 class="title" style="font-size: 36px; justify-content: center; margin-bottom: 8px;">Neo<sup
                         class="title-plus">+</sup></h1>
                 <p style="color: var(--text-muted); font-size: 14px;">確かなマネーマネジメントを、あなたと共に。</p>
             </div>
 
-            <div
-                style="background: rgba(15, 23, 42, 0.02); padding: 24px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.03); text-align: left;">
-                <label
-                    style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Email</label>
-                <input type="email" id="auth-email" placeholder="ceo@example.com" class="input-modern"
-                    style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; margin-bottom: 16px;">
+            <div class="auth-panels-stage">
 
-                <label
-                    style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Password</label>
+            <!-- ===== ログインパネル ===== -->
+            <div id="panel-login" class="auth-panel auth-panel--login">
+
+                <div class="auth-panel-surface auth-floating">
+                <p style="font-size: 16px; font-weight: 800; color: var(--text-main); margin: 0 0 20px 0;">ログイン</p>
+
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">メールアドレス</label>
+                <input type="email" id="auth-email" placeholder="ceo@example.com" class="input-modern"
+                    style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; margin-bottom: 16px; box-sizing: border-box;">
+
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">パスワード</label>
                 <input type="password" id="auth-password" placeholder="••••••••" class="input-modern"
-                    style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; margin-bottom: 24px;">
+                    style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; margin-bottom: 24px; box-sizing: border-box;">
 
                 <button id="btn-auth-login" class="btn-huge btn-primary"
                     style="width: 100%; box-shadow: 0 8px 25px rgba(29, 155, 240, 0.4);">
                     ログイン
                 </button>
-                <div style="text-align: center; margin-top: 16px;">
-                    <a href="#" id="link-auth-signup"
-                        style="color: var(--accent-neo-blue); font-size: 13px; font-weight: 600; text-decoration: none;">新規アカウント作成はこちら</a>
-                </div>
+
                 <p id="auth-error-msg"
-                    style="text-align: center; color: #ef4444; font-size: 12px; font-weight: 600; margin-top: 16px; display: none;">
-                </p>
+                    style="text-align: center; color: #ef4444; font-size: 12px; font-weight: 600; margin-top: 12px; display: none;"></p>
+
+                <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--btn-secondary-border);">
+                    <p style="color: var(--text-muted); font-size: 13px; margin: 0 0 8px 0;">アカウントをお持ちでない方</p>
+                    <a href="#" id="link-auth-signup" class="auth-link-signup"
+                        style="color: var(--accent-neo-blue); font-size: 14px; font-weight: 700; text-decoration: none;">アカウント作成はこちら</a>
+                </div>
+                </div>
             </div>
+
+            <!-- ===== 新規登録パネル ===== -->
+            <div id="panel-signup" class="auth-panel auth-panel--signup auth-panel--hidden" style="text-align: left;">
+
+                <!-- アイコン＋タイトル -->
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="width: 52px; height: 52px; background: rgba(139, 92, 246, 0.12); border-radius: 14px; margin: 0 auto 12px; display: grid; place-items: center; color: var(--accent-neo-purple);">
+                        <i data-lucide="user-plus" style="width: 26px; height: 26px;"></i>
+                    </div>
+                    <p style="font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0;">新規アカウント作成</p>
+                    <p style="color: var(--text-muted); font-size: 13px; margin: 6px 0 0 0;">無料で今すぐ始めましょう</p>
+                </div>
+
+                <div class="auth-panel-surface auth-floating">
+
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">メールアドレス</label>
+                    <input type="email" id="signup-email" placeholder="ceo@example.com" class="input-modern auth-input"
+                        style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; margin-bottom: 16px; box-sizing: border-box;">
+
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">パスワード <span style="font-weight: 400; color: var(--text-muted);">（8文字以上）</span></label>
+                    <input type="password" id="signup-password" placeholder="••••••••" class="input-modern"
+                        style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; margin-bottom: 16px; box-sizing: border-box;">
+
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">パスワード（確認）</label>
+                    <input type="password" id="signup-password-confirm" placeholder="••••••••" class="input-modern"
+                        style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; margin-bottom: 20px; box-sizing: border-box;">
+
+                    <!-- 利用規約同意チェック -->
+                    <label style="display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px; margin-bottom: 20px; cursor: pointer; padding: 14px; background: rgba(16,185,129,0.06); border-radius: 10px; border: 1px solid rgba(16,185,129,0.25);">
+                        <input type="checkbox" id="signup-consent" style="width: 18px; height: 18px; accent-color: #10b981; cursor: pointer; flex-shrink: 0;">
+                        <span style="font-size: 13px; color: var(--text-main); line-height: 1.4;">
+                            <a href="#" onclick="return false;" style="color: var(--accent-neo-blue); font-weight: 700;">利用規約</a>および<a href="#" onclick="return false;" style="color: var(--accent-neo-blue); font-weight: 700;">プライバシーポリシー</a>に同意する
+                        </span>
+                    </label>
+
+                    <button id="btn-signup-submit" class="btn-huge btn-primary"
+                        style="width: 100%; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4); background: linear-gradient(135deg, var(--accent-neo-purple, #8b5cf6) 0%, var(--accent-neo-blue, #1d9bf0) 100%); opacity: 0.45; cursor: not-allowed;"
+                        disabled>
+                        アカウントを作成する
+                    </button>
+
+                    <p id="signup-error-msg"
+                        style="text-align: center; color: #ef4444; font-size: 12px; font-weight: 600; margin-top: 12px; display: none;"></p>
+
+                    <!-- 成功メッセージ -->
+                    <div id="signup-success-msg" class="auth-success-msg" style="display: none; text-align: center; padding: 16px; margin-top: 16px;">
+                        <i data-lucide="mail-check" style="width: 28px; height: 28px; color: #10b981; margin-bottom: 8px;"></i>
+                        <p style="font-size: 14px; font-weight: 700; color: #10b981; margin: 0 0 4px 0;">確認メールを送信しました</p>
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 0;">メール内のリンクをクリックして登録を完了してください。</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="#" id="link-back-to-login" class="auth-link-back"
+                        style="color: var(--text-muted); font-size: 13px; font-weight: 600; text-decoration: none;">← ログインに戻る</a>
+                </div>
+            </div>
+
+            </div><!-- /.auth-panels-stage -->
+
         </div>
     </div>
 
@@ -570,7 +639,7 @@
     <script src="/js/i18n.js?v=NEO_SAFE_PHASE30"></script>
     <script type="module" src="/js/registry.js?v=NEO_SAFE_PHASE30"></script>
     <script type="module" src="/js/constants.js?v=NEO_SAFE_PHASE30"></script>
-    <!-- app.js: components の window.createProjectCard、_attachDbSafeIdIfNeeded、_refreshCockpitActivityFeed 等を先に登録 -->
+    <!-- app.js: components + pages/db-sync.js（import）で window.insertTransaction 等を先に登録 -->
     <script type="module" src="/js/app.js?v=NEO_SAFE_PHASE30"></script>
     <script type="module" src="/views/components/modals.js?v=NEO_SAFE_PHASE30"></script>
     <script type="module" src="/views/view-invoice.js?v=NEO_SAFE_PHASE30"></script>
@@ -579,7 +648,6 @@
     <script type="module" src="/views/projectdetail/projectdetail-ai.js?v=NEO_SAFE_PHASE30"></script>
     <script type="module" src="/views/dashboard-projects.js?v=NEO_SAFE_PHASE30"></script>
     <script type="module" src="/pages/cockpit-voice.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/pages/db-sync.js?v=NEO_SAFE_PHASE30"></script>
     <script type="module" src="/pages/chat-intents.js?v=NEO_SAFE_PHASE30"></script>
     <script type="module" src="/pages/chat.js?v=NEO_SAFE_PHASE30"></script>
 </body>

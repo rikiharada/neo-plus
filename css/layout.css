@@ -902,3 +902,113 @@ html[data-theme='dark'] .neo-cockpit-welcome-bubble-wrap::before {
     padding-right: 0;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Auth gate (#view-auth) — ログイン / サインアップ サイバーパンク浮遊パネル
+   ═══════════════════════════════════════════════════════════════ */
+
+#view-auth:not(.hidden) {
+  display: grid !important;
+}
+
+.auth-panels-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, auto);
+  align-items: start;
+  min-height: 120px;
+}
+
+.auth-panel {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  transition:
+    opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.38s;
+  will-change: opacity, transform;
+}
+
+.auth-panel.auth-panel--hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(14px) scale(0.985);
+  z-index: 0;
+}
+
+.auth-panel:not(.auth-panel--hidden) {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  z-index: 2;
+}
+
+.auth-panel-surface {
+  background: rgba(15, 23, 42, 0.5);
+  padding: 24px;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.auth-floating {
+  border-radius: 12px;
+  border: 1px solid rgba(29, 155, 240, 0.42);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(139, 92, 246, 0.28),
+    0 0 32px rgba(29, 155, 240, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transform: translateY(-2px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.auth-panel--signup .auth-floating {
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(139, 92, 246, 0.35),
+    0 0 36px rgba(139, 92, 246, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.auth-link-signup {
+  transition: color 0.2s ease, filter 0.2s ease, text-shadow 0.2s ease;
+}
+
+.auth-link-signup:hover {
+  text-decoration: underline !important;
+  text-shadow: 0 0 12px rgba(29, 155, 240, 0.55);
+}
+
+.auth-link-back {
+  transition: color 0.2s ease;
+}
+
+.auth-link-back:hover {
+  color: var(--accent-neo-blue) !important;
+}
+
+.auth-success-msg {
+  background: rgba(16, 185, 129, 0.12);
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  box-shadow:
+    0 0 24px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-panel {
+    transition: opacity 0.2s ease, visibility 0.2s;
+  }
+  .auth-panel.auth-panel--hidden {
+    transform: none;
+  }
+  .auth-panel:not(.auth-panel--hidden) {
+    transform: none;
+  }
+}

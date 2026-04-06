@@ -86,13 +86,25 @@ window.applyProjectFilter = (filterType, resetPage = true) => {
         renderProjects(sortedFiltered, false);
     };
 
-window.renderProjects = (projectsToRender, resetPage = true) => {
+window.renderProjects = (projectsToRender, resetPage = true, opts = {}) => {
         const container = document.getElementById('project-list-container');
         const paginationContainer = document.getElementById('project-pagination-container');
         if (!container) return;
 
         if (resetPage) {
             window.currentProjectPage = 1;
+        }
+
+        // NEO_DATA_UPDATED / neo-render-projects: localStorage 再読込 → mockDB から常に最新配列で集計
+        if (opts.forceRecalc === true && typeof window.loadLocalBody === 'function') {
+            try {
+                window.loadLocalBody();
+            } catch {
+                /* ignore */
+            }
+        }
+        if (opts.forceRecalc === true && window.mockDB?.projects?.length) {
+            projectsToRender = [...window.mockDB.projects].sort((a, b) => b.id - a.id);
         }
 
         // CEO Fix: Default sort should ALWAYS be Created At (newest) first.

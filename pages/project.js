@@ -33,13 +33,48 @@ export function initProjectView() {
         });
     }
 
+    const mapProjectRowToMock = (p) => ({
+        id: p.id,
+        name: p.name,
+        user_id: p.user_id,
+        customerName: p.customer_name || '-',
+        location: p.location || '-',
+        note: p.note || '',
+        category: p.category,
+        color: p.color,
+        unit: p.unit || '-',
+        hasUnpaid: p.has_unpaid,
+        revenue: parseFloat(p.revenue) || 0,
+        status: p.status,
+        clientName: p.client_name,
+        paymentDeadline: p.payment_deadline,
+        bankInfo: p.bank_info,
+        lastUpdated: p.last_updated,
+        currency: p.currency,
+        startDate: p.created_at ? p.created_at.split('T')[0].replace(/-/g, '/') : null
+    });
+
     const fetchFromSupabase = async () => {
         if (!window.supabaseClient) { doRender(window.mockDB?.projects ?? []); return; }
         try {
+            let uid = null;
+            try {
+                uid = await window._resolveSupabaseAuthUid();
+            } catch {
+                doRender(window.mockDB?.projects ?? []);
+                return;
+            }
+            if (typeof window._isValidSupabaseAuthUid === 'function' && !window._isValidSupabaseAuthUid(uid)) {
+                doRender(window.mockDB?.projects ?? []);
+                return;
+            }
             const { data: projects, error } = await window.supabaseClient
-                .from('projects').select('*').order('created_at', { ascending: false });
+                .from('projects')
+                .select('*')
+                .eq('user_id', uid)
+                .order('created_at', { ascending: false });
             if (error) throw error;
-            const list = projects ?? [];
+            const list = (projects ?? []).map(mapProjectRowToMock);
             if (window.GlobalStore?.updateState) window.GlobalStore.updateState({ projects: list });
             if (window.mockDB) window.mockDB.projects = list;
             doRender(list);
@@ -135,36 +170,47 @@ function bindProjectModals() {
             if (dStartVal && dEndVal) dateStr = `${dStartVal.replace(/-/g,'/')} - ${dEndVal.replace(/-/g,'/')}`;
             else if (dStartVal)       dateStr = dStartVal.replace(/-/g,'/');
 
+            const newProjId = Math.floor(Date.now() / 1000);
+            let startDateStr = '';
+            if (dStartVal) startDateStr = dStartVal.replace(/\//g, '-');
+            else startDateStr = new Date().toLocaleDateString('ja-JP').replace(/\//g, '-');
+
             const newProj = {
+                id: newProjId,
                 name,
-                location,
+                customerName: '-',
+                location: location || '-',
                 note,
-                color:        selectedColor,
-                status:       'planning',
-                revenue:      0,
+                category: 'other',
+                color: selectedColor,
+                unit: '-',
+                hasUnpaid: false,
+                revenue: 0,
+                status: 'planning',
+                startDate: startDateStr,
+                lastUpdated: new Date().toLocaleDateString('ja-JP').replace(/\//g, '-'),
                 last_updated: dateStr,
-                created_at:   new Date().toISOString(),
+                created_at: new Date().toISOString()
             };
 
-            // Supabase に保存（接続している場合）
-            if (window.supabaseClient) {
+            // db-sync の insertProject: user_id 付与・RLS 整合・重複名は既存行を返す
+            if (typeof window.insertProject === 'function') {
                 try {
-                    const { data, error } = await window.supabaseClient
-                        .from('projects').insert([newProj]).select().single();
-                    if (error) throw error;
-                    newProj.id = data.id ?? Date.now();
+                    await window.insertProject(newProj);
                 } catch (err) {
-                    console.warn("[Neo Projects] Supabase insert failed, saving locally:", err.message);
-                    newProj.id = Date.now();
+                    console.warn('[Neo Projects] insertProject failed:', err?.message || err);
+                    if (!window.mockDB) window.mockDB = { projects: [], activities: [], documents: [] };
+                    if (!window.mockDB.projects) window.mockDB.projects = [];
+                    window.mockDB.projects.unshift(newProj);
+                    window.persistLocalBody?.();
                 }
-            } else {
-                newProj.id = Date.now();
+            } else if (window.mockDB) {
+                window.mockDB.projects.unshift(newProj);
+                window.persistLocalBody?.();
             }
 
-            // ローカルDBに反映（mockDB と GlobalStore が同じ配列参照を持つケースがあるため
-            // unshift は mockDB 側の1回だけに限定し、二重追加を防ぐ）
-            if (window.mockDB) {
-                window.mockDB.projects.unshift(newProj);
+            if (window.GlobalStore?.updateState) {
+                window.GlobalStore.updateState({ projects: [...(window.mockDB?.projects ?? [])] });
             }
 
             // プロジェクト一覧を再描画

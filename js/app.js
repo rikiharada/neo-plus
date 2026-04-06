@@ -10,6 +10,8 @@ import {
     neoDangerZoneWipeUserLocalBody
 } from '../lib/core/neoKnowledgeReset.js';
 import '../lib/supabase-knowledge-client.js';
+/** DB 同期層（window.insertTransaction 等）。HTML の重複 <script> は置かない — ここで一度だけ読み込む */
+import '../pages/db-sync.js';
 
 loadUserProfile(); // 非同期でSupabaseからも取得（localStorage は即時反映済み）
 
@@ -225,14 +227,12 @@ window.resolveLocalProjectId = function resolveLocalProjectId(dbPid) {
 };
 
 /** Supabase の amount（numeric / text / null）を数値に統一 */
-function _parseActivityAmount(v) {
+window._parseActivityAmount = function _parseActivityAmount(v) {
     if (v == null || v === '') return 0;
     if (typeof v === 'number' && Number.isFinite(v)) return v;
     const n = parseFloat(String(v).replace(/,/g, '').trim());
     return Number.isFinite(n) ? n : 0;
-}
-// type="module" の dashboard-projects.js / projectdetail-core.js / db-sync.js から参照できるよう公開
-window._parseActivityAmount = _parseActivityAmount;
+};
 
 /**
  * ウォレット画面の集計・表示（dashboard-projects の renderProjects から load 前にも呼ばれるため window に登録）
@@ -340,16 +340,228 @@ window.updateWalletDashboard = function updateWalletDashboard(totalProfit) {
 };
 
 /** 診断ログ用（長すぎる JSON を短縮） */
-function _neoJsonStringifyForLog(obj, maxLen = 3500) {
+window._neoJsonStringifyForLog = function _neoJsonStringifyForLog(obj, maxLen = 3500) {
     try {
         const s = JSON.stringify(obj, (_k, v) => (typeof v === 'bigint' ? v.toString() : v));
         return s.length > maxLen ? `${s.slice(0, maxLen)}…(truncated)` : s;
     } catch (e) {
         return `[stringify failed: ${e && e.message ? e.message : e}]`;
     }
-}
+};
 
-/** 現在の Supabase ユーザー UID（session → getUser）— RLS / user_id 付与に必須 */
+/**
+ * projectdetail-core の openProjectDetail が window.__neoProjectIdCandidatesForMatch をセットしてから呼ぶ。
+ * 活動行の projectId が候補のいずれかと一致するか。
+ */
+window._mockActivityMatchesProjectCandidates = function _mockActivityMatchesProjectCandidates(activity) {
+    const candidates = window.__neoProjectIdCandidatesForMatch;
+    if (!Array.isArray(candidates) || !activity) return false;
+    const ap = String(activity.projectId ?? '');
+    return candidates.some((c) => String(c) === ap);
+};
+
+/** 動的ロード / 順序ずれでも window 経由で同一参照に揃える */
+Object.assign(window, {
+    _parseActivityAmount: window._parseActivityAmount,
+    updateWalletDashboard: window.updateWalletDashboard,
+    _neoJsonStringifyForLog: window._neoJsonStringifyForLog,
+    _mockActivityMatchesProjectCandidates: window._mockActivityMatchesProjectCandidates
+});
+
+/**
+ * Supabase auth.users の本物の UUID のみ true（nil UUID・開発用ダミーは除外）
+ */
+window._isValidSupabaseAuthUid = function _isValidSupabaseAuthUid(uid) {
+    if (uid == null || typeof uid !== 'string') return false;
+    const s = uid.trim();
+    if (s === '') return false;
+    if (s === '00000000-0000-0000-0000-000000000000') return false;
+    if (s === 'local-body-id') return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
+};
+
+/** バイパス時代のダミー user_id（DB / ローカル双方で拒否） */
+window.NEO_NIL_UUID = '00000000-0000-0000-0000-000000000000';
+
+/**
+ * ログイン中は「現在のセッションの user_id」と一致するプロジェクトのみ有効（意図解決・名前検索用）
+ */
+window._projectBelongsToCurrentUser = function _projectBelongsToCurrentUser(p) {
+    if (!p) return false;
+    if (!window.supabaseClient) return true;
+    const uid = window.GlobalStore?.state?.user?.id;
+    if (!uid || !window._isValidSupabaseAuthUid(uid)) return true;
+    const pu = p.user_id ?? p.userId;
+    if (pu == null || pu === '') return false;
+    if (String(pu) === window.NEO_NIL_UUID) return false;
+    return String(pu) === String(uid);
+};
+
+window._getProjectsScopedToCurrentUser = function _getProjectsScopedToCurrentUser() {
+    const all = window.mockDB?.projects || [];
+    if (!window.supabaseClient) return all;
+    const uid = window.GlobalStore?.state?.user?.id;
+    if (!uid || !window._isValidSupabaseAuthUid(uid)) return all;
+    return all.filter((p) => window._projectBelongsToCurrentUser(p));
+};
+
+/** localStorage / mock から nil UUID 行を除去 */
+window._neoPurgeLocalNilUserRows = function _neoPurgeLocalNilUserRows() {
+    const nil = window.NEO_NIL_UUID;
+    if (!window.mockDB) return;
+    if (Array.isArray(window.mockDB.projects)) {
+        window.mockDB.projects = window.mockDB.projects.filter((p) => {
+            const u = p?.user_id ?? p?.userId;
+            if (u == null || u === '') return true;
+            return String(u) !== nil;
+        });
+    }
+    if (Array.isArray(window.mockDB.activities)) {
+        window.mockDB.activities = window.mockDB.activities.filter((a) => {
+            const u = a?.user_id ?? a?.userId;
+            if (u == null || u === '') return true;
+            return String(u) !== nil;
+        });
+    }
+    try {
+        window.persistLocalBody?.();
+    } catch {
+        /* ignore */
+    }
+};
+
+/**
+ * ログイン直後: ローカル nil 除去 + Supabase 上の nil user_id 行削除（RLS 許可時のみ成功）
+ */
+window._neoRunPostLoginDataCleanup = async function _neoRunPostLoginDataCleanup() {
+    window._neoPurgeLocalNilUserRows();
+    if (!window.supabaseClient) return;
+    const nil = window.NEO_NIL_UUID;
+    try {
+        const { error: e1 } = await window.supabaseClient.from('activities').delete().eq('user_id', nil);
+        if (e1) console.warn('[Neo Cleanup] activities delete nil user_id:', e1.message || e1);
+    } catch (e) {
+        console.warn('[Neo Cleanup] activities purge skipped:', e?.message || e);
+    }
+    try {
+        const { error: e2 } = await window.supabaseClient.from('projects').delete().eq('user_id', nil);
+        if (e2) console.warn('[Neo Cleanup] projects delete nil user_id:', e2.message || e2);
+    } catch (e) {
+        console.warn('[Neo Cleanup] projects purge skipped:', e?.message || e);
+    }
+    console.log('[Neo Cleanup] Post-login nil-UUID purge attempted (see migration if RLS blocked).');
+};
+
+/**
+ * 再ログインが必要なときのトースト（FAB バブル）— db-sync / チャットから共通利用
+ */
+window._notifyAuthRequired = function _notifyAuthRequired(
+    message = '再ログインが必要です。ログイン画面からサインインし直してください。'
+) {
+    try {
+        const el = document.getElementById('neo-fab-bubble');
+        if (el) {
+            el.textContent = message;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 7000);
+        } else {
+            alert(message);
+        }
+    } catch {
+        alert(message);
+    }
+};
+
+/**
+ * コックピット等の DB 書き込み前に呼ぶ。セッション更新を試し、ダメなら false + 通知。
+ */
+window._ensureAuthReadyForMutation = async function _ensureAuthReadyForMutation() {
+    if (!window.supabaseClient) return true;
+    try {
+        await window._resolveSupabaseAuthUid();
+        return true;
+    } catch (e) {
+        if (e && e.message === 'AUTH_REQUIRED') {
+            window._notifyAuthRequired();
+        }
+        return false;
+    }
+};
+
+/**
+ * 共通 UID 解決（db-sync より前に読み込まれる view からも利用可）。
+ * 取得成功時は uid 文字列、失敗時は Error('AUTH_REQUIRED') を投げる。
+ * getSession → refreshSession → getSession / getUser → GlobalStore 待機の順で強化。
+ */
+window._resolveSupabaseAuthUid = async function _resolveSupabaseAuthUid() {
+    if (!window.supabaseClient) throw new Error('AUTH_REQUIRED');
+
+    const pickValid = (uid) =>
+        uid && typeof window._isValidSupabaseAuthUid === 'function' && window._isValidSupabaseAuthUid(uid)
+            ? uid
+            : null;
+
+    const readSessionUid = async () => {
+        try {
+            const {
+                data: { session }
+            } = await window.supabaseClient.auth.getSession();
+            const u = pickValid(session?.user?.id);
+            if (u) return u;
+        } catch {
+            /* ignore */
+        }
+        return null;
+    };
+
+    let uid = await readSessionUid();
+    if (uid) return uid;
+
+    try {
+        const { data, error } = await window.supabaseClient.auth.refreshSession();
+        if (!error && data?.session?.user?.id) {
+            uid = pickValid(data.session.user.id);
+            if (uid) return uid;
+        }
+    } catch {
+        /* ignore */
+    }
+
+    uid = await readSessionUid();
+    if (uid) return uid;
+
+    try {
+        const { data: gu, error: guErr } = await window.supabaseClient.auth.getUser();
+        if (!guErr && gu?.user?.id) {
+            uid = pickValid(gu.user.id);
+            if (uid) return uid;
+        }
+    } catch {
+        /* ignore */
+    }
+
+    const storeUid = window.GlobalStore?.state?.user?.id ?? null;
+    if (pickValid(storeUid)) return storeUid;
+
+    if (window.GlobalStore?.ready) {
+        await Promise.race([
+            window.GlobalStore.ready,
+            new Promise((resolve) => setTimeout(resolve, 8000))
+        ]);
+        const uid2 = window.GlobalStore?.state?.user?.id ?? null;
+        if (pickValid(uid2)) return uid2;
+    }
+
+    uid = await readSessionUid();
+    if (uid) return uid;
+
+    throw new Error('AUTH_REQUIRED');
+};
+
+Object.assign(window, {
+    _resolveSupabaseAuthUid: window._resolveSupabaseAuthUid
+});
+
 /**
  * activities.user_id が NULL の行を現在の UID で更新（同一 project_id の孤児行の救済。RLS 許可範囲のみ）
  */
@@ -394,16 +606,19 @@ window._refreshProjectDetailIfOpen = function _refreshProjectDetailIfOpen(projec
  */
 window.findProjectIdByName = function (text) {
     const mockDB = window.mockDB;
-    if (!text || !mockDB?.projects?.length) return null;
+    const projects = typeof window._getProjectsScopedToCurrentUser === 'function'
+        ? window._getProjectsScopedToCurrentUser()
+        : mockDB?.projects || [];
+    if (!text || !projects.length) return null;
 
     const textLower = text.toLowerCase();
-    const exactMatch = mockDB.projects.find((p) => p.id !== 1 && p.name.toLowerCase() === textLower);
+    const exactMatch = projects.find((p) => p.id !== 1 && p.name.toLowerCase() === textLower);
     if (exactMatch) return exactMatch.id;
 
     let bestMatch = null;
     let longestMatchLength = 0;
 
-    mockDB.projects.forEach((p) => {
+    projects.forEach((p) => {
         if (p.id === 1) return;
         const pNameLower = p.name.toLowerCase();
         if (textLower.includes(pNameLower)) {
@@ -431,7 +646,10 @@ window.findProjectIdByName = function (text) {
  * 経費の projectId 解決（currentOpenProjectId || 1 は使わない）
  */
 window.resolveExpenseProjectId = function (intentLike = {}, hintText = '') {
-    const projects = window.mockDB?.projects || [];
+    const projects =
+        typeof window._getProjectsScopedToCurrentUser === 'function'
+            ? window._getProjectsScopedToCurrentUser()
+            : window.mockDB?.projects || [];
     if (!projects.length) return null;
 
     const matchesPid = (id) => id != null && id !== '' && projects.some((p) => String(p.id) === String(id));
@@ -478,6 +696,88 @@ window._toDbSafeId = (localId) => {
         return n % 2147483647;
     }
     return n;
+};
+
+/**
+ * activities の .in('project_id', …) 用: string / number の表記ゆれを同一視（PostgREST と bigint / uuid の両方に対応）
+ */
+window._neoExpandProjectIdCandidates = function _neoExpandProjectIdCandidates(ids) {
+    const raw = Array.isArray(ids) ? ids : [];
+    const out = [];
+    const seen = new Set();
+    for (const v of raw) {
+        if (v == null || v === '') continue;
+        const s0 = String(v).trim();
+        if (s0 === 'undefined' || s0 === 'null') continue;
+        const variants = [v];
+        if (typeof v === 'string' && /^\d+$/.test(s0)) {
+            const n = Number(s0);
+            if (Number.isFinite(n)) variants.push(n);
+        }
+        if (typeof v === 'number' && Number.isFinite(v)) {
+            variants.push(String(v));
+        }
+        for (const x of variants) {
+            const k = String(x);
+            if (!seen.has(k)) {
+                seen.add(k);
+                out.push(x);
+            }
+        }
+    }
+    return out;
+};
+
+/**
+ * openProjectDetail の activities SELECT 用: project_id の数値・文字列・UUID（大小）のバリエーションを列挙
+ */
+window._neoBuildActivityProjectIdAttempts = function _neoBuildActivityProjectIdAttempts(projectId, proj, dbProjectIdForQuery) {
+    const seen = new Set();
+    const out = [];
+    const push = (v) => {
+        if (v == null || v === '') return;
+        const s = String(v).trim();
+        if (s === 'undefined' || s === 'null') return;
+        const key = `${typeof v}::${s}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        out.push(v);
+        if (typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(s)) {
+            const low = s.toLowerCase();
+            if (low !== s) {
+                const k2 = `string::${low}`;
+                if (!seen.has(k2)) {
+                    seen.add(k2);
+                    out.push(low);
+                }
+            }
+        }
+        if (typeof v === 'string' && /^\d+$/.test(s)) {
+            const n = Number(s);
+            if (Number.isFinite(n)) {
+                const kn = `number::${n}`;
+                if (!seen.has(kn)) {
+                    seen.add(kn);
+                    out.push(n);
+                }
+            }
+        }
+        if (typeof v === 'number' && Number.isFinite(v)) {
+            const ks = `string::${String(v)}`;
+            if (!seen.has(ks)) {
+                seen.add(ks);
+                out.push(String(v));
+            }
+        }
+    };
+    const base = [projectId, proj?.id, dbProjectIdForQuery];
+    const expanded =
+        typeof window._neoExpandProjectIdCandidates === 'function'
+            ? window._neoExpandProjectIdCandidates(base)
+            : base;
+    expanded.forEach(push);
+    base.forEach(push);
+    return out;
 };
 
 /** 数値ローカルIDのプロジェクトに Supabase 用の安定した project_id を付与（重複返却時も FK と一致させる） */
@@ -538,22 +838,35 @@ window._refreshCockpitActivityFeed = function _refreshCockpitActivityFeed() {
     }
 };
 
-// NeoBus Central Router for Data Updates
-window.addEventListener('DOMContentLoaded', () => {
-    if (window.NeoBus) {
-        window.NeoBus.on('NEO_DATA_UPDATED', () => {
-            console.log('[NeoBus] Data update received. Syncing views...');
-            if (typeof window._refreshCockpitActivityFeed === 'function') {
-                window._refreshCockpitActivityFeed();
-            }
-            if (window.currentOpenProjectId && typeof window.openProjectDetail === 'function') {
-                window.openProjectDetail(window.currentOpenProjectId);
-            } else if (typeof window.renderProjects === 'function' && window.mockDB && window.mockDB.projects) {
-                window.renderProjects(window.mockDB.projects);
-            }
-        });
-    }
-});
+// NeoBus Central Router for Data Updates（DOMContentLoaded を待たず登録 — insert 完了直後の emit を取りこぼさない）
+(function registerNeoBusDataSync() {
+    if (!window.NeoBus) return;
+    window.NeoBus.on('NEO_DATA_UPDATED', (payload = {}) => {
+        console.log('[NeoBus] Data update received. Syncing views...', payload);
+        if (typeof window._refreshCockpitActivityFeed === 'function') {
+            window._refreshCockpitActivityFeed();
+        }
+        const projects = window.mockDB?.projects ? [...window.mockDB.projects] : [];
+        if (typeof window.renderProjects === 'function') {
+            window.renderProjects(projects, false, { forceRecalc: true, neoBusPayload: payload });
+        }
+        const detailEl = document.getElementById('view-project-detail');
+        const detailVisible =
+            !!detailEl &&
+            !detailEl.classList.contains('hidden') &&
+            window.getComputedStyle(detailEl).display !== 'none';
+        if (
+            window.currentOpenProjectId != null &&
+            typeof window.openProjectDetail === 'function'
+        ) {
+            window.openProjectDetail(window.currentOpenProjectId, {
+                navigate: false,
+                skipFetch: false,
+                animateTotals: !!detailVisible
+            });
+        }
+    });
+})();
 
 window._getPendingProjectInsertPromise = _getPendingProjectInsertPromise;
 window._ensureSupabaseProjectRowForActivity = _ensureSupabaseProjectRowForActivity;
@@ -2371,8 +2684,10 @@ const triggerNeoSyncGlow = () => {
 // Render Projects (Bank Account style list)
 // CEO Fix: Securely expose renderProjects via an Event Listener instead of a global Object reference
     window.addEventListener('neo-render-projects', (e) => {
-        const projects = e.detail?.projects || mockDB.projects;
-        if (typeof window.renderProjects === 'function') window.renderProjects(projects);
+        const projects = e.detail?.projects ? [...e.detail.projects] : [...(mockDB.projects || [])];
+        if (typeof window.renderProjects === 'function') {
+            window.renderProjects(projects, false, { forceRecalc: true });
+        }
     });
 
     // Make project cards clickable to detail
@@ -3548,24 +3863,64 @@ const triggerNeoSyncGlow = () => {
 
             // ユーザーデータはリモートがソース。neoHardReset はユーザーデータのみ削除し、知識テーブルは触れない（docs/DATA_INITIALIZATION_RULES.md）。
 
-            // Fetch Projects
-            const { data: projData, error: projErr } = await window.supabaseClient.from('projects').select('*').order('id', { ascending: false });
+            await window._neoRunPostLoginDataCleanup?.();
+
+            let bootUidForProjects = null;
+            try {
+                bootUidForProjects = await window._resolveSupabaseAuthUid();
+            } catch {
+                bootUidForProjects = null;
+            }
+
+            // Fetch Projects — 現在の auth.uid() に紐づく行のみ（RLS + 明示フィルタ）
+            let projData = null;
+            let projErr = null;
+            if (bootUidForProjects && typeof window._isValidSupabaseAuthUid === 'function' && window._isValidSupabaseAuthUid(bootUidForProjects)) {
+                const pr = await window.supabaseClient
+                    .from('projects')
+                    .select('*')
+                    .eq('user_id', bootUidForProjects)
+                    .order('id', { ascending: false });
+                projData = pr.data;
+                projErr = pr.error;
+            } else {
+                const pr = await window.supabaseClient.from('projects').select('*').order('id', { ascending: false });
+                projData = pr.data;
+                projErr = pr.error;
+            }
+
             if (!projErr && projData) {
                 // --- ZOMBIE QUARANTINE FILTER ---
                 const deadIds = JSON.parse(localStorage.getItem('neo_deleted_projects') || '[]');
-                const aliveProjects = projData.filter(p => !deadIds.includes(p.id));
+                const aliveProjects = projData.filter((p) => !deadIds.includes(p.id));
 
                 if (deadIds.length > 0 && aliveProjects.length < projData.length) {
                     console.warn(`[Neo Boot] Suppressed ${projData.length - aliveProjects.length} zombie projects from rendering.`);
                 }
 
-                // Map snake_case to camelCase mapping for legacy mockDB usage
-                window.mockDB.projects = aliveProjects.map(p => ({
-                    id: p.id, name: p.name, customerName: p.customer_name || '-', location: p.location || '-', note: p.note || '',
-                    category: p.category, color: p.color, unit: p.unit || '-', hasUnpaid: p.has_unpaid, revenue: parseFloat(p.revenue) || 0,
-                    status: p.status, clientName: p.client_name, paymentDeadline: p.payment_deadline, bankInfo: p.bank_info, lastUpdated: p.last_updated, currency: p.currency,
+                // Map snake_case to camelCase mapping for legacy mockDB usage（user_id 保持でスコープ解決に利用）
+                window.mockDB.projects = aliveProjects.map((p) => ({
+                    id: p.id,
+                    name: p.name,
+                    user_id: p.user_id,
+                    customerName: p.customer_name || '-',
+                    location: p.location || '-',
+                    note: p.note || '',
+                    category: p.category,
+                    color: p.color,
+                    unit: p.unit || '-',
+                    hasUnpaid: p.has_unpaid,
+                    revenue: parseFloat(p.revenue) || 0,
+                    status: p.status,
+                    clientName: p.client_name,
+                    paymentDeadline: p.payment_deadline,
+                    bankInfo: p.bank_info,
+                    lastUpdated: p.last_updated,
+                    currency: p.currency,
                     startDate: p.created_at ? p.created_at.split('T')[0].replace(/-/g, '/') : null
                 }));
+            } else if (projErr) {
+                console.warn('[Neo Boot] Projects fetch failed:', projErr.message || projErr);
             }
 
             // Fetch Activities — 現在ユーザーの行のみ（RLS と一致）
@@ -4002,3 +4357,28 @@ const triggerNeoSyncGlow = () => {
     };
 
 });
+
+/**
+ * 公開 API 参照（本実装の定義元）
+ * - window.insertTransaction, mapActivityRowToMock … pages/db-sync.js（上で import）
+ * - window.openProjectDetail … views/projectdetail-core.js
+ * - window.handleInstruction … pages/chat.js
+ */
+window.addEventListener(
+    'load',
+    () => {
+        console.log('window functions check:', {
+            insertTransaction: typeof window.insertTransaction,
+            openProjectDetail: typeof window.openProjectDetail,
+            _parseActivityAmount: typeof window._parseActivityAmount,
+            _mockActivityMatchesProjectCandidates: typeof window._mockActivityMatchesProjectCandidates
+        });
+        if (typeof window.insertTransaction !== 'function') {
+            console.warn('[Neo] window.insertTransaction が未定義です（db-sync の import を確認）');
+        }
+        if (typeof window.openProjectDetail !== 'function') {
+            console.warn('[Neo] window.openProjectDetail が未定義です（projectdetail-core の読み込みを確認）');
+        }
+    },
+    { once: true }
+);

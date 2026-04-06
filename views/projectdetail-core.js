@@ -2,9 +2,32 @@
  * Neo+ isolated Project Detail Engine
  */
 
-// app.js が公開する前のフォールバック（モジュール評価時点で未定義の場合に備える）
-const _parseActivityAmount = window._parseActivityAmount
-    ?? ((v) => { if (!v) return 0; const n = parseFloat(String(v).replace(/,/g, '').trim()); return Number.isFinite(n) ? n : 0; });
+function _parseYenFromDetailLabel(s) {
+    if (!s || typeof s !== 'string') return 0;
+    const n = parseInt(String(s).replace(/[¥￥,\s]/g, ''), 10);
+    return Number.isFinite(n) ? n : 0;
+}
+
+/** NeoBus 経由の再描画時に合計が 0→正しい値へ追従するようイージング表示 */
+function _setYenLabelAnimated(el, target, animate) {
+    if (!el) return;
+    const to = Math.round(Number(target) || 0);
+    if (!animate) {
+        el.textContent = `¥${to.toLocaleString()}`;
+        return;
+    }
+    const from = _parseYenFromDetailLabel(el.textContent);
+    const start = performance.now();
+    const dur = 480;
+    const tick = (now) => {
+        const t = Math.min(1, (now - start) / dur);
+        const eased = 1 - (1 - t) * (1 - t);
+        const v = Math.round(from + (to - from) * eased);
+        el.textContent = `¥${v.toLocaleString()}`;
+        if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+}
 
         window.openProjectDetail = async (projectId, opts = {}) => {
             const pidStr = projectId == null ? '' : String(projectId);
@@ -65,19 +88,14 @@ const _parseActivityAmount = window._parseActivityAmount
                 }
             }
 
-            /** 同一プロジェクトの行を mock から落とす／Supabase の eq.in に使う（表記ゆれ対策） */
-            const projectIdCandidates = [
-                ...new Map(
-                    [projectId, proj.id, dbProjectIdForQuery]
-                        .filter((x) => x != null && x !== '')
-                        .map((x) => [String(x), x])
-                ).values()
-            ];
-
-            const _mockActivityMatchesProjectCandidates = (a) => {
-                const ap = String(a.projectId ?? '');
-                return projectIdCandidates.some((c) => String(c) === ap);
-            };
+            /** 同一プロジェクトの行を mock から落とす／SELECT の project_id 候補（型のバリエーションを網羅） */
+            const projectIdCandidates =
+                typeof window._neoBuildActivityProjectIdAttempts === 'function'
+                    ? window._neoBuildActivityProjectIdAttempts(projectId, proj, dbProjectIdForQuery)
+                    : typeof window._neoExpandProjectIdCandidates === 'function'
+                      ? window._neoExpandProjectIdCandidates([projectId, proj.id, dbProjectIdForQuery])
+                      : [projectId, proj.id, dbProjectIdForQuery].filter((x) => x != null && x !== '');
+            window.__neoProjectIdCandidatesForMatch = projectIdCandidates;
 
             /** Supabase 取得成功時のみセット（経費はこの配列だけで計算。失敗時は null のまま mock にフォールバック） */
             let actSourceFromSupabase = null;
@@ -97,15 +115,22 @@ const _parseActivityAmount = window._parseActivityAmount
                     let usedFallbackEq = false;
                     let lastCount = null;
 
-                    const { data: sessWrap } = await window.supabaseClient.auth.getSession();
-                    let uidForActivities = sessWrap?.session?.user?.id ?? null;
-                    if (!uidForActivities) {
-                        const { data: gu } = await window.supabaseClient.auth.getUser();
-                        uidForActivities = gu?.user?.id ?? null;
+                    let uidForActivities = null;
+                    try {
+                        uidForActivities = await window._resolveSupabaseAuthUid();
+                    } catch (e) {
+                        actSourceFromSupabaseNullReason = `auth uid unavailable: ${e && e.message ? e.message : String(e)}`;
+                        console.warn('[openProjectDetail] _resolveSupabaseAuthUid failed — skipping remote activities fetch', e);
                     }
-                    if (!uidForActivities) {
+                    if (
+                        !uidForActivities ||
+                        (typeof window._isValidSupabaseAuthUid === 'function' &&
+                            !window._isValidSupabaseAuthUid(uidForActivities))
+                    ) {
+                        actSourceFromSupabaseNullReason =
+                            actSourceFromSupabaseNullReason || 'no valid auth uid (RLS requires user_id = auth.uid())';
                         console.warn(
-                            '[openProjectDetail] No auth uid; cannot filter activities by user_id — expect 0 rows if RLS requires user_id = auth.uid().'
+                            '[openProjectDetail] No valid Supabase UID — skipping activities SELECT (use local mockDB only).'
                         );
                     } else if (projectIdCandidates.length) {
                         await window._backfillActivitiesNullUserIdForProjects(
@@ -115,13 +140,17 @@ const _parseActivityAmount = window._parseActivityAmount
                         );
                     }
 
-                    const _activitiesBase = () => {
-                        let q = window.supabaseClient.from('activities').select('*', { count: 'exact' });
-                        if (uidForActivities) {
-                            q = q.eq('user_id', uidForActivities);
-                        }
-                        return q;
-                    };
+                    const _uidOkForActivitiesQuery =
+                        uidForActivities &&
+                        (typeof window._isValidSupabaseAuthUid !== 'function' ||
+                            window._isValidSupabaseAuthUid(uidForActivities));
+
+                    if (_uidOkForActivitiesQuery) {
+                    const _activitiesBase = () =>
+                        window.supabaseClient
+                            .from('activities')
+                            .select('*', { count: 'exact' })
+                            .eq('user_id', uidForActivities);
 
                     console.log(
                         `[Query] user_id filter = ${uidForActivities ?? '(none)'} | project_id candidates = ${JSON.stringify(projectIdCandidates)}`
@@ -131,34 +160,52 @@ const _parseActivityAmount = window._parseActivityAmount
                         .in('project_id', projectIdCandidates)
                         .order('date', { ascending: true });
 
-                    if (q1res.error && projectIdCandidates.length > 1) {
-                        usedFallbackEq = true;
-                        const q2res = await _activitiesBase()
-                            .eq('project_id', dbProjectIdForQuery)
-                            .order('date', { ascending: true });
-                        data = q2res.data;
-                        error = q2res.error;
-                        lastCount = q2res.count;
-                    } else {
-                        data = q1res.data;
-                        error = q1res.error;
-                        lastCount = q1res.count;
+                    data = q1res.data;
+                    error = q1res.error;
+                    lastCount = q1res.count;
+                    let rows = Array.isArray(data) ? data : [];
+                    let lastQueryMethod = 'in(project_id, candidates)';
+
+                    const needEqFallback = rows.length === 0 || !!q1res.error;
+
+                    if (needEqFallback && projectIdCandidates.length > 0) {
+                        for (const fid of projectIdCandidates) {
+                            const qEq = await _activitiesBase()
+                                .eq('project_id', fid)
+                                .order('date', { ascending: true });
+                            const rEq = Array.isArray(qEq.data) ? qEq.data : [];
+                            if (!qEq.error && rEq.length > 0) {
+                                usedFallbackEq = true;
+                                data = qEq.data;
+                                error = qEq.error;
+                                lastCount = qEq.count;
+                                rows = rEq;
+                                lastQueryMethod = `eq(project_id, ${typeof fid} ${JSON.stringify(fid)})`;
+                                console.log(
+                                    `[openProjectDetail] activities: .in() returned 0 or error — succeeded with ${lastQueryMethod}`
+                                );
+                                break;
+                            }
+                        }
                     }
 
-                    const rows = Array.isArray(data) ? data : [];
+                    if (!Array.isArray(rows)) rows = [];
 
                     console.log(
                         '[openProjectDetail] Supabase raw response:',
-                        _neoJsonStringifyForLog({
+                        window._neoJsonStringifyForLog({
                             data,
                             error,
                             count: lastCount,
-                            query: usedFallbackEq ? 'eq(project_id, dbProjectIdForQuery)' : 'in(project_id, projectIdCandidates)',
+                            lastQueryMethod,
                             user_idFilter: uidForActivities ?? '(omitted — no auth uid)',
                             projectIdCandidates
                         })
                     );
                     if (!error && rows.length === 0) {
+                        console.warn(
+                            '[openProjectDetail] RLS filtering is likely. Check if activities.user_id matches auth.uid() and project_id matches INSERT.'
+                        );
                         console.warn('[openProjectDetail] raw response is empty array (0 rows for this filter)');
                         console.warn(
                             'Supabase returned 0 rows despite INSERT success. Possible RLS or project_id mismatch.'
@@ -179,8 +226,7 @@ const _parseActivityAmount = window._parseActivityAmount
                     }
 
                     console.log(
-                        `[openProjectDetail] Supabase activities raw row count: ${rows.length}` +
-                            (usedFallbackEq ? ' (query: eq fallback after .in error)' : ' (query: .in)')
+                        `[openProjectDetail] Supabase activities raw row count: ${rows.length} | method: ${lastQueryMethod}`
                     );
                     console.log(
                         '[openProjectDetail] projectIdCandidates used in query (all values):',
@@ -330,6 +376,7 @@ const _parseActivityAmount = window._parseActivityAmount
                         );
                         console.log(`Activities refresh: ${rows.length} row(s) from Supabase`);
                     }
+                    }
                 } catch (e) {
                     actSourceFromSupabaseNullReason = `exception: ${e && e.message ? e.message : String(e)}`;
                     console.warn('[openProjectDetail] Supabase activities fetch failed, using local body', e);
@@ -374,10 +421,10 @@ const _parseActivityAmount = window._parseActivityAmount
             if (actSourceFromSupabase != null) {
                 const supabaseExpenseSum = actSourceFromSupabase
                     .filter((t) => !t.is_deleted && t.type !== 'income')
-                    .reduce((acc, curr) => acc + _parseActivityAmount(curr.amount), 0);
+                    .reduce((acc, curr) => acc + window._parseActivityAmount(curr.amount), 0);
                 const supabaseIncomeSum = actSourceFromSupabase
                     .filter((t) => !t.is_deleted && t.type === 'income')
-                    .reduce((acc, curr) => acc + _parseActivityAmount(curr.amount), 0);
+                    .reduce((acc, curr) => acc + window._parseActivityAmount(curr.amount), 0);
                 const mockExpenseSum = mockDB.activities
                     .filter(
                         (t) =>
@@ -385,7 +432,7 @@ const _parseActivityAmount = window._parseActivityAmount
                             !t.is_deleted &&
                             t.type !== 'income'
                     )
-                    .reduce((acc, curr) => acc + _parseActivityAmount(curr.amount), 0);
+                    .reduce((acc, curr) => acc + window._parseActivityAmount(curr.amount), 0);
                 const mockIncomeSum = mockDB.activities
                     .filter(
                         (t) =>
@@ -393,7 +440,7 @@ const _parseActivityAmount = window._parseActivityAmount
                             !t.is_deleted &&
                             t.type === 'income'
                     )
-                    .reduce((acc, curr) => acc + _parseActivityAmount(curr.amount), 0);
+                    .reduce((acc, curr) => acc + window._parseActivityAmount(curr.amount), 0);
 
                 if (actSourceFromSupabase.length === 0) {
                     expenses = mockExpenseSum;
@@ -420,10 +467,10 @@ const _parseActivityAmount = window._parseActivityAmount
             } else {
                 expenses = actSource
                     .filter((t) => !t.is_deleted && t.type !== 'income')
-                    .reduce((acc, curr) => acc + _parseActivityAmount(curr.amount), 0);
+                    .reduce((acc, curr) => acc + window._parseActivityAmount(curr.amount), 0);
                 incomesFromTx = actSource
                     .filter((t) => !t.is_deleted && t.type === 'income')
-                    .reduce((acc, curr) => acc + _parseActivityAmount(curr.amount), 0);
+                    .reduce((acc, curr) => acc + window._parseActivityAmount(curr.amount), 0);
                 console.log(
                     `[openProjectDetail] totals from mock fallback: ${actSource.length} rows, expense total = ${expenses}`
                 );
@@ -464,7 +511,7 @@ const _parseActivityAmount = window._parseActivityAmount
             }
             if (typeof window.renderProjects === 'function') {
                 try {
-                    window.renderProjects(window.mockDB.projects);
+                    window.renderProjects([...(window.mockDB.projects || [])], false, { forceRecalc: true });
                 } catch {
                     /* ignore */
                 }
@@ -479,6 +526,7 @@ const _parseActivityAmount = window._parseActivityAmount
             // Target gauge logic (mock target of 1,000,000 or dynamic based on project if we had it)
             const targetProfit = 1000000;
             const progressPercent = Math.min(100, Math.max(0, (profit / targetProfit) * 100));
+            const animateMoney = opts.animateTotals === true;
 
             // Update UI
             const nameEl = document.getElementById('detail-project-name');
@@ -493,18 +541,18 @@ const _parseActivityAmount = window._parseActivityAmount
                 if (window.lucide) window.lucide.createIcons();
             }
             const revEl = document.getElementById('detail-revenue');
-            if (revEl) revEl.textContent = `¥${revenue.toLocaleString()}`;
+            _setYenLabelAnimated(revEl, revenue, animateMoney);
             const expEl = document.getElementById('detail-expense');
-            if (expEl) expEl.textContent = `¥${expenses.toLocaleString()}`;
+            _setYenLabelAnimated(expEl, expenses, animateMoney);
 
             // Formula mini-indicators
             const revMiniEl = document.getElementById('detail-revenue-mini');
-            if (revMiniEl) revMiniEl.textContent = `¥${revenue.toLocaleString()}`;
+            _setYenLabelAnimated(revMiniEl, revenue, animateMoney);
             const expMiniEl = document.getElementById('detail-expense-mini');
-            if (expMiniEl) expMiniEl.textContent = `¥${expenses.toLocaleString()}`;
+            _setYenLabelAnimated(expMiniEl, expenses, animateMoney);
 
             const profEl = document.getElementById('detail-profit');
-            if (profEl) profEl.textContent = `¥${profit.toLocaleString()}`;
+            _setYenLabelAnimated(profEl, profit, animateMoney);
 
             // Update Dashboard Note
             const noteEl = document.getElementById('detail-project-note');

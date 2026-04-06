@@ -171,10 +171,10 @@ export function initSetupView() {
         window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
             _initialAuthHandled = true;
             handleAuthState(session);
-        }).catch(err => {
-            console.warn("Brain (Supabase) Unreachable. Falling back to Local Body Mode.", err);
+        }).catch((err) => {
+            console.warn('Brain (Supabase) Unreachable. Require sign-in when online.', err);
             _initialAuthHandled = true;
-            handleAuthState({ user: { email: 'ceo@local.neo', id: 'local-body-id' } });
+            handleAuthState(null);
         });
 
         // 2. Continuous Listener
@@ -207,14 +207,14 @@ export function initSetupView() {
             const email = document.getElementById('auth-email')?.value;
             const password = document.getElementById('auth-password')?.value;
             const errorMsg = document.getElementById('auth-error-msg');
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-            // Development Auto-Login Bypass (Enabled for preview/dev)
+            // ダミー UUID は DB の user_id に混入するため廃止 — 本番 UID は Supabase セッションのみ
             if (!email && !password) {
-                console.log("[NeoGatekeeper] Development bypass activated. Logging in as CEO.");
-                if (errorMsg) errorMsg.style.display = 'none';
-                newBtnLogin.textContent = "Bypass 成功";
-                handleAuthState({ user: { email: 'ceo@example.com', id: '00000000-0000-0000-0000-000000000000' } });
+                console.warn('[NeoGatekeeper] メールとパスワードを入力してください（ダミー UUID バイパスは無効です）。');
+                if (errorMsg) {
+                    errorMsg.textContent = 'メールとパスワードを入力してログインしてください。';
+                    errorMsg.style.display = 'block';
+                }
                 return;
             }
 
@@ -244,6 +244,156 @@ export function initSetupView() {
             } else {
                 if (errorMsg) errorMsg.style.display = 'none';
                 newBtnLogin.textContent = "ログイン成功";
+            }
+        });
+    }
+
+    // ==========================================
+    // 4. Signup Panel: Toggle + Registration Handler
+    // ==========================================
+    const panelLogin  = document.getElementById('panel-login');
+    const panelSignup = document.getElementById('panel-signup');
+
+    /** ログイン ↔ 新規登録パネル（CSS .auth-panel--hidden でクロスフェード＋浮遊スライド） */
+    const _showPanel = (mode) => {
+        if (!panelLogin || !panelSignup) return;
+        const goSignup = mode === 'signup';
+        panelLogin.classList.toggle('auth-panel--hidden', goSignup);
+        panelSignup.classList.toggle('auth-panel--hidden', !goSignup);
+        if (!goSignup) {
+            const errMsg = document.getElementById('auth-error-msg');
+            if (errMsg) errMsg.style.display = 'none';
+        }
+        if (window.lucide) window.lucide.createIcons();
+    };
+
+    // 「新規アカウント作成 →」リンク
+    const linkSignup = document.getElementById('link-auth-signup');
+    if (linkSignup) {
+        linkSignup.addEventListener('click', (e) => {
+            e.preventDefault();
+            _showPanel('signup');
+        });
+    }
+
+    // 「← ログインに戻る」リンク
+    const linkBackToLogin = document.getElementById('link-back-to-login');
+    if (linkBackToLogin) {
+        linkBackToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            // 成功メッセージ・エラーをリセット
+            const successEl = document.getElementById('signup-success-msg');
+            const errEl     = document.getElementById('signup-error-msg');
+            if (successEl) successEl.style.display = 'none';
+            if (errEl) errEl.style.display = 'none';
+            _showPanel('login');
+        });
+    }
+
+    // サインアップフォームのバリデーション（同意チェック + パスワード一致）
+    const _validateSignupForm = () => {
+        const email    = document.getElementById('signup-email')?.value?.trim() ?? '';
+        const pw       = document.getElementById('signup-password')?.value ?? '';
+        const pwConf   = document.getElementById('signup-password-confirm')?.value ?? '';
+        const consent  = document.getElementById('signup-consent')?.checked ?? false;
+        const btn      = document.getElementById('btn-signup-submit');
+        if (!btn) return;
+
+        const isValid = email.length > 0 && pw.length >= 8 && pw === pwConf && consent;
+        btn.disabled       = !isValid;
+        btn.style.opacity  = isValid ? '1' : '0.45';
+        btn.style.cursor   = isValid ? 'pointer' : 'not-allowed';
+        btn.style.boxShadow = isValid ? '0 8px 25px rgba(139, 92, 246, 0.4)' : 'none';
+    };
+
+    ['signup-email', 'signup-password', 'signup-password-confirm', 'signup-consent'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener(el.type === 'checkbox' ? 'change' : 'input', _validateSignupForm);
+    });
+
+    // パスワード一致インジケーター（入力中にフィールドをハイライト）
+    const signupPwConf = document.getElementById('signup-password-confirm');
+    if (signupPwConf) {
+        signupPwConf.addEventListener('input', () => {
+            const pw     = document.getElementById('signup-password')?.value ?? '';
+            const pwConf = signupPwConf.value;
+            if (pwConf.length === 0) {
+                signupPwConf.style.borderColor = 'var(--btn-secondary-border)';
+                return;
+            }
+            signupPwConf.style.borderColor = pw === pwConf ? '#10b981' : '#ef4444';
+        });
+    }
+
+    // サインアップ送信ボタン
+    const btnSignupSubmit = document.getElementById('btn-signup-submit');
+    if (btnSignupSubmit) {
+        btnSignupSubmit.addEventListener('click', async () => {
+            const email   = document.getElementById('signup-email')?.value?.trim() ?? '';
+            const pw      = document.getElementById('signup-password')?.value ?? '';
+            const pwConf  = document.getElementById('signup-password-confirm')?.value ?? '';
+            const errEl   = document.getElementById('signup-error-msg');
+            const succEl  = document.getElementById('signup-success-msg');
+
+            // 二重チェック
+            if (!email || pw.length < 8) {
+                if (errEl) { errEl.textContent = 'メールと8文字以上のパスワードを入力してください。'; errEl.style.display = 'block'; }
+                return;
+            }
+            if (pw !== pwConf) {
+                if (errEl) { errEl.textContent = 'パスワードが一致しません。'; errEl.style.display = 'block'; }
+                return;
+            }
+
+            btnSignupSubmit.disabled = true;
+            btnSignupSubmit.textContent = '登録中...';
+            if (errEl) errEl.style.display = 'none';
+
+            if (!window.supabaseClient) {
+                if (errEl) { errEl.textContent = 'Supabase に接続できません。ネットワークを確認してください。'; errEl.style.display = 'block'; }
+                btnSignupSubmit.disabled = false;
+                btnSignupSubmit.textContent = 'アカウントを作成する';
+                return;
+            }
+
+            const { error } = await window.supabaseClient.auth.signUp({ email, password: pw });
+
+            if (error) {
+                if (errEl) {
+                    // Supabase エラーメッセージを日本語化
+                    const msgMap = {
+                        'User already registered': 'このメールアドレスは既に登録されています。ログインしてください。',
+                        'Password should be at least 6 characters': 'パスワードは6文字以上で入力してください。',
+                        'Unable to validate email address: invalid format': 'メールアドレスの形式が正しくありません。',
+                    };
+                    errEl.textContent = msgMap[error.message] ?? `登録に失敗しました: ${error.message}`;
+                    errEl.style.display = 'block';
+                }
+                btnSignupSubmit.disabled = false;
+                btnSignupSubmit.textContent = 'アカウントを作成する';
+            } else {
+                // 成功 — 確認メール送信済みメッセージを表示
+                btnSignupSubmit.style.display = 'none';
+                if (succEl) {
+                    succEl.style.display = 'block';
+                    if (window.lucide) window.lucide.createIcons();
+                }
+                // 3秒後に自動でログインパネルへ戻る
+                setTimeout(() => {
+                    if (succEl) succEl.style.display = 'none';
+                    btnSignupSubmit.style.display = 'block';
+                    btnSignupSubmit.disabled = false;
+                    btnSignupSubmit.textContent = 'アカウントを作成する';
+                    // フォームをリセット
+                    ['signup-email', 'signup-password', 'signup-password-confirm'].forEach((id) => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = '';
+                    });
+                    const consent = document.getElementById('signup-consent');
+                    if (consent) consent.checked = false;
+                    _validateSignupForm();
+                    _showPanel('login');
+                }, 4000);
             }
         });
     }
