@@ -4199,14 +4199,14 @@ const triggerNeoSyncGlow = () => {
     // Stubs are provided below for backward compatibility during transition.
 
     window.updateChatCharCounter = function (inputElement) {
-        // console.warn("Legacy window.updateChatCharCounter called. Use neo-brain.js for new logic.");
         const counter = document.getElementById('chat-char-counter');
-        if (counter) {
-            const len = inputElement.value.length;
-            const max = inputElement.getAttribute('maxlength') || 400;
-            counter.textContent = `${len} / ${max}`;
-            counter.style.color = len >= 380 ? '#ef4444' : (len >= 300 ? '#f59e0b' : 'var(--text-muted)');
-        }
+        if (!counter) return;
+        const len = inputElement.value.length;
+        const max = inputElement.getAttribute('maxlength') || 400;
+        counter.textContent = `${len} / ${max}`;
+        counter.classList.remove('chat-char-counter--warn', 'chat-char-counter--danger');
+        if (len >= 380) counter.classList.add('chat-char-counter--danger');
+        else if (len >= 300) counter.classList.add('chat-char-counter--warn');
     };
 
     window.sendChatMessage = async function () {

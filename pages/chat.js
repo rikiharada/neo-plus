@@ -45,6 +45,25 @@ function _buildOfflineFallbackReply(inputText = '') {
     return null;
 }
 
+/** チャット末尾へスクロール（レイアウト確定後に複数フレームで追従） */
+export function scrollChatToBottom() {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return;
+    const run = () => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+    run();
+    requestAnimationFrame(run);
+    requestAnimationFrame(() => {
+        run();
+        if (typeof window.syncChatVisualViewport === 'function') window.syncChatVisualViewport();
+    });
+    setTimeout(run, 50);
+    setTimeout(run, 200);
+}
+
+window.scrollChatToBottom = scrollChatToBottom;
+
 export function appendChatMessage(sender, htmlContent) {
     const chatMessages = document.getElementById('chat-messages');
     if (!chatMessages) return null;
@@ -54,11 +73,12 @@ export function appendChatMessage(sender, htmlContent) {
     const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false });
 
     const row = document.createElement('div');
-    row.className = 'chat-message-row';
+    row.className = sender === 'neo'
+        ? 'chat-message-row chat-message-row--neo'
+        : 'chat-message-row chat-message-row--user';
 
     if (sender === 'neo') {
         // Neo: 左寄せ、アバター左上固定
-        row.style.justifyContent = 'flex-start';
         row.innerHTML = `
             <img src="img/neo_avatar.jpg" class="chat-avatar"
                  alt="Neo"
@@ -70,7 +90,6 @@ export function appendChatMessage(sender, htmlContent) {
         `;
     } else {
         // user: 右寄せ、アバターなし (iMessage スタイル)
-        row.style.justifyContent = 'flex-end';
         row.innerHTML = `
             <div class="chat-bubble-col ceo">
                 <div class="message-bubble ceo">${htmlContent}</div>
@@ -81,11 +100,7 @@ export function appendChatMessage(sender, htmlContent) {
 
     chatMessages.appendChild(row);
 
-    // 最新メッセージへスクロール
-    setTimeout(() => {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        if (typeof window.syncChatVisualViewport === 'function') window.syncChatVisualViewport();
-    }, 50);
+    scrollChatToBottom();
 
     return row;
 }
@@ -147,10 +162,7 @@ function syncChatVisualViewport() {
     document.documentElement.style.setProperty('--vv-keyboard-inset', `${inset}px`);
 
     if (inset > 48) {
-        const chatMessages = document.getElementById('chat-messages');
-        if (chatMessages) {
-            requestAnimationFrame(() => { chatMessages.scrollTop = chatMessages.scrollHeight; });
-        }
+        window.scrollChatToBottom?.();
     }
 }
 
@@ -970,7 +982,10 @@ export async function handleInstruction(text, hasImage = false) {
                         try {
                             finalText = await getNeoResponseStream(text, (_chunk, fullText) => {
                                 if (streamSpan) streamSpan.textContent = fullText;
-                                if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+                                if (chatMessages) {
+                                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                                    window.scrollChatToBottom?.();
+                                }
                             });
                         } catch (streamErr) {
                             const isKeyErr =

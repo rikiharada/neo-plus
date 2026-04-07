@@ -805,12 +805,18 @@ html[data-theme='dark'] .neo-cockpit-welcome-bubble-wrap::before {
     margin-right: auto;
   }
 
-  /* 6. チャット入力もサイドバー分オフセット */
+  /* 6. チャット入力: メイン列（サイドバー右）の中央に配置（viewport 50% だと左がサイドバーに隠れる） */
   .chat-input-floating {
-    left: calc(220px + 12px) !important;
-    right: 12px !important;
-    max-width: calc(min(836px, 100vw - 220px) - 24px) !important;
+    left: calc(220px + (100vw - 220px) / 2) !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(calc(100vw - 220px - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 800px) !important;
+    max-width: min(calc(100vw - 220px - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 800px) !important;
     margin: 0 !important;
+  }
+
+  #view-chat .chat-input-floating:focus-within {
+    transform: translateX(-50%) translateY(-1px) !important;
   }
 
   /* 6b. チャットヘッダー: デスクトップでは水平パディングを統一 */
@@ -845,7 +851,16 @@ html[data-theme='dark'] .neo-cockpit-welcome-bubble-wrap::before {
   .neo-desktop-sidebar { width: 200px; }
   #app-container { margin-left: 200px !important; max-width: calc(100vw - 200px) !important; }
   .header-area { left: 200px !important; max-width: calc(100vw - 200px) !important; }
-  .chat-input-floating { left: calc(200px + 12px) !important; }
+  .chat-input-floating {
+    left: calc(200px + (100vw - 200px) / 2) !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(calc(100vw - 200px - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 800px) !important;
+    max-width: min(calc(100vw - 200px - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 800px) !important;
+  }
+  #view-chat .chat-input-floating:focus-within {
+    transform: translateX(-50%) translateY(-1px) !important;
+  }
 }
 
 /* ── Wide Desktop (≥ 1280px) コンテンツ中央寄せ ──────────────── */
@@ -887,11 +902,22 @@ html[data-theme='dark'] .neo-cockpit-welcome-bubble-wrap::before {
   }
 
   .chat-input-floating {
-    left: 8px !important;
-    right: 8px !important;
-    width: auto !important;
-    max-width: none !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(
+      calc(100vw - 20px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
+      800px
+    ) !important;
+    max-width: min(
+      calc(100vw - 20px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
+      800px
+    ) !important;
     margin: 0 !important;
+  }
+
+  #view-chat .chat-input-floating:focus-within {
+    transform: translateX(-50%) translateY(-1px) !important;
   }
 
   #view-chat .content-area,

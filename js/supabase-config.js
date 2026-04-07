@@ -26,7 +26,15 @@ try {
     console.log('[Neo] Supabase URL:', supabaseUrl);
 }
 
-window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseOptions = {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage
+    }
+};
+window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, supabaseOptions);
 window.neoSupabaseUrl = supabaseUrl;
 
 console.log('✅ Supabase Client Initialized v2');

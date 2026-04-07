@@ -199,6 +199,12 @@ export function initSetupView() {
     // 3. Login Button Binding
     const btnLogin = document.getElementById('btn-auth-login');
     if (btnLogin) {
+        const emailInput = document.getElementById('auth-email');
+        if (emailInput) {
+            const savedEmail = localStorage.getItem('neo_last_login_email');
+            if (savedEmail) emailInput.value = savedEmail;
+        }
+
         // Prevent duplicate bindings
         const newBtnLogin = btnLogin.cloneNode(true);
         btnLogin.parentNode.replaceChild(newBtnLogin, btnLogin);
@@ -244,6 +250,7 @@ export function initSetupView() {
             } else {
                 if (errorMsg) errorMsg.style.display = 'none';
                 newBtnLogin.textContent = "ログイン成功";
+                if (email) localStorage.setItem('neo_last_login_email', email);
             }
         });
     }

@@ -219,18 +219,14 @@ window.sendChatMessage = async function() {
 window.updateChatCharCounter = function(inputElement) {
     const counter = document.getElementById('chat-char-counter');
     if (!counter) return;
-    
+
     const len = inputElement.value.length;
     const max = inputElement.getAttribute('maxlength') || 400;
     counter.textContent = `${len} / ${max}`;
-    
-    if (len >= 380) {
-        counter.style.color = '#ef4444'; // Red
-    } else if (len >= 300) {
-        counter.style.color = '#f59e0b'; // Orange
-    } else {
-        counter.style.color = 'var(--text-muted)';
-    }
+
+    counter.classList.remove('chat-char-counter--warn', 'chat-char-counter--danger');
+    if (len >= 380) counter.classList.add('chat-char-counter--danger');
+    else if (len >= 300) counter.classList.add('chat-char-counter--warn');
 };
 
 // Initialize Greetings upon injection
