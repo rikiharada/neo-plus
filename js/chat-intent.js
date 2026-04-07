@@ -1,3 +1,4 @@
+/** Canonical ADD_EXPENSE parser; load from `/js/chat-intent.js` (not pages/chat-intents.js). */
 export function parseInputToData(input) {
   try {
     if (typeof input !== "string") return { error: true };
