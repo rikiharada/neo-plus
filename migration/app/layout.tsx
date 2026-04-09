@@ -39,7 +39,8 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
-        <Suspense fallback={<RootOutletFallback />}>{children}</Suspense>
+        {/* Suspense removed for debug */}
+        {children}
       </body>
     </html>
   );

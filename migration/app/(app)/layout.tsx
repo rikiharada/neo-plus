@@ -25,21 +25,17 @@ export const metadata: Metadata = {
 
 // ─── レイアウトコンポーネント ────────────────────────────────────
 
-/**
- * ユーザー取得 + シェル。Suspense 内に置くことで、getUser() 待ちがルート全体の
- * HTML ストリーミングを止めない（フォールバックを先に送れる）。
- */
 async function AppShellWithUser({ children }: { children: React.ReactNode }) {
-  const supabase = await createServerComponentClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // const supabase = await createServerComponentClient();
+  // const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <>
-      <AppSidebar user={user} />
+      <AppSidebar user={null} />
       <div className="app-main">
-        <AppHeader user={user} />
+        <AppHeader user={null} />
         <main className="app-content" id="main-content">
-          <Suspense fallback={<PageLoadingSkeleton />}>{children}</Suspense>
+          {children}
         </main>
       </div>
     </>
@@ -49,9 +45,7 @@ async function AppShellWithUser({ children }: { children: React.ReactNode }) {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="app-layout">
-      <Suspense fallback={<PageLoadingSkeleton />}>
-        <AppShellWithUser>{children}</AppShellWithUser>
-      </Suspense>
+      <AppShellWithUser>{children}</AppShellWithUser>
     </div>
   );
 }
