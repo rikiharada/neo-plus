@@ -2,3 +2,5 @@
 .env*.local
 .next/
 .next
+.next/
+.next
