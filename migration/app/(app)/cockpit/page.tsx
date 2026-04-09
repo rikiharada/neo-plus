@@ -32,9 +32,6 @@ export const metadata: Metadata = {
 
 // ─── PPR: 静的シェルと動的コンテンツを分離 ──────────────────────
 
-// ⚠️ next.config.ts の experimental.ppr: 'incremental' が必要
-export const experimental_ppr = true;
-
 // ─── ページコンポーネント ────────────────────────────────────────
 
 export default async function CockpitPage() {

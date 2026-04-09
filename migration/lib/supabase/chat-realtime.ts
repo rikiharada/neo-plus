@@ -16,6 +16,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+/** 型付き DB クライアントとそのまま渡せるよう緩い参照（removeChannel のみ使用） */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Realtime ヘルパは全スキーマで共有
+type SupabaseForRealtime = SupabaseClient<any, any, any, any, any>;
+
 /** 開発時かつ NEXT_PUBLIC_CHAT_REALTIME_DEBUG=1 のときだけ chat-realtime 内で詳細ログ */
 function rtDebugLog(...args: unknown[]): void {
   if (
@@ -51,7 +55,7 @@ export function setNeoChatActivitiesChannel(ch: RealtimeChannel | null): void {
  * 必ず await してから新規 channel() すること（「WebSocket is closed before…」対策）
  */
 export async function removeNeoChatActivitiesChannel(
-  supabase: SupabaseClient,
+  supabase: SupabaseForRealtime,
   channelRef: { current: RealtimeChannel | null },
 ): Promise<void> {
   const fromRef = channelRef.current;
@@ -78,7 +82,7 @@ export async function removeNeoChatActivitiesChannel(
  * クライアントに残った `neo-chat-activities:{userId}` 系チャンネルを掃除（Strict Mode / 異常時の残骸対策）
  */
 export async function removeOrphanNeoChatActivityChannels(
-  supabase: SupabaseClient,
+  supabase: SupabaseForRealtime,
   userId: string,
 ): Promise<void> {
   try {
@@ -110,7 +114,7 @@ export async function removeOrphanNeoChatActivityChannels(
  * @returns アクセストークンが取れたら true
  */
 export async function ensureSessionForRealtimeSubscribe(
-  supabase: SupabaseClient,
+  supabase: SupabaseForRealtime,
 ): Promise<boolean> {
   const {
     data: { session: s0 },

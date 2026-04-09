@@ -15,9 +15,6 @@
  * │  Summary     │  入力エリア                                   │
  * └──────────────┴───────────────────────────────────────────────┘
  *
- * ─── 初期化ログ（互換性維持） ────────────────────────────────────
- * [Neo] Desk View Initialized — Vanilla JS 版 desk.js の検知と互換
- *
  * ─── データフロー ────────────────────────────────────────────────
  * 1. FileDropZone でドロップ
  * 2. analyzeFile() — ブラウザ側解析（CSV/Excel/PDF/画像）
@@ -29,7 +26,7 @@
 'use client';
 
 import {
-  useState, useCallback, useEffect, useRef, useTransition,
+  useState, useCallback, useEffect, useLayoutEffect, useRef, useTransition,
   type KeyboardEvent as ReactKbEvent,
   type DragEvent,
   type ChangeEvent,
@@ -67,10 +64,8 @@ export function LedgerDeskClient({ userId, hasDriveLinked }: LedgerDeskClientPro
   const processingRef = useRef(false);
   const chatEndRef    = useRef<HTMLDivElement>(null);
 
-  // ─── [Neo] Desk View Initialized ─────────────────────────────
-  // 既存の Vanilla JS 版 desk.js の初期化シグナルと互換性を保つ。
-  // このログ行は絶対に削除・変更しないこと。
-  useEffect(() => {
+  // ─── [Neo] Desk View Initialized（DOM コミット直後） ─────────────
+  useLayoutEffect(() => {
     console.info('[Neo] Desk View Initialized', {
       userId,
       hasDriveLinked,
@@ -124,7 +119,7 @@ export function LedgerDeskClient({ userId, hasDriveLinked }: LedgerDeskClientPro
         const uploadResult = await uploadToDriveAndCreateActivity(fd);
         if (uploadResult.ok) {
           driveFileId  = uploadResult.driveFileId  ?? undefined;
-          driveWebLink = uploadResult.driveWebLink ?? undefined;
+          driveWebLink = uploadResult.webViewLink ?? undefined;
           setFiles((prev) => prev.map((f) =>
             f.id === id ? { ...f, driveFileId, driveWebLink } : f,
           ));
@@ -662,7 +657,7 @@ function SummaryCard({
 interface RightPaneProps {
   messages:       DeskMessage[];
   isThinking:     boolean;
-  chatEndRef:     React.RefObject<HTMLDivElement>;
+  chatEndRef:     React.RefObject<HTMLDivElement | null>;
   userInput:      string;
   onInputChange:  (v: string) => void;
   onSend:         () => void;

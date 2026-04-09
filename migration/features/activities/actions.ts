@@ -33,6 +33,7 @@ import {
 import { checkRateLimit, RATE_LIMIT_PRESETS }          from '@/lib/rate-limit';
 import { loadSoulServer }                              from '@/features/soul/server';
 import { runSoulPipeline }                             from '@/lib/soul-pipeline';
+import type { ActivityRow }                            from '@/lib/supabase/types';
 
 // ─── 型定義 ─────────────────────────────────────────────────────
 
@@ -252,7 +253,7 @@ export async function fetchActivities(opts?: {
   type?:      'expense' | 'income' | 'transfer';
   dateFrom?:  string;
   dateTo?:    string;
-}) {
+}): Promise<ActivityRow[]> {
   try {
     const user = await requireAuth();
     await checkRateLimit(`activity:fetch:${user.id}`, RATE_LIMIT_PRESETS.activityFetch);

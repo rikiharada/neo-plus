@@ -22,6 +22,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@/lib/supabase/server';
 import { exchangeGoogleAuthorizationCode } from '@/lib/google-oauth-exchange';
 import { ensureNeoFolderExists, GOOGLE_DRIVE_SCOPES } from '@/lib/google-drive';
+import type { Database } from '@/lib/supabase/types';
+
+type UserIntegrationInsert = Database['public']['Tables']['user_integrations']['Insert'];
 
 function redirectWithError(request: NextRequest, reason: string) {
   const path = process.env.NEO_OAUTH_SUCCESS_PATH ?? '/cockpit';
@@ -74,29 +77,30 @@ export async function GET(request: NextRequest) {
   }
 
   const t            = exchanged.tokens;
+  const accessToken  = t.access_token as string;
   const expiryDate   = t.expiry_date ?? Date.now() + 3600 * 1000;
   const scopeJoined  = t.scope && t.scope.length > 0
     ? t.scope
     : GOOGLE_DRIVE_SCOPES.join(' ');
 
-  const folder = await ensureNeoFolderExists(t.access_token);
+  const folder = await ensureNeoFolderExists(accessToken);
   if (!folder.ok || !folder.folderId) {
     return redirectWithError(request, 'folder');
   }
 
-  const { error: upErr } = await supabase.from('user_integrations').upsert(
-    {
-      user_id:       user.id,
-      provider:      'google_drive',
-      access_token:  t.access_token,
-      refresh_token: t.refresh_token ?? null,
-      expiry_date:   expiryDate,
-      scope:         scopeJoined,
-      folder_id:     folder.folderId,
-      updated_at:    new Date().toISOString(),
-    },
-    { onConflict: 'user_id,provider' },
-  );
+  const row: UserIntegrationInsert = {
+    user_id:       user.id,
+    provider:      'google_drive',
+    access_token:  accessToken,
+    refresh_token: t.refresh_token ?? null,
+    expiry_date:   expiryDate,
+    scope:         scopeJoined,
+    folder_id:     folder.folderId,
+  };
+
+  const { error: upErr } = await supabase.from('user_integrations').upsert(row, {
+    onConflict: 'user_id,provider',
+  });
 
   if (upErr) {
     console.error('[google/callback] user_integrations upsert:', upErr);

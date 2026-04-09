@@ -12,7 +12,6 @@
 
 import type { Metadata }               from 'next';
 import { Suspense }                    from 'react';
-import '../globals.css';
 import { createServerComponentClient } from '@/lib/supabase/server';
 import { AppSidebar }                  from '@/components/AppSidebar';
 import { AppHeader }                   from '@/components/AppHeader';

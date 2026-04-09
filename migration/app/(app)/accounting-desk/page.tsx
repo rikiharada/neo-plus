@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   description: '領収書・帳票をドロップして、Neo に解析・仕訳を依頼できます。',
 };
 
+/** Vercel / CDN で古い静的シェルが残らないよう、常に動的レンダリング */
+export const dynamic = 'force-dynamic';
+
 // ─── ページコンポーネント ────────────────────────────────────────
 
 export default async function AccountingDeskPage() {

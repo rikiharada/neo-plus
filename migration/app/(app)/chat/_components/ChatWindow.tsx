@@ -599,11 +599,12 @@ export function ChatWindow({
         return;
       }
       if (result.message) {
+        const text = result.message;
         setMessages((prev) => [
           ...prev,
           {
             role:      'assistant',
-            content:   result.message,
+            content:   text,
             timestamp: new Date().toISOString(),
           },
         ]);
@@ -625,11 +626,12 @@ export function ChatWindow({
       if (r.ok) {
         setPendingDrive(null);
         if (r.message) {
+          const dismissText = r.message;
           setMessages((prev) => [
             ...prev,
             {
               role:      'assistant',
-              content:   r.message,
+              content:   dismissText,
               timestamp: new Date().toISOString(),
             },
           ]);

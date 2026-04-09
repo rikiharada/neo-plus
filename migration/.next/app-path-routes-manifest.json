@@ -1,0 +1,12 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/auth/google/route": "/api/auth/google",
+  "/api/auth/google/callback/route": "/api/auth/google/callback",
+  "/api/accounting/action/route": "/api/accounting/action",
+  "/api/accounting/analyze/route": "/api/accounting/analyze",
+  "/(auth)/login/page": "/login",
+  "/(app)/settings/page": "/settings",
+  "/(app)/accounting-desk/page": "/accounting-desk",
+  "/(app)/cockpit/page": "/cockpit",
+  "/(app)/chat/page": "/chat"
+}

@@ -123,16 +123,19 @@ export interface Database {
         Row:    ActivityRow;
         Insert: Omit<ActivityRow, 'id' | 'created_at' | 'updated_at'> & { id?: string };
         Update: Partial<Omit<ActivityRow, 'id' | 'user_id' | 'created_at'>>;
+        Relationships: [];
       };
       projects: {
         Row:    ProjectRow;
         Insert: Omit<ProjectRow, 'id' | 'created_at'> & { id?: string };
         Update: Partial<Omit<ProjectRow, 'id' | 'user_id' | 'created_at'>>;
+        Relationships: [];
       };
       souls: {
         Row:    SoulRow;
         Insert: Omit<SoulRow, 'created_at' | 'updated_at'>;
         Update: Partial<Omit<SoulRow, 'id' | 'created_at'>>;
+        Relationships: [];
       };
       user_integrations: {
         Row:    UserIntegrationRow;
@@ -142,11 +145,13 @@ export interface Database {
         Update: Partial<
           Omit<UserIntegrationRow, 'id' | 'user_id' | 'provider' | 'created_at'>
         >;
+        Relationships: [];
       };
       drive_file_pointers: {
         Row:    DriveFilePointerRow;
         Insert: Omit<DriveFilePointerRow, 'id' | 'created_at'> & { id?: string };
         Update: Partial<Omit<DriveFilePointerRow, 'id' | 'user_id' | 'created_at'>>;
+        Relationships: [];
       };
       agentic_pending_nonces: {
         Row:    AgenticPendingNonceRow;
@@ -160,13 +165,15 @@ export interface Database {
         Update: Partial<
           Pick<AgenticPendingNonceRow, 'expires_at' | 'consumed_at'>
         >;
+        Relationships: [];
       };
       user_feedback: {
         Row:    UserFeedbackRow;
         Insert: Omit<UserFeedbackRow, 'id' | 'created_at'> & {
           id?: string;
         };
-        Update: never;
+        Update: Partial<Omit<UserFeedbackRow, 'id' | 'user_id' | 'created_at'>>;
+        Relationships: [];
       };
     };
     Views:     Record<string, never>;
