@@ -18,25 +18,9 @@
     <link rel="stylesheet" href="/css/index.css?v=20260321-13">
     <link rel="stylesheet" href="/css/layout.css?v=20260321-13">
     <link rel="stylesheet" href="/css/chat.css?v=20260322-1">
-    <link rel="stylesheet" href="/css/desk.css?v=20260323-1">
     <link rel="stylesheet" href="/css/components.css?v=20260321-13">
 
-    <!-- Supabase SDK & Config -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/js/supabase-config.js?v=neo-99-RECOVERY14"></script>
-
-    <!-- Industry Lexicons & Knowledge -->
-    <script src="/js/StaticLexicon.js?v=2.6.5" defer></script>
-    <script src="/js/industries.js?v=2.6.5" defer></script>
-    <script src="/js/GoldenKnowledge.js" defer></script>
-    <!-- 8-Category Tag Extraction Engine (Layer 1 + Layer 2 LLM) -->
-    <script src="/pages/parseInputToData.js?v=20260321-1" defer></script>
-    
-    <!-- Cloud Integration: Google Identity Services (GIS) Zero-Server Auth -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Legacy SPA script bundles removed — use Next.js app (migration/) and features/lib modules. -->
 
     <!-- Global Error Debugger for Mobile Vercel -->
     <script>
@@ -217,8 +201,7 @@
             <!-- NEW: Settings View Router Anchor -->
             <div id="router-view-settings"></div>
 
-            <!-- AI Ledger Desk Router Anchor -->
-            <div id="router-view-desk"></div>
+            <!-- Ledger Desk → App Router /accounting-desk（旧 SPA desk は廃止） -->
 
             <!-- GLOBAL DOCUMENT GENERATOR MODAL -->
             <div id="document-preview-modal" class="modal-overlay hidden" style="z-index: 99999; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-color); display: flex; flex-direction: column;">
@@ -608,52 +591,6 @@
         </div>
     </div>
     <!-- END app-container -->
-    <!-- Instant Touch Library for iOS Safari -->
-    <script src="/js/fastclick.min.js?v=FINAL_FORCE_RECOVERY_30"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            if ('addEventListener' in document) {
-                // Attach FastClick to body
-                FastClick.attach(document.body);
-
-                // FIXED: iOS "long press to focus" bug under FastClick
-                // FastClick's 'needsclick' class is sometimes ignored by newer WebKit versions.
-                // We must manually intercept touchend on inputs and force focus.
-                document.body.addEventListener('touchend', function (e) {
-                    const tag = e.target.tagName;
-                    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-                        // If it's an input, force the browser to focus it immediately
-                        e.target.focus();
-                    }
-                }, { passive: false }); // We need passive: false just in case, but standard inputs bounce fine.
-            }
-        }, false);
-    </script>
-
-    <!-- Core App Scripts -->
-    <script type="module" src="/lib/utils.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/lib/cloud/googleDrive.js?v=NEO_SAFE_PHASE30"></script>
-    <script src="/js/neoRealtimeHelpers.js?v=NEO_SAFE_PHASE30"></script>
-    <script src="/js/store.js?v=NEO_SAFE_PHASE30"></script>
-    <!-- Soul Container: window.NeoSoul を gemini.js より前に初期化 -->
-    <script type="module" src="/soul/neo-soul.js?v=NEO_SAFE_PHASE30"></script>
-    <script src="/js/gemini.js?v=NEO_SAFE_PHASE30"></script>
-    <script src="/js/neo-brain.js?v=NEO_SAFE_PHASE30"></script>
-    <script src="/js/doc-engine.js?v=NEO_SAFE_PHASE30"></script>
-    <script src="/js/i18n.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/js/registry.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/js/constants.js?v=NEO_SAFE_PHASE30"></script>
-    <!-- app.js: components + pages/db-sync.js（import）で window.insertTransaction 等を先に登録 -->
-    <script type="module" src="/js/app.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/views/components/modals.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/views/view-invoice.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/views/projectdetail-core.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/views/projectdetail/projectdetail-modals.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/views/projectdetail/projectdetail-ai.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/views/dashboard-projects.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/pages/cockpit-voice.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/pages/chat-intents.js?v=NEO_SAFE_PHASE30"></script>
-    <script type="module" src="/pages/chat.js?v=NEO_SAFE_PHASE30"></script>
 </body>
 
 

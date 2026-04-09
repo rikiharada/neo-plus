@@ -21,6 +21,7 @@ import type { NextRequest }     from 'next/server';
 import type { NextResponse }    from 'next/server';
 import type { Database }        from './types';
 import type { User }            from '@supabase/supabase-js';
+import { getSupabasePublicAnonKey, getSupabasePublicUrl } from './public-env';
 
 // ─── Server Component / Route Handler 用 ──────────────────────────
 
@@ -40,8 +41,8 @@ export const createServerComponentClient = async () => {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getSupabasePublicUrl(),
+    getSupabasePublicAnonKey(),
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
@@ -76,8 +77,8 @@ export const createServerActionClient = async () => {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getSupabasePublicUrl(),
+    getSupabasePublicAnonKey(),
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
@@ -112,8 +113,8 @@ export const createRouteHandlerClient = (
   response: NextResponse,
 ) => {
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getSupabasePublicUrl(),
+    getSupabasePublicAnonKey(),
     {
       cookies: {
         getAll: () => request.cookies.getAll(),

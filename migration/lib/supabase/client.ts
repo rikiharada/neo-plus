@@ -12,6 +12,7 @@
 import { createBrowserClient } from '@supabase/ssr';
 import type { Database }       from './types';
 import { REALTIME_SOCKET_TIMEOUT_MS } from './realtime-config';
+import { getSupabasePublicAnonKey, getSupabasePublicUrl } from './public-env';
 
 // ─── シングルトン保持 ─────────────────────────────────────────────
 
@@ -39,8 +40,8 @@ let _client: ReturnType<typeof createBrowserClient<Database>> | null = null;
 export const getSupabaseBrowserClient = () => {
   if (!_client) {
     _client = createBrowserClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      getSupabasePublicUrl(),
+      getSupabasePublicAnonKey(),
       {
         realtime: {
           /** 既定 10s → 20s（TIMED_OUT 緩和）。RLS 購読は setAuth 完了後に開始（ChatWindow） */

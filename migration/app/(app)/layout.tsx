@@ -25,40 +25,33 @@ export const metadata: Metadata = {
 
 // ─── レイアウトコンポーネント ────────────────────────────────────
 
-export default async function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  // Server Component でユーザー情報を取得（Middleware が保証しているため null チェック省略可）
+/**
+ * ユーザー取得 + シェル。Suspense 内に置くことで、getUser() 待ちがルート全体の
+ * HTML ストリーミングを止めない（フォールバックを先に送れる）。
+ */
+async function AppShellWithUser({ children }: { children: React.ReactNode }) {
   const supabase = await createServerComponentClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <div className="app-layout">
-      {/* ─ サイドバー（狭い画面では上に回る — globals.css） ─ */}
+    <>
       <AppSidebar user={user} />
-
-      {/* ─ メインコンテンツ ─ */}
       <div className="app-main">
         <AppHeader user={user} />
-
-        {/*
-         * main の余白は globals.css の .app-content のみ（pt-16 等は付けない）。
-         * AppHeader は sticky（ドキュメントフロー内）— main にヘッダー高さの二重 padding は付けない。
-         */}
         <main className="app-content" id="main-content">
-          {/*
-           * ⚠️ PPR (Partial Prerendering):
-           *   各ページが `experimental_ppr = true` を export すると
-           *   静的シェルと動的コンテンツが分離される。
-           *   Suspense boundary がその境界になる。
-           */}
-          <Suspense fallback={<PageLoadingSkeleton />}>
-            {children}
-          </Suspense>
+          <Suspense fallback={<PageLoadingSkeleton />}>{children}</Suspense>
         </main>
       </div>
+    </>
+  );
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="app-layout">
+      <Suspense fallback={<PageLoadingSkeleton />}>
+        <AppShellWithUser>{children}</AppShellWithUser>
+      </Suspense>
     </div>
   );
 }

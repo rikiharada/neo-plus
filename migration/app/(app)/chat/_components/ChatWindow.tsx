@@ -137,6 +137,13 @@ export function ChatWindow({
   routerRef.current = router;
   const supabase = getSupabaseBrowserClient();
 
+  const [isClientReady, setIsClientReady] = useState(false);
+  useEffect(() => {
+    setIsClientReady(true);
+  }, []);
+
+  if (!isClientReady) return null;
+
   const [messages,     setMessages]     = useState<ChatMessage[]>(initialMessages);
   const [isThinking,   setIsThinking]   = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST='{"features/accounting-desk/file-analyzer.ts -> xlsx":{"id":4246,"files":["static/chunks/2170a4aa.ba034d85534a2829.js","static/chunks/436.11bab3cf847df1c0.js"]}}';
+self.__REACT_LOADABLE_MANIFEST="{}"

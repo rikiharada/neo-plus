@@ -16,6 +16,7 @@
 import { createServerClient }                        from '@supabase/ssr';
 import { NextResponse, type NextRequest }            from 'next/server';
 import type { Database }                             from '@/lib/supabase/types';
+import { getSupabasePublicAnonKey, getSupabasePublicUrl } from '@/lib/supabase/public-env';
 
 // 認証不要の公開パス
 const PUBLIC_PATHS = ['/login', '/signup', '/auth/callback', '/api/health'];
@@ -27,8 +28,8 @@ export async function middleware(request: NextRequest) {
   // ⚠️ この処理は全リクエストで実行する必要がある。
   //    省略するとアクセストークンが期限切れになっても更新されない。
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getSupabasePublicUrl(),
+    getSupabasePublicAnonKey(),
     {
       cookies: {
         getAll:  () => request.cookies.getAll(),

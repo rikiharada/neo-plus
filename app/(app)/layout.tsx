@@ -55,9 +55,8 @@ export default async function AppLayout({
            *   静的シェルと動的コンテンツが分離される。
            *   Suspense boundary がその境界になる。
            */}
-          <Suspense fallback={<PageLoadingSkeleton />}>
-            {children}
-          </Suspense>
+          {/* Suspense removed for hydration debug */}
+          {children}
         </main>
       </div>
     </div>

@@ -1408,6 +1408,12 @@ window.addEventListener('load', async () => {
             return;
         }
 
+        // Ledger Desk は App Router の /accounting-desk（旧 pages/desk.js は廃止）
+        if (targetId === 'view-desk') {
+            window.location.assign('/accounting-desk');
+            return;
+        }
+
         // 強制的に全ビューをリセット（ID固定リストではなく .view 全量）
         document.querySelectorAll('.view').forEach((el) => {
             el.classList.add('hidden');
@@ -1425,8 +1431,7 @@ window.addEventListener('load', async () => {
             'view-project-detail': 'router-view-sites',
             'view-wallet': 'router-view-wallet',
             'view-settings': 'router-view-settings',
-            'view-account': 'router-view-settings',
-            'view-desk': 'router-view-desk'
+            'view-account': 'router-view-settings'
         };
         const keepAnchorId = routeAnchorByView[targetId] || null;
         const allAnchors = [
@@ -1434,8 +1439,7 @@ window.addEventListener('load', async () => {
             'router-view-chat',
             'router-view-sites',
             'router-view-wallet',
-            'router-view-settings',
-            'router-view-desk'
+            'router-view-settings'
         ];
         allAnchors.forEach((anchorId) => {
             if (anchorId === keepAnchorId) return;
@@ -1599,9 +1603,6 @@ window.addEventListener('load', async () => {
             case 'view-wallet':
                 loadView('wallet', 'router-view-wallet', 'view-wallet', '../pages/wallet-render.js', 'initWalletView');
                 break;
-            case 'view-desk':
-                loadView('desk', 'router-view-desk', 'view-desk', '../pages/desk.js', 'initDeskView');
-                break;
             default:
                 // Pre-loaded views like expense
                 const tg = document.getElementById(targetId);
@@ -1689,7 +1690,6 @@ window.addEventListener('load', async () => {
                 'view-dash': 'home',
                 'view-sites': 'projects',
                 'view-wallet': 'wallet',
-                'view-desk': 'desk',
                 'view-settings': 'settings',
                 'view-account': 'settings', // Alias
                 'view-chat': 'chat'          // 明示的に登録（未登録だと 'chat' にフォールバックして Chat がデフォルト起動する）
