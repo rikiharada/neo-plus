@@ -70,6 +70,14 @@
     justify-content: space-between;
     background-color: var(--header-bg);
     z-index: 9000;
+    border-bottom: 1px solid var(--header-separator, #f0f0f0);
+    box-shadow: var(--header-float-shadow, 0 12px 24px -10px rgba(0, 0, 0, 0.08));
+}
+
+/* JS 注入の #global-header: インライン border を上書きし装飾ライン（グラデ/ネオン）を排除 */
+#global-header.header-area {
+    border-bottom: 1px solid var(--header-separator, #f0f0f0) !important;
+    box-shadow: var(--header-float-shadow, 0 12px 24px -10px rgba(0, 0, 0, 0.08)) !important;
 }
 
 /* PC block removed */

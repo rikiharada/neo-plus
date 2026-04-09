@@ -1,0 +1,11 @@
+{
+  "name": "neo-plus-migration",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 8081",
+    "verify:agentic-parse": "node scripts/agentic-parse-smoke.mjs"
+  },
+  "dependencies": {
+    "google-auth-library": "^9.15.1"
+  }
+}

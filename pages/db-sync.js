@@ -2,6 +2,13 @@
  * Neo+ isolated Database Sync Layer
  */
 
+import {
+    resolveDbProjectIdForActivity,
+    buildActivityInsertPayload,
+    registerUpdateTransaction
+} from '../lib/Logic-ActivitySync.js';
+import { registerInsertProject } from '../lib/Logic-ProjectSync.js';
+
 // app.js が公開する前のフォールバック（モジュール評価時点で未定義の場合に備える）
 const _parseActivityAmount = window._parseActivityAmount
     ?? ((v) => { if (!v) return 0; const n = parseFloat(String(v).replace(/,/g, '').trim()); return Number.isFinite(n) ? n : 0; });
@@ -122,76 +129,6 @@ window.mapActivityRowToMock = function mapActivityRowToMock(a) {
     };
 };
 
-window.insertProject = async (proj) => {
-    if (window.supabaseClient) {
-        try {
-            const u = await window._resolveSupabaseAuthUid();
-            if (typeof window._isValidSupabaseAuthUid === 'function' && window._isValidSupabaseAuthUid(u)) {
-                proj.user_id = u;
-            }
-        } catch {
-            /* ローカルフォールバック */
-        }
-    }
-
-    const scoped =
-        typeof window._getProjectsScopedToCurrentUser === 'function'
-            ? window._getProjectsScopedToCurrentUser()
-            : window.mockDB.projects || [];
-    // 同名フォルダが既にある場合は挿入せず、その既存レコードを返す（currentOpenProjectId が幽霊IDになるのを防ぐ）
-    const dup = scoped.find((p) => p.name && proj.name && p.name.trim() === proj.name.trim());
-    if (dup) {
-        console.warn('[insertProject] Duplicate name — using existing folder:', proj.name);
-        window._attachDbSafeIdIfNeeded(dup);
-        return Promise.resolve(dup);
-    }
-    window.mockDB.projects.unshift(proj);
-    window.persistLocalBody();
-
-    window.pendingProjectInserts = window.pendingProjectInserts || {};
-    if (window.supabaseClient) {
-        const safeId = window._toDbSafeId(proj.id);
-        proj._dbSafeId = safeId;
-        const pidKey = proj.id;
-        window.pendingProjectInserts[pidKey] = (async () => {
-            // _resolveSupabaseAuthUid は uid 取得不可時に Error('AUTH_REQUIRED') を投げる（ダミー UUID は返さない）
-            const uid = await window._resolveSupabaseAuthUid();
-            if (typeof window._isValidSupabaseAuthUid === 'function' && !window._isValidSupabaseAuthUid(uid)) {
-                throw new Error('AUTH_REQUIRED');
-            }
-            return window.supabaseClient.from('projects').insert([{
-                id: safeId,
-                name: proj.name,
-                category: proj.category || 'other',
-                color: proj.color || '#8E8E93',
-                status: proj.status || 'active',
-                location: proj.location || '-',
-                user_id: uid,
-                created_at: proj.startDate ? new Date(proj.startDate.replace(/-/g, '/')).toISOString() : new Date().toISOString()
-            }]);
-        })().then(({ error }) => {
-            if (error) console.error('Brain Sync Error (Project):', JSON.stringify(error));
-            else {
-                console.log('Brain Sync OK (Project)');
-                _emitNeoDataUpdated({ kind: 'project', projectId: proj.id, remote: true });
-            }
-            delete window.pendingProjectInserts[pidKey];
-            delete window.pendingProjectInserts[String(pidKey)];
-        }).catch((err) => {
-            console.error('Brain Sync Fatal (Project):', err);
-            if (err && (err.message === 'AUTH_REQUIRED' || String(err.message || '').includes('AUTH_REQUIRED'))) {
-                _notifyAuthRequiredDbSync();
-            }
-            delete window.pendingProjectInserts[pidKey];
-            delete window.pendingProjectInserts[String(pidKey)];
-            throw err;
-        });
-    } else {
-        _emitNeoDataUpdated({ kind: 'project', projectId: proj.id, localOnly: true });
-    }
-    return Promise.resolve(proj);
-};
-
 window.insertTransaction = async (tx) => {
     if (!window.mockDB.activities) window.mockDB.activities = [];
 
@@ -266,12 +203,7 @@ window.insertTransaction = async (tx) => {
                     await pendingIns.catch(() => {});
                 }
 
-                const dbProjectId = (() => {
-                    const s = String(projectId).trim();
-                    if (!/^\d+$/.test(s)) return projectId;
-                    if (projForSync && projForSync._dbSafeId != null) return projForSync._dbSafeId;
-                    return window._toDbSafeId ? window._toDbSafeId(projectId) : Number(projectId);
-                })();
+                const dbProjectId = resolveDbProjectIdForActivity(projectId, projForSync);
 
                 const ensured = window._ensureSupabaseProjectRowForActivity
                     ? await window._ensureSupabaseProjectRowForActivity(projForSync, dbProjectId)
@@ -279,18 +211,14 @@ window.insertTransaction = async (tx) => {
                 if (!ensured.ok) {
                     console.warn('[insertTransaction] Remote activity skipped: could not ensure projects row for FK.');
                 } else {
-                    /** activities.id は DB 自動採番 — user_id は必ず Supabase 実 UID */
-                    const dbDate = _toISODate(normalized.date);
-                    const dbAmount = Number(normalized.amount);
-                    const basePayload = {
-                        project_id: dbProjectId,
-                        type: normalized.type,
-                        category: normalized.category,
-                        title: normalized.title,
-                        amount: isNaN(dbAmount) ? 0 : dbAmount,
-                        date: dbDate,
-                        user_id: remoteUid
-                    };
+                    /** activities.id は DB 側 DEFAULT（UUID）— クライアント送信しない */
+                    const basePayload = buildActivityInsertPayload({
+                        normalized,
+                        remoteUid,
+                        dbProjectId,
+                        toISODate: _toISODate
+                    });
+                    const dbDate = basePayload.date;
 
                     console.log('[insertTransaction] Supabase INSERT', {
                         user_id: remoteUid,
@@ -348,52 +276,6 @@ window.insertTransaction = async (tx) => {
     return Promise.resolve(normalized);
 };
 
-window.updateTransaction = async (txId, updates) => {
-    // Local Update
-    const tx = window.mockDB.activities.find(t => t.id === txId);
-    if (!tx) return;
-
-    // Merge updates
-    const originalTitle = tx.title;
-    const originalAmount = tx.amount;
-
-    if (updates.category) tx.category = updates.category;
-    if (updates.title) tx.title = updates.title;
-    if (updates.amount !== undefined) tx.amount = Number(updates.amount);
-
-    tx.is_user_corrected = true; // Flag for Ground Truth Cache Priority
-    window.persistLocalBody?.();
-
-    // Sync to Supabase if exists
-    if (window.supabaseClient) {
-        try {
-            // _resolveSupabaseAuthUid throws Error('AUTH_REQUIRED') if no uid — no null check needed
-            await window._resolveSupabaseAuthUid();
-
-            // Note: Since our MVP frontend doesn't strictly pull unique Postgres UUIDs back to window.mockDB.id on insert,
-            // we will search and update by original title and amount as a composite fallback for the prototype.
-            // In a production app, the insertTransaction should return the actual DB UUID to keep them synced.
-            await window.supabaseClient.from('activities').update({
-                category: tx.category,
-                title: tx.title,
-                amount: tx.amount,
-                is_user_corrected: true
-            }).match({
-                title: originalTitle,
-                amount: originalAmount,
-                date: tx.date
-            });
-            console.log("Supabase updateTransaction success:", tx.title, "updates:", updates);
-        } catch (e) {
-            if (e?.message === 'AUTH_REQUIRED') {
-                console.warn('[updateTransaction] No auth session; skipping Supabase update.');
-                _notifyAuthRequiredDbSync();
-            } else {
-                console.error('Supabase Update Error:', e);
-            }
-        }
-    }
-    window._refreshCockpitActivityFeed?.();
-    _emitNeoDataUpdated({ kind: 'activity', projectId: tx.projectId, txId });
-};
+registerInsertProject({ _emitNeoDataUpdated, _notifyAuthRequiredDbSync });
+registerUpdateTransaction({ _notifyAuthRequiredDbSync, _emitNeoDataUpdated });
 

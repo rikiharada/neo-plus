@@ -15,6 +15,9 @@
   --btn-secondary-border: #EFF3F4;
 
   --header-bg: rgba(255, 255, 255, 0.95);
+  /* ヘッダー下端: 線なし（余白＋ --header-float-shadow のみで区切り） */
+  --header-separator: transparent;
+  --header-float-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.08);
 
   /* Typography - Strict Professional Coolness */
   --font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Noto Sans JP', sans-serif;
@@ -80,6 +83,8 @@
   --btn-secondary-text: #E7E9EA;
 
   --header-bg: rgba(0, 0, 0, 0.95);
+  --header-separator: transparent;
+  --header-float-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.55);
 
   /* Chat bubbles — dark mode overrides */
   --chat-neo-bg: #2C2C2E;          /* iOS dark secondary system fill */
@@ -326,6 +331,50 @@ input[type="number"] {
 
 .chat-message-row {
   animation: chatFadeIn 0.2s cubic-bezier(0.1, 0.82, 0.25, 1) forwards;
+}
+
+/* Supabase Realtime: 接続状態の微細インジケーター（12px・軽い浮遊シャドウ） */
+#neo-realtime-indicator.neo-realtime-indicator {
+  position: fixed;
+  z-index: 9998;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  max-width: min(240px, calc(100vw - 24px));
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: var(--font-weight-regular, 400);
+  color: var(--text-muted);
+  background: var(--header-bg, rgba(255, 255, 255, 0.95));
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 12px 28px -8px rgba(0, 0, 0, 0.12),
+    0 4px 12px -4px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#neo-realtime-indicator.neo-realtime-indicator--live {
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+#neo-realtime-indicator.neo-realtime-indicator--pending {
+  animation: neoRealtimeFloat 2.4s ease-in-out infinite;
+}
+
+@keyframes neoRealtimeFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+[data-theme="dark"] #neo-realtime-indicator.neo-realtime-indicator {
+  background: rgba(10, 10, 20, 0.92);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 12px 28px -8px rgba(0, 0, 0, 0.45),
+    0 4px 12px -4px rgba(0, 0, 0, 0.35);
 }
 
 /* Removed Phase 7 aggressive tap optimizations due to iOS Safari touch-blocking bug */

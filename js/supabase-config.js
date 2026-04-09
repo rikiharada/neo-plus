@@ -32,6 +32,10 @@ const supabaseOptions = {
         autoRefreshToken: true,
         detectSessionInUrl: true,
         storage: window.localStorage
+    },
+    /** Realtime push タイムアウト（既定 10s）— TIMED_OUT 緩和 */
+    realtime: {
+        timeout: 20000
     }
 };
 window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, supabaseOptions);

@@ -808,11 +808,12 @@ async function _ensureSupabaseProjectRowForActivity(meta, dbProjectId) {
             location: m.location || '-',
             user_id: uid
         };
-        const { error } = await window.supabaseClient
-            .from('projects')
-            .upsert([row], { onConflict: 'id' });
+        const { error } = await window.supabaseClient.from('projects').insert([row]);
         if (error) {
-            console.warn('[insertTransaction] projects upsert failed:', JSON.stringify(error));
+            if (error.code === '23505') {
+                return { ok: true, duplicate: true };
+            }
+            console.warn('[insertTransaction] projects insert failed:', JSON.stringify(error));
             return { ok: false, error };
         }
         return { ok: true };
@@ -1029,64 +1030,52 @@ window.handleCompoundAction = async function(rawText) {
             projLoc = tags.entities[0];
         }
 
-        let newProj = null;
-        if (window.createProject) {
-            // Pass projName directly — createProject cleans noise words
-            newProj = window.createProject(projName, projDate, projLoc);
-            // Override location if extractTags found one (createProject uses parseCommand internally)
-            if (newProj && projLoc) newProj.location = projLoc;
-            console.log(`[CompoundAction] Project created: ${newProj?.name} (id=${newProj?.id})`);
-
-            // Feed: project creation
-            window.pushFeedMessage?.('project', {
-                id:    newProj.id,
-                title: newProj.name,
-                sub:   projLoc ? `📍 ${projLoc}` : '',
-                date:  projDate
+        // 1. Enqueue Project Creation
+        if (window.NeoBus && window.NeoBus.emit) {
+            window.NeoBus.emit('QUEUE_ENQUEUE', {
+                type: 'CREATE_PROJECT',
+                payload: {
+                    name: projName,
+                    date: projDate,
+                    location: projLoc
+                }
             });
+            console.log(`[CompoundAction] QUEUED Project creation: ${projName}`);
         }
 
-        // 2. Insert each expense amount as a transaction
-        if (hasAmounts && newProj) {
+        // 2. Enqueue Expenses (Sequentially Dependent)
+        if (hasAmounts) {
             let offset = 1;
             for (const amt of tags.amounts) {
                 const txId = Math.floor(Date.now() / 1000) + offset;
                 offset++;
-                const tx = {
-                    id: txId,
-                    projectId: newProj.id,
-                    projectName: newProj.name,
-                    type: 'expense',
-                    category: amt.label || tags.category || '雑費',
-                    title: amt.label || tags.category || '経費',
-                    amount: amt.value,
-                    date: tags.date || new Date().toLocaleDateString('ja-JP').replace(/\//g, '-'),
-                    source: 'compound-rule',
-                    originalInput: rawText
-                };
-                if (window.insertTransaction) {
-                    await window.insertTransaction(tx);
-                    console.log(`[CompoundAction] Expense logged: ${tx.category} ¥${tx.amount}`);
-
-                    // Feed: expense logged
-                    window.pushFeedMessage?.('expense', {
-                        id:          tx.id,
-                        title:       tx.title,
-                        amount:      tx.amount,
-                        category:    tx.category,
-                        projectName: tx.projectName,
-                        date:        tx.date
+                if (window.NeoBus && window.NeoBus.emit) {
+                    window.NeoBus.emit('QUEUE_ENQUEUE', {
+                        type: 'ADD_EXPENSE',
+                        waitForPreviousContext: ['lastCreatedProjectId'],
+                        payload: {
+                            id: txId,
+                            projectName: projName, // local visual placeholder
+                            type: 'expense',
+                            category: amt.label || tags.category || '雑費',
+                            title: amt.label || tags.category || '経費',
+                            amount: amt.value,
+                            date: tags.date || new Date().toLocaleDateString('ja-JP').replace(/\//g, '-'),
+                            source: 'compound-rule',
+                            originalInput: rawText
+                        }
                     });
+                    console.log(`[CompoundAction] QUEUED Expense: ${amt.label || tags.category} ¥${amt.value}`);
                 }
             }
         }
 
-        // 3. Re-render projects list
+        // 3. Re-render trigger (often handled automatically by NeoBus event NEO_DATA_UPDATED, but retained for immediate UI)
         if (typeof window.renderProjects === 'function') window.renderProjects(window.mockDB.projects);
         window.dispatchEvent(new CustomEvent('neo-render-projects', { detail: { projects: window.mockDB?.projects } }));
 
         // 4. Neo Bubble notification + Feed confirmation message
-        let neoMsg = `フォルダ「${newProj?.name || projName}」を作成しました。`;
+        let neoMsg = `フォルダ「${projName}」を作成しました。`;
         if (hasAmounts) {
             const amtSummary = tags.amounts
                 .map(a => `${a.label || '経費'} ¥${a.value.toLocaleString()}`)

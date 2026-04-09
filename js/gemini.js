@@ -383,6 +383,26 @@ Example Query: [{"action": "QUERY_KNOWLEDGE", "answer": "現在稼働中のプ�
 
                 // Ensure it's an array for the new multi-action format
                 if (Array.isArray(parsed)) {
+                    // ── Soul フィルター適用 ──────────────────────────────
+                    // window.NeoSoul が読み込み済みであれば Gemini 生出力を
+                    // Neoらしい口調・励まし・会計補足に変換する
+                    if (window.NeoSoul) {
+                        try {
+                            const uid = window.GlobalStore?.state?.user?.id ?? null;
+                            const soul = await window.NeoSoul.loadSoul(window.supabaseClient, uid);
+                            const ctx = {
+                                todayEntryCount:   (window.mockDB?.activities ?? []).length,
+                                lastEncouragementAt: window._lastSoulEncouragementAt ?? 0,
+                            };
+                            const soulResult = window.NeoSoul.applySoul(parsed, soul, ctx);
+                            if (soulResult.encouragementInjected) {
+                                window._lastSoulEncouragementAt = Date.now();
+                            }
+                            return soulResult.processedActions;
+                        } catch (soulErr) {
+                            console.warn('[Soul] Middleware error (falling back to raw):', soulErr);
+                        }
+                    }
                     return parsed;
                 } else if (parsed.route) {
                     // Backwards compatibility if AI still returns old object format

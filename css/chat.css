@@ -45,7 +45,8 @@
   padding-top: calc(12px + env(safe-area-inset-top, 0px));
   background: var(--bg-color);
   z-index: 1000;
-  border-bottom: 1px solid var(--btn-secondary-border);
+  border-bottom: 1px solid var(--header-separator, var(--chat-header-border, rgba(0, 0, 0, 0.06)));
+  box-shadow: var(--header-float-shadow, 0 12px 24px -10px rgba(0, 0, 0, 0.08));
 }
 
 .chat-header-title {

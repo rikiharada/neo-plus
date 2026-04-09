@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase-client.js';
 import { understandIntent } from '../lib/core/intentRouter.js';
 import { generateAndUploadPDF } from '../lib/export/pdfGenerator.js';
 import { getNeoResponse, getNeoResponseStream } from '../lib/api/geminiClient.js';
+import { normalizeProjectIdForInsert } from '../lib/Common-Validator.js';
 
 // API Key inline card feature removed by User request (Hiding system operations for Persona immersion)
 
@@ -706,8 +707,9 @@ export async function handleInstruction(text, hasImage = false) {
                                 return;
                             }
                             /** id は activities の自動採番（int4 等）— フィールドを付けない */
+                            const pidForDb = normalizeProjectIdForInsert(projId) ?? projId;
                             const bulkActivities = rowsToSave.map((row) => ({
-                                project_id: projId,
+                                project_id: pidForDb,
                                 user_id: uid,
                                 type: baseMeta.type,
                                 category: baseMeta.category,

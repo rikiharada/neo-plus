@@ -123,7 +123,95 @@ window.GlobalStore = {
         this.listeners.forEach(listener => listener(this.state));
     },
 
+    /** initRealtimeSync 同時実行ガード（シングルトン） */
+    _globalRealtimeInitPromise: null,
+
     async initRealtimeSync() {
+        if (!window.supabaseClient) return;
+        if (this._globalRealtimeInitPromise) {
+            return this._globalRealtimeInitPromise;
+        }
+        const self = this;
+        const p = self._runInitRealtimeSyncInner();
+        this._globalRealtimeInitPromise = p;
+        try {
+            await p;
+        } finally {
+            this._globalRealtimeInitPromise = null;
+        }
+    },
+
+    /** _subscribeRealtimeChannel 内の postgres_changes コールバック用（_runInit で代入） */
+    _revalidateBrainRef: null,
+
+    /**
+     * Realtime 購読のみ（初期データ取得なし）— CHANNEL_ERROR 後の再接続用
+     * @returns {Promise<void>}
+     */
+    async _subscribeRealtimeChannel() {
+        if (!window.supabaseClient) return;
+        const H = window.NeoRealtimeHelpers;
+        if (!H) {
+            console.warn('[GlobalStore] NeoRealtimeHelpers missing');
+            return;
+        }
+
+        await this.teardownRealtimeSync();
+
+        await H.awaitSessionAndRealtimeAuth(window.supabaseClient);
+
+        H.setRealtimeConnectionUi('CONNECTING', null);
+
+        try {
+            const channelName = H.getUniqueRealtimeChannelName('table-db-changes');
+            const revalidateBrain = this._revalidateBrainRef;
+            if (typeof revalidateBrain !== 'function') {
+                console.warn('[GlobalStore] _revalidateBrainRef missing — run _runInitRealtimeSyncInner first');
+                return;
+            }
+
+            window._neoGlobalRealtimeChannel = window.supabaseClient
+                .channel(channelName)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, (payload) => {
+                    console.log('[GlobalStore] Realtime Activity Change received!', payload);
+                    revalidateBrain();
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, (payload) => {
+                    console.log('[GlobalStore] Realtime Project Change received!', payload);
+                    revalidateBrain();
+                })
+                .subscribe((status, err) => {
+                    H.setRealtimeConnectionUi(status, err);
+                    if (status === 'SUBSCRIBED') {
+                        window._neoRealtimeReconnectAttempt = 0;
+                        return;
+                    }
+                    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
+                        console.warn('[GlobalStore] Supabase realtime error — scheduling backoff reconnect', err || status);
+                        var att = typeof window._neoRealtimeReconnectAttempt === 'number' ? window._neoRealtimeReconnectAttempt : 0;
+                        H.scheduleChannelErrorReconnect({
+                            client: window.supabaseClient,
+                            attempt: att,
+                            maxAttempts: H.MAX_CHANNEL_ERROR_RECONNECT || 5,
+                            onReconnect: async () => {
+                                window._neoRealtimeReconnectAttempt = att + 1;
+                                await this.teardownRealtimeSync();
+                                await H.awaitSessionAndRealtimeAuth(window.supabaseClient);
+                                await this._subscribeRealtimeChannel();
+                            },
+                            onExhausted: () => {
+                                H.setRealtimeConnectionUi('CHANNEL_ERROR', new Error('reconnect exhausted'));
+                            }
+                        });
+                    }
+                });
+        } catch (e) {
+            console.warn('[GlobalStore] Supabase realtime crashed', e);
+            H.setRealtimeConnectionUi('CHANNEL_ERROR', e);
+        }
+    },
+
+    async _runInitRealtimeSyncInner() {
         if (!window.supabaseClient) return;
 
         console.log("[GlobalStore] Initializing Supabase Realtime Sync...");
@@ -193,6 +281,8 @@ window.GlobalStore = {
             }
         };
 
+        this._revalidateBrainRef = revalidateBrain;
+
         const fetchInitialData = async () => {
             if (!this.state.user) return;
 
@@ -220,48 +310,48 @@ window.GlobalStore = {
 
         await fetchInitialData();
 
-        if (window._neoGlobalRealtimeChannel) {
+        await this.teardownRealtimeSync();
+
+        const H = window.NeoRealtimeHelpers;
+        if (!H) {
+            console.warn('[GlobalStore] NeoRealtimeHelpers missing — load js/neoRealtimeHelpers.js before store.js');
+            return;
+        }
+
+        await this._subscribeRealtimeChannel();
+    },
+
+    /**
+     * Realtime チャンネル解除（再 init 前・pagehide / beforeunload から呼ぶ）
+     * @returns {Promise<void>}
+     */
+    async teardownRealtimeSync() {
+        const H = window.NeoRealtimeHelpers;
+        if (H && typeof H.clearChannelErrorReconnectTimer === 'function') {
+            H.clearChannelErrorReconnectTimer();
+        }
+        if (!window._neoGlobalRealtimeChannel) {
+            return;
+        }
+        if (!window.supabaseClient) {
+            window._neoGlobalRealtimeChannel = null;
+            if (H && typeof H.setRealtimeConnectionUi === 'function') {
+                H.setRealtimeConnectionUi('CLOSED', null);
+            }
+            return;
+        }
+        if (H && typeof H.removeChannelSafe === 'function') {
+            await H.removeChannelSafe(window.supabaseClient, window._neoGlobalRealtimeChannel);
+        } else {
             try {
                 await window.supabaseClient.removeChannel(window._neoGlobalRealtimeChannel);
             } catch {
                 /* ignore */
             }
-            window._neoGlobalRealtimeChannel = null;
         }
-
-        try {
-            window._neoGlobalRealtimeChannel = window.supabaseClient
-                .channel('neo-global-data-v1')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, (payload) => {
-                    console.log('[GlobalStore] Realtime Activity Change received!', payload);
-                    revalidateBrain();
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, (payload) => {
-                    console.log('[GlobalStore] Realtime Project Change received!', payload);
-                    revalidateBrain();
-                })
-                .subscribe((status, err) => {
-                    const statusEl = document.getElementById('neo-core-status');
-                    if (status === 'SUBSCRIBED') {
-                        if (statusEl) {
-                            statusEl.textContent = 'AI Core Active';
-                            statusEl.style.color = 'var(--text-muted)';
-                        }
-                    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || err) {
-                        console.warn('[GlobalStore] Supabase realtime disabled/error', err || status);
-                        if (statusEl) {
-                            statusEl.textContent = 'オフライン中';
-                            statusEl.style.color = '#ef4444';
-                        }
-                    }
-                });
-        } catch (e) {
-            console.warn('[GlobalStore] Supabase realtime crashed', e);
-            const statusEl = document.getElementById('neo-core-status');
-            if (statusEl) {
-                statusEl.textContent = 'オフライン中';
-                statusEl.style.color = '#ef4444';
-            }
+        window._neoGlobalRealtimeChannel = null;
+        if (H && typeof H.setRealtimeConnectionUi === 'function') {
+            H.setRealtimeConnectionUi('CLOSED', null);
         }
     }
 };
