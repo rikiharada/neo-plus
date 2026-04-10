@@ -11,17 +11,33 @@
  * セキュリティ設計:
  *   1. getUser()  → JWT を Supabase サーバーで検証（信頼できる）
  *   2. getSession() → Cookie の値をそのまま信頼（検証なし → 使わない）
- *   3. requireAuth() → 未認証は UNAUTHORIZED をスロー（Server Actions で必須）
- *   4. requireAuthWithRole() → ロールベースアクセス制御（将来拡張用）
+ *   3. requireAuth() → 未認証は /login へ redirect
+ *   4. API ルートは getAuthenticatedUser() + 401 JSON
+ *   5. requireAuthWithRole() → role-based access (future)
  */
 
 import { createServerClient }   from '@supabase/ssr';
 import { cookies }              from 'next/headers';
+import { redirect }             from 'next/navigation';
 import type { NextRequest }     from 'next/server';
 import type { NextResponse }    from 'next/server';
 import type { Database }        from './types';
 import type { User }            from '@supabase/supabase-js';
 import { getSupabasePublicAnonKey, getSupabasePublicUrl } from './public-env';
+
+function isNextDynamicServerError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  if (err.message.includes('Dynamic server usage')) return true;
+  const d = (err as Error & { digest?: string }).digest;
+  return d === 'DYNAMIC_SERVER_USAGE';
+}
+
+/** next/navigation の redirect() が投げる制御フロー用エラー（catch で握りつぶさない） */
+export function isNextRedirectError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const d = (err as Error & { digest?: string }).digest;
+  return typeof d === 'string' && d.startsWith('NEXT_REDIRECT');
+}
 
 // ─── Server Component / Route Handler 用 ──────────────────────────
 
@@ -38,7 +54,15 @@ import { getSupabasePublicAnonKey, getSupabasePublicUrl } from './public-env';
  */
 export const createServerComponentClient = async () => {
   // Next.js 15: cookies() は async
-  const cookieStore = await cookies();
+  let cookieStore: Awaited<ReturnType<typeof cookies>>;
+  try {
+    cookieStore = await cookies();
+  } catch (e) {
+    if (!isNextDynamicServerError(e)) {
+      console.error('[supabase/server] cookies() failed:', e);
+    }
+    throw e;
+  }
 
   return createServerClient<Database>(
     getSupabasePublicUrl(),
@@ -74,7 +98,15 @@ export const createServerComponentClient = async () => {
  * ```
  */
 export const createServerActionClient = async () => {
-  const cookieStore = await cookies();
+  let cookieStore: Awaited<ReturnType<typeof cookies>>;
+  try {
+    cookieStore = await cookies();
+  } catch (e) {
+    if (!isNextDynamicServerError(e)) {
+      console.error('[supabase/server] cookies() failed (action client):', e);
+    }
+    throw e;
+  }
 
   return createServerClient<Database>(
     getSupabasePublicUrl(),
@@ -102,7 +134,7 @@ export const createServerActionClient = async () => {
  *
  * @example
  * ```ts
- * let response = NextResponse.redirect(new URL('/cockpit', request.url));
+ * let response = NextResponse.redirect(new URL('/', request.url));
  * const supabase = createRouteHandlerClient(request, response);
  * const { data: { user } } = await supabase.auth.getUser();
  * return response;
@@ -139,46 +171,30 @@ export const createRouteHandlerClient = (
  *   セキュアな操作（INSERT/UPDATE）は必ず getUser() を使うこと。
  */
 export const getAuthenticatedUser = async () => {
-  const supabase = await createServerActionClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) return null;
-  return user;
+  try {
+    const supabase = await createServerActionClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) {
+      console.warn('[supabase/server] auth.getUser():', error.message);
+      return null;
+    }
+    if (!user) return null;
+    return user;
+  } catch (e) {
+    if (isNextDynamicServerError(e)) throw e;
+    console.error('[supabase/server] getAuthenticatedUser failed:', e);
+    return null;
+  }
 };
 
 /**
- * 認証必須のガード。未認証は Error('UNAUTHORIZED') をスロー。
- * Server Actions の先頭で呼ぶことで RLS と二重の保護を提供する。
- *
- * ⚠️ 実装詳細:
- *   1. createServerActionClient() で Cookie から JWT を取得
- *   2. supabase.auth.getUser() → Supabase Auth サーバーで JWT を検証
- *      （Cookie 改ざんや期限切れトークンを検出できる）
- *   3. エラー / null → Error('UNAUTHORIZED') をスロー
- *   4. Next.js の Server Action エラーハンドリングが UNAUTHORIZED を受け取り
- *      Client に伝播（ログインページへリダイレクト）
- *
- * セキュリティノート:
- *   - RLS （Row Level Security）が DB 側で user_id を保護する
- *   - requireAuth() はコード側の二重保護（Defense in Depth）
- *   - 両方を組み合わせることで「コードバグ」と「DB 設定漏れ」の両方を防ぐ
- *
- * @example
- * ```ts
- * // features/activities/actions.ts
- * 'use server'
- * export async function insertActivity(input: unknown) {
- *   const user = await requireAuth();  // ← 先頭で必ず呼ぶ
- *   // ... user.id は信頼できる値
- * }
- * ```
+ * Auth guard for RSC / Server Actions: unauthenticated users go to /login (redirect).
+ * Inside try/catch, rethrow when `isNextRedirectError(err)`.
  */
 export const requireAuth = async (): Promise<User> => {
   const user = await getAuthenticatedUser();
   if (!user) {
-    // ⚠️ エラーメッセージに詳細を含めない（情報漏洩防止）
-    const err = new Error('UNAUTHORIZED') as Error & { statusCode: number };
-    err.statusCode = 401;
-    throw err;
+    redirect('/login');
   }
   return user;
 };

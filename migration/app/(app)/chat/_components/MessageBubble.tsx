@@ -13,7 +13,7 @@
 
 import { useEffect, useRef, useState, useMemo, memo } from 'react';
 import type { CSSProperties } from 'react';
-import type { ChatMessage }   from '@/features/chat/actions';
+import type { ChatMessage }   from '@/features/chat/chat-types';
 
 /**
  * 折りたたみ閾値: 読みやすさ優先で、十分に長いときだけ折る（通常の 2〜5 ステップは開いたまま）
@@ -52,9 +52,9 @@ export const MessageBubble = memo(function MessageBubble({
     <div
       ref={ref}
       className={[
-        'flex gap-2',
-        goalPlan ? 'items-start' : 'items-end',
-        isAssistant ? 'flex-row' : 'flex-row-reverse',
+        'message-row',
+        isAssistant ? 'message-row--neo' : 'message-row--user',
+        goalPlan ? 'message-row--align-start' : 'message-row--align-end',
         'animate-fadeIn',
       ].join(' ')}
     >
@@ -65,15 +65,7 @@ export const MessageBubble = memo(function MessageBubble({
         </div>
       )}
 
-      <div
-        style={{
-          display:       'flex',
-          flexDirection: 'column',
-          gap:           8,
-          minWidth:      0,
-          maxWidth:      'min(100%, 28rem)',
-        }}
-      >
+      <div className="message-row__content">
         {/* Neo がまとめた目標・計画（履歴に残る・提案のみターンでも表示） */}
         {goalPlan ? (
           <GoalPlanInlineCards

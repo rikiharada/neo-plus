@@ -341,7 +341,7 @@ function LeftPane({
           }}>
             <span style={{ flexShrink: 0 }}>⚠️</span>
             <span>Drive 未連携 —</span>
-            <a href="/settings/integrations" style={{
+            <a href="/settings" style={{
               color:          BRAND,
               textDecoration: 'underline',
               whiteSpace:     'nowrap',
@@ -749,7 +749,7 @@ function RightPane({
 
 function DeskHeader() {
   const quickActions = [
-    { label: '損益',  href: '/cockpit' },
+    { label: '損益',  href: '/' },
     { label: '請求書', href: '/invoices' },
     { label: '申告',  href: '/tax' },
   ] as const;

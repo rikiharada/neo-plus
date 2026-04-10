@@ -5,7 +5,38 @@
 /**
  * Neo+ Day テーマ — 水・紺・赤・金・紫・緑（§8-2.0e 一貫性）
  * レスポンシブ: サイドバーは狭い画面で上に回し、メインを全幅に。
+ *
+ * ベースライン（Tailwind Preflight の上書き）:
+ *   - html/body の margin/padding をゼロに（ブラウザデフォルトの 8px margin を消す）
+ *   - background と color を CSS 変数で管理（ダークモード対応）
+ *   - box-sizing: border-box はすでに Tailwind Preflight で設定済みだが念のため明記
  */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* スクロールバー幅確保（CLS 防止） */
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin:            0;
+  padding:           0;
+  background:        var(--page-bg);
+  color:             var(--text-main);
+  font-family:       ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* ダークモード時の背景色フォールバック（--page-bg は gradient なので solid も指定） */
+  background-color:  #fff;
+}
+
+html.dark body {
+  background-color: #0f172a;
+}
 
 /* ─── デザイントークン（昼） ───────────────────────────────────── */
 :root {
@@ -54,6 +85,32 @@
   --app-content-pad-x: 16px;
   --app-content-pad-top: 10px;
   --app-content-pad-bottom: 16px;
+
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --chat-neo-bubble-bg: #f1f5f9;
+  --chat-neo-bubble-border: rgba(15, 23, 42, 0.08);
+  --chat-user-bubble-fg: #ffffff;
+}
+
+/* ─── ダーク（html.dark + ThemeProvider） ───────────────────────── */
+html.dark {
+  --neo-navy: #e2e8f0;
+  --neo-navy-mid: #94a3b8;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border-subtle: rgba(241, 245, 249, 0.12);
+  --panel-bg: rgba(30, 41, 59, 0.55);
+  --panel-elevated: #0f172a;
+  --header-bg: rgba(15, 23, 42, 0.92);
+  --page-bg: linear-gradient(
+    165deg,
+    rgba(56, 189, 248, 0.06) 0%,
+    #0f172a 42%,
+    rgba(79, 70, 229, 0.08) 100%
+  );
+  --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --chat-neo-bubble-bg: rgba(30, 41, 59, 0.95);
+  --chat-neo-bubble-border: rgba(148, 163, 184, 0.2);
 }
 
 /* ─── レイアウト ───────────────────────────────────────────────── */
@@ -85,6 +142,9 @@
   max-width: 100%;
   flex: 1;
   min-height: 0;
+  /* CRITICAL: flex container required so .chat-page { flex: 1 } can fill height */
+  display: flex;
+  flex-direction: column;
   padding: var(--app-content-pad-top) var(--app-content-pad-x)
     var(--app-content-pad-bottom);
 }
@@ -102,9 +162,49 @@
   padding: 0;
 }
 
+.chat-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /** フッター文言と重ならないよう十分な下余白（pb-20 相当） */
 .cockpit-page {
   padding-bottom: 5rem;
+}
+
+.neo-home-dashboard {
+  position: relative;
+}
+
+.neo-home-dashboard::before {
+  content:       '';
+  display:       block;
+  width:         100%;
+  max-width:     7rem;
+  height:        3px;
+  border-radius: 999px;
+  background:    linear-gradient(90deg, var(--neo-violet), #818cf8);
+  margin-bottom: 1rem;
+  opacity:       0.92;
+}
+
+.neo-home-header {
+  align-items: flex-start;
+}
+
+.neo-home-header__titles {
+  flex:      1;
+  min-width: min(100%, 240px);
+}
+
+.neo-home-lead {
+  margin:      6px 0 0;
+  font-size:   13px;
+  line-height: 1.55;
+  color:       var(--text-muted);
+  max-width:   40rem;
 }
 
 .cockpit-quick-entry {
@@ -125,6 +225,388 @@
 .cockpit-quick-entry:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+.cockpit-header-chat-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--neo-violet);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(79, 70, 229, 0.25);
+  background: var(--neo-violet-soft);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.cockpit-header-chat-link:hover {
+  background: rgba(79, 70, 229, 0.16);
+  transform: translateY(-1px);
+}
+
+/* コックピット — 自然言語「すばやく記録」 */
+.cockpit-quick-capture {
+  margin: 1.25rem auto 1.75rem;
+  max-width: 40rem;
+  width: 100%;
+}
+
+.cockpit-quick-capture__inner {
+  padding: 1.25rem 1.35rem 1.2rem;
+  border-radius: 18px;
+  background: var(--panel-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-float);
+}
+
+.cockpit-quick-capture__title {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.cockpit-quick-capture__lead {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.cockpit-quick-capture__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 140px;
+  padding: 14px 16px;
+  font-size: 15px;
+  line-height: 1.55;
+  font-family: inherit;
+  color: var(--text-main);
+  background: var(--panel-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  resize: vertical;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.cockpit-quick-capture__textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.cockpit-quick-capture__textarea:focus {
+  outline: none;
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+}
+
+.cockpit-quick-capture__textarea:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.cockpit-quick-capture__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.cockpit-quick-capture__counter {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.cockpit-quick-capture__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.cockpit-quick-capture__link-chat {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.cockpit-quick-capture__link-chat:hover {
+  color: var(--neo-violet);
+}
+
+.cockpit-quick-capture__submit {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--neo-violet), #6366f1);
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.28);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.cockpit-quick-capture__submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.32);
+}
+
+.cockpit-quick-capture__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cockpit-quick-capture__feedback {
+  margin-top: 14px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  border-radius: 12px;
+}
+
+.cockpit-quick-capture__feedback--ok {
+  background: rgba(5, 150, 105, 0.08);
+  border: 1px solid rgba(5, 150, 105, 0.22);
+  color: var(--text-main);
+}
+
+.cockpit-quick-capture__feedback--err {
+  background: var(--neo-coral-soft);
+  border: 1px solid rgba(225, 29, 72, 0.22);
+  color: var(--text-main);
+}
+
+.cockpit-quick-capture__dev-ai-toast {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: var(--text-main);
+}
+
+.cockpit-quick-capture__dev-ai-toast-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+
+.cockpit-quick-capture__dev-ai-toast-body {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* コックピット2 カラム（lg: 2+1） */
+.cockpit-desk-grid {
+  display:               grid;
+  grid-template-columns: 1fr;
+  gap:                   1.5rem;
+  align-items:           start;
+  margin-top:            0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .cockpit-desk-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cockpit-desk-col--main {
+    grid-column: span 2;
+  }
+
+  .cockpit-desk-col--projects {
+    grid-column: span 1;
+  }
+}
+
+.cockpit-desk-col--main .cockpit-quick-capture {
+  max-width:  none;
+  margin-left:  0;
+  margin-right: 0;
+}
+
+.cockpit-project-focus {
+  position: sticky;
+  top:      calc(var(--app-content-pad-top, 12px) + 8px);
+}
+
+.cockpit-project-focus__header {
+  margin-bottom: 14px;
+}
+
+.cockpit-project-focus__title {
+  margin: 0;
+  font-size:   1rem;
+  font-weight: 700;
+  color:       var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+.cockpit-project-focus__empty {
+  margin:      0;
+  font-size:   13px;
+  line-height: 1.55;
+  color:       var(--text-muted);
+}
+
+.cockpit-project-focus__list {
+  list-style: none;
+  margin:     0;
+  padding:    0;
+  display:    flex;
+  flex-direction: column;
+  gap:        14px;
+}
+
+/** Deep Focus project cards (vertical motion: .neo-float-12) */
+.cockpit-project-card--deep {
+  margin:         0;
+  padding:        14px 16px 16px;
+  border-radius:  14px;
+  background:     linear-gradient(
+    145deg,
+    var(--panel-elevated) 0%,
+    rgba(79, 70, 229, 0.04) 100%
+  );
+  border: 1px solid rgba(79, 70, 229, 0.14);
+  box-shadow:     var(--shadow-float);
+  position:       relative;
+  overflow:       hidden;
+}
+
+.cockpit-project-card--deep::before {
+  content:    '';
+  position:   absolute;
+  inset:      0;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 80% at 100% 0%,
+    rgba(99, 102, 241, 0.07),
+    transparent 55%
+  );
+}
+
+.cockpit-project-card__head {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             8px;
+  margin-bottom:   10px;
+  position:        relative;
+  z-index:         1;
+}
+
+.cockpit-project-card__status {
+  font-size:     11px;
+  font-weight:   600;
+  color:         var(--neo-mint);
+  letter-spacing: 0.03em;
+}
+
+.cockpit-project-card__name {
+  margin:      0 0 12px;
+  font-size:   1.05rem;
+  font-weight: 700;
+  color:       var(--text-main);
+  line-height: 1.35;
+  position:    relative;
+  z-index:     1;
+}
+
+.cockpit-project-card__stats {
+  margin:     0;
+  display:    grid;
+  gap:        8px 12px;
+  font-size:  12px;
+  position:   relative;
+  z-index:    1;
+}
+
+.cockpit-project-card__stats dt {
+  margin:    0;
+  font-size: 10px;
+  font-weight: 600;
+  color:     var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cockpit-project-card__stats dd {
+  margin:    2px 0 0;
+  font-weight: 600;
+  color:     var(--text-main);
+}
+
+.cockpit-project-tag {
+  display:        inline-block;
+  padding:        3px 9px;
+  border-radius:  999px;
+  font-size:      11px;
+  font-weight:    600;
+  letter-spacing: 0.02em;
+}
+
+.cockpit-project-tag--0 {
+  background: rgba(236, 72, 153, 0.14);
+  color:      #be185d;
+}
+
+.cockpit-project-tag--1 {
+  background: rgba(59, 130, 246, 0.14);
+  color:      #1d4ed8;
+}
+
+.cockpit-project-tag--2 {
+  background: rgba(16, 185, 129, 0.16);
+  color:      #047857;
+}
+
+.cockpit-project-tag--3 {
+  background: rgba(245, 158, 11, 0.18);
+  color:      #b45309;
+}
+
+.cockpit-project-tag--4 {
+  background: rgba(139, 92, 246, 0.16);
+  color:      #6d28d9;
+}
+
+.cockpit-project-tag--5 {
+  background: rgba(14, 165, 233, 0.16);
+  color:      #0369a1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .cockpit-project-tag--0 {
+    color: #f9a8d4;
+  }
+  .cockpit-project-tag--1 {
+    color: #93c5fd;
+  }
+  .cockpit-project-tag--2 {
+    color: #6ee7b7;
+  }
+  .cockpit-project-tag--3 {
+    color: #fcd34d;
+  }
+  .cockpit-project-tag--4 {
+    color: #c4b5fd;
+  }
+  .cockpit-project-tag--5 {
+    color: #7dd3fc;
+  }
 }
 
 .cockpit-summary-grid {
@@ -308,6 +790,374 @@
   color: var(--text-muted);
 }
 
+/* ─── チャットウィンドウ（ChatWindow / MessageBubble / ChatInput） ─ */
+.chat-page-window.chat-window,
+.chat-window {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.chat-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 12px 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* メッセージ行（Tailwind に依存しない — Next 15 / App Router でレイアウトを安定化） */
+.message-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.message-row--neo {
+  flex-direction: row;
+}
+
+.message-row--user {
+  flex-direction: row-reverse;
+}
+
+.message-row--align-start {
+  align-items: flex-start;
+}
+
+.message-row--align-end {
+  align-items: flex-end;
+}
+
+.message-row__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  max-width: min(100%, 28rem);
+}
+
+.neo-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  background: linear-gradient(145deg, var(--neo-violet-soft), var(--neo-aqua-soft));
+  border: 2px solid var(--neo-violet);
+}
+
+.neo-avatar svg {
+  display: block;
+}
+
+.message-bubble {
+  border-radius: 18px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 400;
+  word-break: break-word;
+  box-shadow: var(--neo-shadow-sm);
+}
+
+.message-bubble--neo {
+  background: var(--chat-neo-bubble-bg);
+  color: var(--text-main);
+  border: 1px solid var(--chat-neo-bubble-border);
+  border-radius: 18px 18px 18px 6px;
+}
+
+.message-bubble--user {
+  background-image: linear-gradient(135deg, var(--neo-violet), #6366f1);
+  color: var(--chat-user-bubble-fg);
+  border: none;
+  border-radius: 18px 18px 6px 18px;
+  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.25);
+}
+
+.message-bubble--user .message-timestamp {
+  color: rgba(255, 255, 255, 0.82);
+  opacity: 1;
+}
+
+.message-bubble--thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+.message-text {
+  margin: 0;
+}
+
+.message-timestamp {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.thinking-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: thinking-bounce 1s ease infinite;
+}
+
+@keyframes thinking-bounce {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+.chat-input-area {
+  flex-shrink: 0;
+  padding: 10px 12px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border-subtle);
+  background: var(--panel-elevated);
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+}
+
+.chat-input-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.chat-input-wrapper {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.chat-input-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  max-height: 200px;
+  padding: 10px 12px 22px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--panel-bg);
+  color: var(--text-main);
+  font-size: 15px;
+  line-height: 1.5;
+  resize: none;
+  font-family: inherit;
+}
+
+.chat-input-textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.chat-input-textarea:focus {
+  outline: 2px solid var(--neo-aqua);
+  outline-offset: 1px;
+}
+
+.chat-input-textarea--error {
+  border-color: var(--neo-coral);
+}
+
+.chat-input-counter {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.chat-input-counter--error {
+  color: var(--neo-coral);
+  font-weight: 600;
+}
+
+.chat-send-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--neo-violet), #6366f1);
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.chat-send-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.chat-send-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+/* Realtime status chips — positioned via inline style; class is semantic */
+.chat-realtime-pending,
+.chat-realtime-reconnect-hint {
+  /* layout + color fully handled by inline style in ChatWindow.tsx */
+}
+
+/* Info banner — visual props via inline style; class is semantic */
+.chat-info-banner {
+  /* layout + color fully handled by inline style in ChatWindow.tsx */
+}
+
+/* Goal/plan inline card — visual props via inline style; class is semantic */
+.neo-goal-plan-inline {
+  /* layout + color fully handled by inline style in MessageBubble.tsx */
+}
+
+.chat-empty-state {
+  margin: 12px auto 8px;
+  max-width: 28rem;
+  padding: 16px;
+  text-align: center;
+}
+
+.chat-empty-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.chat-empty-subtitle {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.chat-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.chat-suggestion-chip {
+  cursor: pointer;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-main);
+  background: var(--panel-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.chat-suggestion-chip:hover {
+  border-color: var(--neo-violet);
+  box-shadow: var(--neo-shadow-sm);
+}
+
+.chat-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 8px 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--neo-coral-soft);
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  color: var(--text-main);
+}
+
+.chat-error-icon {
+  flex-shrink: 0;
+}
+
+.chat-error-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.chat-error-dismiss {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0 4px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+@keyframes neo-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: neo-fade-in 0.22s ease-out;
+}
+
+.theme-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--panel-bg);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--neo-violet);
+  background: var(--neo-violet-soft);
+}
+
+html.dark .sidebar-feedback__icon {
+  background: var(--panel-elevated);
+  color: var(--neo-aqua);
+}
+
 .app-sidebar {
   box-sizing: border-box;
   display: flex;
@@ -370,7 +1220,7 @@
   font-size: 15px;
   font-weight: 600;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--header-bg);
   backdrop-filter: blur(8px);
 }
 
@@ -1124,4 +1974,30 @@
   .auth-panel:not(.auth-panel--hidden) {
     transform: none;
   }
+}
+
+/* ─── Ledger Desk（accounting-desk） ───────────────────────────── */
+.accounting-desk-page {
+  margin: 0;
+  padding: 0 0 1.5rem;
+  max-width: 100%;
+}
+
+.accounting-desk-header {
+  margin: 0 0 1rem;
+}
+
+.accounting-desk-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-main);
+}
+
+.accounting-desk-subtitle {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
 }

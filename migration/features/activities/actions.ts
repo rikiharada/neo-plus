@@ -21,7 +21,12 @@
 'use server';
 
 import { revalidatePath }                              from 'next/cache';
-import { requireAuth, handleServerActionError }        from '@/lib/supabase/server';
+import { APP_HOME_HREF }                               from '@/components/app-nav-config';
+import {
+  requireAuth,
+  handleServerActionError,
+  isNextRedirectError,
+} from '@/lib/supabase/server';
 import { createServerActionClient }                    from '@/lib/supabase/server';
 import {
   ActivityInsertSchema,
@@ -117,7 +122,7 @@ export async function insertActivity(
     });
 
     // ⑦ キャッシュ無効化
-    revalidatePath('/cockpit');
+    revalidatePath(APP_HOME_HREF);
 
     return {
       ok:      true,
@@ -125,6 +130,7 @@ export async function insertActivity(
       message: soulResult.text,
     };
   } catch (err) {
+    if (isNextRedirectError(err)) throw err;
     return handleServerActionError(err);
   }
 }
@@ -182,9 +188,10 @@ export async function updateActivity(
       soulOverride: soul,
     });
 
-    revalidatePath('/cockpit');
+    revalidatePath(APP_HOME_HREF);
     return { ok: true, id, message: soulResult.text };
   } catch (err) {
+    if (isNextRedirectError(err)) throw err;
     return handleServerActionError(err);
   }
 }
@@ -238,9 +245,10 @@ export async function deleteActivity(
       context:      { todayEntryCount: 1 },
     });
 
-    revalidatePath('/cockpit');
+    revalidatePath(APP_HOME_HREF);
     return { ok: true, id, message: soulResult.text };
   } catch (err) {
+    if (isNextRedirectError(err)) throw err;
     return handleServerActionError(err);
   }
 }

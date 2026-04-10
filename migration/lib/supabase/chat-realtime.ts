@@ -148,3 +148,75 @@ export async function ensureSessionForRealtimeSubscribe(
 
 /** CHANNEL_ERROR / TIMED_OUT 後の待機（秒）— 2 → 4 → 8 */
 export const REALTIME_RECONNECT_BACKOFF_MS = [2000, 4000, 8000] as const;
+
+// ─── Cockpit: router.refresh なしでプロジェクト／収支を再取得 ─────────
+// Separate channel from neo-chat-activities. Does not alter ChatWindow reconnect/backoff.
+
+const cockpitDataInvalidateListeners = new Set<() => void>();
+let cockpitInvalidateDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+const COCKPIT_DATA_INVALIDATE_DEBOUNCE_MS = 400;
+
+/** コックピット表示中に登録。返却関数で解除する。 */
+export function registerCockpitDataInvalidateListener(fn: () => void): () => void {
+  cockpitDataInvalidateListeners.add(fn);
+  return () => {
+    cockpitDataInvalidateListeners.delete(fn);
+  };
+}
+
+/**
+ * すばやく記録成功・Realtime（activities / projects）から呼ぶ。
+ * 短時間の多重発火はデバウンスしてまとめる（SWR mutate とは競合しないクライアントローカル更新用）。
+ */
+export function notifyCockpitDataInvalidate(_source?: string): void {
+  if (cockpitInvalidateDebounceTimer) {
+    clearTimeout(cockpitInvalidateDebounceTimer);
+  }
+  cockpitInvalidateDebounceTimer = setTimeout(() => {
+    cockpitInvalidateDebounceTimer = null;
+    for (const fn of cockpitDataInvalidateListeners) {
+      try {
+        fn();
+      } catch (e) {
+        rtDebugLog('cockpit invalidate listener error', e);
+      }
+    }
+  }, COCKPIT_DATA_INVALIDATE_DEBOUNCE_MS);
+}
+
+let neoCockpitSyncChannel: RealtimeChannel | null = null;
+
+export function getNeoCockpitSyncChannel(): RealtimeChannel | null {
+  return neoCockpitSyncChannel;
+}
+
+export function setNeoCockpitSyncChannel(ch: RealtimeChannel | null): void {
+  neoCockpitSyncChannel = ch;
+}
+
+/**
+ * Cockpit Realtime (activities + projects). Separate from the chat channel.
+ */
+export async function removeNeoCockpitSyncChannel(
+  supabase: SupabaseForRealtime,
+  channelRef: { current: RealtimeChannel | null },
+): Promise<void> {
+  const fromRef = channelRef.current;
+  const target = fromRef ?? neoCockpitSyncChannel;
+  if (!target) {
+    channelRef.current = null;
+    neoCockpitSyncChannel = null;
+    return;
+  }
+  try {
+    await supabase.removeChannel(target);
+  } catch {
+    /* ignore */
+  }
+  if (channelRef.current === target) {
+    channelRef.current = null;
+  }
+  if (neoCockpitSyncChannel === target) {
+    neoCockpitSyncChannel = null;
+  }
+}

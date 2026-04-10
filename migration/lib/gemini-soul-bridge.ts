@@ -22,7 +22,13 @@ import {
 /** Gemini 呼び出しの結果（生テキスト or 技術エラー文言） */
 export type GeminiCallResult =
   | { ok: true; text: string }
-  | { ok: false; error: string };
+  | {
+      ok:          false;
+      error:       string;
+      variant?:    AiFailureVariant;
+      /** モデルフォールバック判定用（任意） */
+      httpStatus?: number;
+    };
 
 export type GeminiSoulSuccess<TMeta> = {
   ok:               true;
@@ -37,13 +43,16 @@ export type GeminiSoulFailure = {
   error:     string;
   soulDebug: SoulPipelineOutput['debug'];
   code:      'AI_ERROR';
+  /** 開発者向け: Soul 適用前の Gemini 生エラー文言 */
+  technicalGeminiError?: string;
 };
 
 // ─── 技術エラー → Soul 失敗バリアント（一元化） ───────────────────
 
 export function mapTechnicalErrorToAiFailureVariant(error?: string): AiFailureVariant {
   if (!error) return 'generic';
-  if (error.includes('設定')) return 'config';
+  // Avoid matching any string containing 「設定」— too many false positives vs Soul text.
+  if (error.startsWith('[neo:ai-config]')) return 'config';
   if (error.includes('タイムアウト')) return 'timeout';
   if (error.includes('ネットワーク')) return 'network';
   if (error.includes('安全フィルタ')) return 'safety';
@@ -71,16 +80,21 @@ export async function executeGeminiWithMandatorySoulPipeline<TMeta>(
   const geminiResult = await geminiCall();
 
   if (!geminiResult.ok) {
+    const variant =
+      geminiResult.variant ??
+      mapTechnicalErrorToAiFailureVariant(geminiResult.error);
     const soul = await runSoulPipelineForAiFailure({
       userId:       ctx.userId,
       soulOverride: ctx.soulOverride,
-      variant:      mapTechnicalErrorToAiFailureVariant(geminiResult.error),
+      variant,
     });
     return {
       ok:        false,
       error:     soul.text,
       soulDebug: soul.debug,
       code:      'AI_ERROR',
+      technicalGeminiError:
+        process.env.NODE_ENV === 'development' ? geminiResult.error : undefined,
     };
   }
 

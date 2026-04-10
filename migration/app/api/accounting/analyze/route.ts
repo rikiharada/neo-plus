@@ -16,7 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z }                         from 'zod';
-import { requireAuth }               from '@/lib/supabase/server';
+import { getAuthenticatedUser }      from '@/lib/supabase/server';
 import { checkRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit';
 
 // ─── バリデーションスキーマ ──────────────────────────────────────
@@ -35,14 +35,12 @@ type AnalyzeRequest = z.infer<typeof AnalyzeRequestSchema>;
 // ─── Route Handler ───────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  // ① 認証
-  let userId: string;
-  try {
-    const user = await requireAuth();
-    userId = user.id;
-  } catch {
+  // ① 認証（Route Handler では redirect せず 401 のみ）
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return NextResponse.json({ ok: false, error: '認証が必要です' }, { status: 401 });
   }
+  const userId = user.id;
 
   // ② レート制限（driveFileUpload プリセット: 15/min）
   try {

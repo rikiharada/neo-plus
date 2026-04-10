@@ -8,7 +8,7 @@
  *   - ログインパネルとサインアップパネルをクロスフェードで切り替える
  *   - メールアドレス + パスワード認証（Supabase Auth）
  *   - サインアップ: パスワード確認 + 利用規約同意チェック
- *   - 成功後: redirectTo があればそこへ、なければ /cockpit へ
+ *   - 成功後: redirectTo があればそこへ、なければ / へ
  */
 
 'use client';
@@ -21,6 +21,7 @@ import {
 } from 'react';
 import { useRouter }            from 'next/navigation';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { APP_HOME_HREF } from '@/components/app-nav-config';
 
 // ─── 型定義 ─────────────────────────────────────────────────────
 
@@ -86,7 +87,7 @@ export function AuthForm({ redirectTo }: AuthFormProps) {
       }
 
       // ログイン成功 → リダイレクト
-      router.push(redirectTo ?? '/cockpit');
+      router.push(redirectTo ?? APP_HOME_HREF);
       router.refresh(); // Middleware に認証情報を認識させる
     });
   }

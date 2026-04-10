@@ -79,13 +79,13 @@ import {
 import { MessageBubble }       from './MessageBubble';
 import { ChatInput }           from './ChatInput';
 import { handleInstruction }   from '@/features/chat/actions';
-import type { ChatMessage, ParsedAction } from '@/features/chat/actions';
+import type { ChatMessage, ParsedAction } from '@/features/chat/chat-types';
 import { insertActivity } from '@/features/activities/actions';
-import {
-  dismissDrivePendingMessage,
-  type PendingDriveConfirmation,
-  type UploadToDriveResult,
-} from '@/features/drive/actions';
+import { dismissDrivePendingMessage } from '@/features/drive/actions';
+import type {
+  PendingDriveConfirmation,
+  UploadToDriveResult,
+} from '@/features/drive/drive-types';
 import { DriveUploadForm } from '@/features/drive/DriveUploadForm';
 import { isConfirmExecutionMessage } from '@/lib/agent-chat-confirm';
 import { AgenticPendingPanel } from './AgenticPendingPanel';
@@ -137,13 +137,6 @@ export function ChatWindow({
   routerRef.current = router;
   const supabase = getSupabaseBrowserClient();
 
-  const [isClientReady, setIsClientReady] = useState(false);
-  useEffect(() => {
-    setIsClientReady(true);
-  }, []);
-
-  if (!isClientReady) return null;
-
   const [messages,     setMessages]     = useState<ChatMessage[]>(initialMessages);
   const [isThinking,   setIsThinking]   = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -154,6 +147,8 @@ export function ChatWindow({
   const [rtStatus, setRtStatus] = useState<string>(() =>
     isChatRealtimeDisabledFromEnv() ? 'DISABLED' : 'SUBSCRIBING',
   );
+  /** Realtime が SUBSCRIBED に届かない場合でもチャット操作を塞がない */
+  const [rtPendingGraceOver, setRtPendingGraceOver] = useState(false);
   const bottomRef  = useRef<HTMLDivElement>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   /** Realtime: postgres_changes のデバウンスタイマー */
@@ -248,6 +243,17 @@ export function ChatWindow({
       document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [requestRscRefresh]);
+
+  // ─ Realtime: 「接続中…」を長時間出し続けない（オフラインでも入力・送信可能） ─
+  useEffect(() => {
+    if (rtStatus !== 'SUBSCRIBING') {
+      setRtPendingGraceOver(false);
+      return;
+    }
+    setRtPendingGraceOver(false);
+    const t = window.setTimeout(() => setRtPendingGraceOver(true), 12_000);
+    return () => window.clearTimeout(t);
+  }, [rtStatus]);
 
   // ─ マルチタブ: 同じ nonce の承認が別タブで完了したら、このタブの保留を手元で解除 ─
   useEffect(() => {
@@ -658,8 +664,8 @@ export function ChatWindow({
 
   // ─ レンダリング ────────────────────────────────────────────────
 
-  /** 接続ハンドシェイク中のみ（CHANNEL_ERROR では「接続中…」を出し続けない） */
-  const showRtPending = rtStatus === 'SUBSCRIBING';
+  /** 接続ハンドシェイク中のみ（一定時間後は非表示 — UI を塞がない） */
+  const showRtPending = rtStatus === 'SUBSCRIBING' && !rtPendingGraceOver;
   /** 再購読リトライ尽き: 操作は可能。Neo 調の一行のみ（技術用語は出さない） */
   const showRtReconnectHint = rtStatus === 'RECONNECT_EXHAUSTED';
 
@@ -965,7 +971,7 @@ function EmptyState({ onSuggestion }: { onSuggestion: (s: string) => void }) {
 function ThinkingIndicator() {
   return (
     <div
-      className="flex gap-2 items-end"
+      className="message-row message-row--neo message-row--align-end"
       role="status"
       aria-label="Neoが考えています"
     >

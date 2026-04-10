@@ -7,7 +7,12 @@
 
 'use server';
 
-import { requireAuth, handleServerActionError, createServerActionClient } from '@/lib/supabase/server';
+import {
+  requireAuth,
+  handleServerActionError,
+  createServerActionClient,
+  isNextRedirectError,
+} from '@/lib/supabase/server';
 import { checkRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit';
 import {
   finalizeDriveUploadMessage,
@@ -24,6 +29,12 @@ import {
 import { getValidGoogleDriveAccessForUser } from '@/lib/drive-user-access';
 import { DriveUploadKindSchema, type DriveUploadKind } from '@/lib/validation';
 import { runSoulPipeline } from '@/lib/soul-pipeline';
+import type {
+  DriveUploadSoulResult,
+  PendingDriveConfirmation,
+  SuggestedActivityDraft,
+  UploadToDriveResult,
+} from './drive-types';
 
 // ─── 定数 ────────────────────────────────────────────────────────
 
@@ -37,51 +48,6 @@ const ALLOWED_MIME = new Set([
   'image/heif',
   'application/pdf',
 ]);
-
-// ─── 型（Client が記帳確認に利用） ───────────────────────────────
-
-/** insertActivity に渡す下書き（ユーザーがバナーで金額を変えてもよい） */
-export interface SuggestedActivityDraft {
-  type:            'expense';
-  category:        string;
-  title:           string;
-  amount:          number;
-  date:            string;
-  is_bookkeeping:  boolean;
-  receipt_url:     string | null;
-}
-
-export interface PendingDriveConfirmation {
-  pointerId:        string;
-  driveFileId:      string;
-  webViewLink:      string | null;
-  fileName:         string;
-  mimeType:         string;
-  kind:             DriveUploadKind;
-  suggestedDraft:   SuggestedActivityDraft;
-}
-
-export interface DriveUploadSoulResult {
-  ok:       boolean;
-  message?: string;
-  error?:   string;
-  code?:    string;
-  _debug?:  { soul?: unknown };
-}
-
-export interface UploadToDriveResult {
-  ok:                        boolean;
-  message?:                  string;
-  /** @deprecated 互換用 — pendingDriveConfirmation を優先 */
-  pointerId?:                string;
-  driveFileId?:              string;
-  webViewLink?:              string;
-  /** 記帳はユーザーが「実行」するまで保留（メタデータのみ） */
-  pendingDriveConfirmation?:   PendingDriveConfirmation;
-  error?:                    string;
-  code?:                     string;
-  _debug?:                   { soul?: unknown };
-}
 
 // ─── 既存: アップロード結果だけ Soul する（テスト・二段階 UI 用） ───
 
@@ -110,6 +76,7 @@ export async function dismissDrivePendingMessage(fileName?: string): Promise<{
     });
     return { ok: true, message: soul.text };
   } catch (err) {
+    if (isNextRedirectError(err)) throw err;
     return handleServerActionError(err);
   }
 }
@@ -134,6 +101,7 @@ export async function buildDriveUploadAssistantMessage(input: {
       _debug:  process.env.NODE_ENV === 'development' ? { soul: out.debug } : undefined,
     };
   } catch (err) {
+    if (isNextRedirectError(err)) throw err;
     return handleServerActionError(err);
   }
 }
@@ -334,6 +302,7 @@ export async function uploadToDriveAndCreateActivity(
       _debug:                  process.env.NODE_ENV === 'development' ? { soul: msg.debug } : undefined,
     };
   } catch (err) {
+    if (isNextRedirectError(err)) throw err;
     return handleServerActionError(err);
   }
 }

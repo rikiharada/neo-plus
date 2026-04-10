@@ -30,7 +30,11 @@
 
 import { randomUUID } from 'crypto';
 import type { User } from '@supabase/supabase-js';
-import { requireAuth, handleServerActionError } from '@/lib/supabase/server';
+import {
+  requireAuth,
+  handleServerActionError,
+  isNextRedirectError,
+} from '@/lib/supabase/server';
 import {
   HandleInstructionSchema,
   ActivityInsertSchema,
@@ -39,7 +43,15 @@ import {
 import { checkRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit';
 import { loadSoulServer } from '@/features/soul/server';
 import { finalizeAssistantReplyAfterGemini, runSoulPipeline } from '@/lib/soul-pipeline';
-import { executeGeminiWithMandatorySoulPipeline } from '@/lib/gemini-soul-bridge';
+import {
+  executeGeminiWithMandatorySoulPipeline,
+  type GeminiCallResult,
+} from '@/lib/gemini-soul-bridge';
+import {
+  GeminiEnvConfigurationError,
+  getGeminiApiKey,
+  resolveGeminiApiKeyWithSource,
+} from '@/lib/gemini-env';
 import { isConfirmExecutionMessage } from '@/lib/agent-chat-confirm';
 import { buildSystemPrompt } from '@/features/chat/soul-prompt';
 import { fetchActivities, insertActivity } from '@/features/activities/actions';
@@ -60,32 +72,7 @@ import type {
   HandleInstructionAgentMeta,
   AgenticLoopPhase,
 } from '@/lib/agentic-types';
-
-export type { ParsedAction, HandleInstructionAgentMeta, AgenticLoopPhase } from '@/lib/agentic-types';
-
-// ─── 型定義 ─────────────────────────────────────────────────────
-
-export interface ChatMessage {
-  role:      'user' | 'assistant';
-  content:   string;
-  timestamp: string;
-  /**
-   * アシスタント行のみ: Gemini の <goal> / <plan> をパースしたもの。
-   * チャット履歴に残し、MessageBubble でカード表示（提案のみターンでも目標・計画が見える）。
-   */
-  goalSummary?: string;
-  planSummary?: string;
-}
-
-export interface HandleInstructionResult {
-  ok:       boolean;
-  reply?:   string;
-  actions?: ParsedAction[];
-  agent?:   HandleInstructionAgentMeta;
-  _debug?:  Record<string, unknown>;
-  error?:   string;
-  code?:    string;
-}
+import type { ChatMessage, HandleInstructionResult } from './chat-types';
 
 type GeminiPipelineMeta = {
   parsed: ReturnType<typeof parseAgenticGeminiResponse>;
@@ -98,6 +85,18 @@ export async function handleInstruction(
 ): Promise<HandleInstructionResult> {
   try {
     const user = await requireAuth();
+    if (process.env.NODE_ENV === 'development') {
+      const g = process.env.GEMINI_API_KEY;
+      console.log(
+        'Using API Key:',
+        g && g.length > 0 ? `${g.slice(0, 5)}...` : '(GEMINI_API_KEY unset — may use GOOGLE_* fallback)',
+      );
+      const r = resolveGeminiApiKeyWithSource();
+      console.log('[handleInstruction] resolved key:', {
+        source: r.source,
+        length: r.key?.length ?? 0,
+      });
+    }
     await checkRateLimit(`chat:${user.id}`, RATE_LIMIT_PRESETS.chat);
 
     const parsed = HandleInstructionSchema.safeParse(rawInput);
@@ -245,7 +244,19 @@ export async function handleInstruction(
         code:  'AI_ERROR',
         _debug:
           process.env.NODE_ENV === 'development'
-            ? { soulDebug: pipelineResult.soulDebug }
+            ? {
+                soulDebug:           pipelineResult.soulDebug,
+                geminiTechnicalError:
+                  pipelineResult.technicalGeminiError ?? null,
+                aiHint:
+                  pipelineResult.technicalGeminiError?.startsWith('[neo:ai-config]')
+                    ? 'config / API key'
+                    : /model|404|400|not found/i.test(
+                          String(pipelineResult.technicalGeminiError),
+                        )
+                      ? 'model / API request'
+                      : 'other',
+              }
             : undefined,
       };
     }
@@ -350,6 +361,7 @@ export async function handleInstruction(
           : undefined,
     };
   } catch (err) {
+    if (isNextRedirectError(err)) throw err;
     return handleServerActionError(err);
   }
 }
@@ -448,13 +460,27 @@ interface GeminiCallInput {
   message:      string;
 }
 
-async function _callGemini(
-  input: GeminiCallInput,
-): Promise<{ ok: boolean; text?: string; error?: string }> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    console.error('[handleInstruction] GEMINI_API_KEY is not configured');
-    return { ok: false, error: 'AI サービスの設定に問題があります' };
+async function _callGemini(input: GeminiCallInput): Promise<GeminiCallResult> {
+  let apiKey: string;
+  let source: ReturnType<typeof resolveGeminiApiKeyWithSource>['source'];
+  try {
+    apiKey = getGeminiApiKey();
+    source = resolveGeminiApiKeyWithSource().source;
+  } catch (e) {
+    if (e instanceof GeminiEnvConfigurationError) {
+      console.error('[handleInstruction] Gemini env:', e.message);
+      return {
+        ok:      false,
+        error:   '[neo:ai-config] API key missing',
+        variant: 'config',
+      };
+    }
+    throw e;
+  }
+  if (process.env.NODE_ENV === 'development') {
+    console.info(
+      `[handleInstruction] Gemini request — envKey=${source} keyLength=${apiKey.length}`,
+    );
   }
 
   const contents = [
@@ -465,57 +491,126 @@ async function _callGemini(
     { role: 'user', parts: [{ text: input.message }] },
   ];
 
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          system_instruction: { parts: [{ text: input.systemPrompt }] },
-          contents,
-          generationConfig: {
-            temperature:      0.7,
-            maxOutputTokens:  1536,
-            responseMimeType: 'text/plain',
-          },
-          safetySettings: [
-            { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-            { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          ],
-        }),
-        cache:  'no-store',
-        signal: AbortSignal.timeout(30_000),
-      },
-    );
+  const primaryModel =
+    process.env.GEMINI_MODEL?.trim() || 'gemini-2.0-flash';
+  const fallbackModel =
+    process.env.GEMINI_MODEL_FALLBACK?.trim() || 'gemini-1.5-flash';
 
-    if (!res.ok) {
-      const errBody = await res.text().catch(() => 'unknown');
-      console.error('[handleInstruction] Gemini API error:', res.status, errBody);
-      return { ok: false, error: 'AI の応答に失敗しました。しばらく後でお試しください。' };
-    }
+  const requestBody = {
+    system_instruction: { parts: [{ text: input.systemPrompt }] },
+    contents,
+    generationConfig: {
+      temperature:      0.7,
+      maxOutputTokens:  1536,
+      responseMimeType: 'text/plain' as const,
+    },
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+    ],
+  };
 
-    const json = await res.json();
-    const finishReason = json?.candidates?.[0]?.finishReason;
-    if (finishReason === 'SAFETY') {
-      return { ok: false, error: '安全フィルタにより応答がブロックされました' };
-    }
+  async function geminiGenerateOnce(
+    modelId: string,
+  ): Promise<GeminiCallResult> {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:generateContent?key=${apiKey}`,
+        {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(requestBody),
+          cache:   'no-store',
+          signal:  AbortSignal.timeout(30_000),
+        },
+      );
 
-    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-    if (!text) {
-      return { ok: false, error: 'AI から空の応答が返されました' };
-    }
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => 'unknown');
+        console.error(
+          '[handleInstruction] Gemini API error:',
+          modelId,
+          res.status,
+          errBody.slice(0, 600),
+        );
+        if (res.status === 401 || res.status === 403) {
+          return {
+            ok:         false,
+            error:      '[neo:ai-config] API rejected the key (401/403)',
+            variant:    'config',
+            httpStatus: res.status,
+          };
+        }
+        return {
+          ok:         false,
+          error:      `[neo:gemini-http] model=${modelId} status=${res.status} body=${errBody.slice(0, 280)}`,
+          variant:    'generic',
+          httpStatus: res.status,
+        };
+      }
 
-    return { ok: true, text };
-  } catch (err) {
-    if (err instanceof Error && err.name === 'TimeoutError') {
-      return { ok: false, error: 'AI の応答がタイムアウトしました（30秒）' };
+      const json = await res.json();
+      const finishReason = json?.candidates?.[0]?.finishReason;
+      if (finishReason === 'SAFETY') {
+        return {
+          ok:      false,
+          error:   '安全フィルタにより応答がブロックされました',
+          variant: 'safety',
+        };
+      }
+
+      const text = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      if (!text) {
+        return {
+          ok:      false,
+          error:   'AI から空の応答が返されました',
+          variant: 'empty',
+        };
+      }
+
+      return { ok: true, text };
+    } catch (err) {
+      if (err instanceof Error && err.name === 'TimeoutError') {
+        return {
+          ok:      false,
+          error:   'AI の応答がタイムアウトしました（30秒）',
+          variant: 'timeout',
+        };
+      }
+      console.error('[handleInstruction] Fetch error:', modelId, err);
+      return {
+        ok:      false,
+        error:   'ネットワークエラーが発生しました',
+        variant: 'network',
+      };
     }
-    console.error('[handleInstruction] Fetch error:', err);
-    return { ok: false, error: 'ネットワークエラーが発生しました' };
   }
+
+  let result = await geminiGenerateOnce(primaryModel);
+
+  const canTryModelFallback =
+    !result.ok &&
+    result.variant !== 'config' &&
+    typeof result.httpStatus === 'number' &&
+    result.httpStatus !== 401 &&
+    result.httpStatus !== 403 &&
+    fallbackModel !== primaryModel;
+
+  if (canTryModelFallback) {
+    if (process.env.NODE_ENV === 'development') {
+      const httpSt = result.ok === false ? result.httpStatus : undefined;
+      console.warn('[handleInstruction] Gemini model fallback', {
+        from: primaryModel,
+        to:   fallbackModel,
+        httpStatus: httpSt,
+      });
+    }
+    result = await geminiGenerateOnce(fallbackModel);
+  }
+
+  return result;
 }
 
 function _extractCategory(actions: ParsedAction[]): string | undefined {

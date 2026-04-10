@@ -9,7 +9,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import type { ParsedAction } from '@/features/chat/actions';
+import type { ParsedAction } from '@/features/chat/chat-types';
 import { APPROVAL_PHRASE_EXAMPLES } from '@/lib/agent-chat-confirm';
 
 const cardBase: CSSProperties = {

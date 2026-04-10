@@ -17,7 +17,12 @@
 
 'use server';
 
-import { requireAuth, handleServerActionError } from '@/lib/supabase/server';
+import {
+  requireAuth,
+  getAuthenticatedUser,
+  handleServerActionError,
+  isNextRedirectError,
+} from '@/lib/supabase/server';
 import { checkRateLimit, RATE_LIMIT_PRESETS }   from '@/lib/rate-limit';
 import { loadSoulServer }                        from '@/features/soul/server';
 import { runSoulPipeline }                       from '@/lib/soul-pipeline';
@@ -128,9 +133,10 @@ export async function generateNeoFirstMessage(
 
     return { ok: true, message: soulResult.text };
   } catch (err) {
+    if (isNextRedirectError(err)) throw err;
     // エラー時も Soul Pipeline でラップ（handleServerActionError では cold なメッセージになるので専用処理）
     try {
-      const user2 = await requireAuth().catch(() => null);
+      const user2 = await getAuthenticatedUser();
       if (user2) {
         const soul = await loadSoulServer(user2.id);
         const fallback = await runSoulPipeline({

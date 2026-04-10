@@ -5,7 +5,12 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { requireAuth, handleServerActionError, createServerActionClient } from '@/lib/supabase/server';
+import {
+  requireAuth,
+  handleServerActionError,
+  createServerActionClient,
+  isNextRedirectError,
+} from '@/lib/supabase/server';
 import { checkRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit';
 import { FeedbackSubmitSchema, formatZodError } from '@/lib/validation';
 
@@ -47,6 +52,7 @@ export async function submitFeedback(input: unknown): Promise<SubmitFeedbackResu
 
     return { ok: true };
   } catch (err) {
+    if (isNextRedirectError(err)) throw err;
     const out = handleServerActionError(err);
     return { ok: false, error: out.error };
   }

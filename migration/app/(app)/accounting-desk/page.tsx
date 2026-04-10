@@ -4,16 +4,18 @@
  *
  * ⚠️ 落とし穴:
  *   1. LedgerDeskClient は 'use client' — JSON シリアライズ可能な props のみ渡す
- *   2. hasDriveLinked は user_integrations テーブルを RLS 越しに取得
- *      （count: 'exact', head: true で行数のみ取得し、データ転送量を最小化）
+ *   2. hasDriveLinked は getGoogleDriveLinkedForUser（欠落テーブル時は false）
  *   3. Drive 未連携でもデスクは使える（analyze のみ、upload スキップ）
  *
  * ─── 認証フロー ──────────────────────────────────────────────────
- *   requireAuth() → throws UNAUTHORIZED (401) → middleware がログインへリダイレクト
+ *   RSC では createServerComponentClient + getUser（read-only Cookie）。
+ *   未認証は redirect（getUser + redirect で requireAuth と同様の UX）。
  */
 
 import type { Metadata }  from 'next';
-import { requireAuth, createServerComponentClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { createServerComponentClient } from '@/lib/supabase/server';
+import { getGoogleDriveLinkedForUser } from '@/lib/drive-integration-status';
 import { LedgerDeskClient } from './_components/LedgerDeskClient';
 
 // ─── メタデータ ─────────────────────────────────────────────────
@@ -29,21 +31,15 @@ export const dynamic = 'force-dynamic';
 // ─── ページコンポーネント ────────────────────────────────────────
 
 export default async function AccountingDeskPage() {
-  // ① 認証チェック（失敗時は 401 → middleware がリダイレクト）
-  const user = await requireAuth();
   const supabase = await createServerComponentClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    redirect('/login?redirectTo=/accounting-desk');
+  }
 
-  // ② Google Drive 連携状態を確認
-  //    データは不要なので head: true で件数のみ取得（RLS で user_id フィルタ済み）
-  const { count: driveCount } = await supabase
-    .from('user_integrations')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .eq('provider', 'google_drive');
+  const hasDriveLinked = await getGoogleDriveLinkedForUser(user.id, supabase);
 
-  const hasDriveLinked = (driveCount ?? 0) > 0;
-
-  // ─── レンダリング ───────────────────────────────────────────────
+  // ─── レンダリング ─────────────────────────────────────────────
 
   return (
     <div className="accounting-desk-page">

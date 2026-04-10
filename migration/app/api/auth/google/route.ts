@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getGoogleOAuthUrl } from '@/lib/google-drive';
+import { APP_HOME_HREF } from '@/components/app-nav-config';
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
   } catch (e) {
     console.error('[api/auth/google]', e);
     return NextResponse.redirect(
-      new URL('/cockpit?drive_error=config', request.url),
+      new URL(`${APP_HOME_HREF}?drive_error=config`, request.url),
     );
   }
 }

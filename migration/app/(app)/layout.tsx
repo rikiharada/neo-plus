@@ -1,68 +1,56 @@
 /**
  * app/(app)/layout.tsx
- * 認証済みユーザー向けアプリレイアウト
+ * 認証済みユーザー向けレイアウト（サイドバー + ヘッダー + メイン）
  *
- * ⚠️ 落とし穴:
- *   1. ここでは認証チェックを行わない（Middleware が担当する）
- *   2. children は Suspense でラップして PPR の恩恵を受ける
- *   3. サイドバーは Server Component にすることでユーザー情報を SSR できる
- *   4. Sidebar を Client Component にすると「モバイルの開閉」も同じファイルで管理できるが
- *      ユーザー情報取得が遅れる → Server Component で data 取得 → Client Component に渡す
+ * Server Component — 'use client' 禁止。
+ *
+ * ⚠️ 設計上の注意:
+ *   1. try { return (...) } catch { throw } パターンは使わない
+ *      → React の Suspense / Error Boundary と干渉する
+ *      → redirect() は Error を throw して伝播するが、catch で二重 throw すると
+ *        NEXT_REDIRECT の digest が失われることがある
+ *
+ *   2. supabase.auth.getUser() は JWT を Supabase サーバーで検証（安全）
+ *      getSession() は Cookie をそのまま信頼するので使わない
+ *
+ *   3. user が null でも layout 自体はクラッシュしない。
+ *      未認証の場合は各 page.tsx の requireAuth() が redirect('/login') する。
+ *      layout でリダイレクトしてしまうと、公開ページを同 (app) グループに追加した
+ *      ときに全部弾かれる（拡張性が下がる）。
  */
 
-import type { Metadata }               from 'next';
-import { Suspense }                    from 'react';
+import type { Metadata }  from 'next';
+import { AppSidebar }     from '@/components/AppSidebar';
+import { AppHeader }      from '@/components/AppHeader';
+import { AppProviders }   from '@/components/providers/AppProviders';
 import { createServerComponentClient } from '@/lib/supabase/server';
-import { AppSidebar }                  from '@/components/AppSidebar';
-import { AppHeader }                   from '@/components/AppHeader';
-
-// ─── メタデータ（子ページで上書き可能） ──────────────────────────
 
 export const metadata: Metadata = {
   title:       'Neo+',
   description: 'フリーランスの経理を自律的にサポートするAIエージェント',
 };
 
-// ─── レイアウトコンポーネント ────────────────────────────────────
-
-async function AppShellWithUser({ children }: { children: React.ReactNode }) {
-  // const supabase = await createServerComponentClient();
-  // const { data: { user } } = await supabase.auth.getUser();
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = await createServerComponentClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
-    <>
-      <AppSidebar user={null} />
-      <div className="app-main">
-        <AppHeader user={null} />
-        <main className="app-content" id="main-content">
-          {children}
-        </main>
+    <AppProviders user={user}>
+      <div className="app-layout">
+        <AppSidebar user={user} />
+        <div className="app-main">
+          <AppHeader user={user} />
+          <main className="app-content" id="main-content">
+            {children}
+          </main>
+        </div>
       </div>
-    </>
-  );
-}
-
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="app-layout">
-      <AppShellWithUser>{children}</AppShellWithUser>
-    </div>
-  );
-}
-
-// ─── スケルトン ─────────────────────────────────────────────────
-
-function PageLoadingSkeleton() {
-  return (
-    <div className="page-skeleton" aria-label="ページを読み込み中" aria-busy="true">
-      <div className="skeleton-bar skeleton-bar--title" />
-      <div className="skeleton-bar skeleton-bar--text" />
-      <div className="skeleton-bar skeleton-bar--text skeleton-bar--short" />
-      <div className="skeleton-grid">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="skeleton-card" />
-        ))}
-      </div>
-    </div>
+    </AppProviders>
   );
 }

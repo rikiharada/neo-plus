@@ -11,7 +11,7 @@
  * 6. ダッシュボードへリダイレクト
  *
  * ─── 手動確認メモ ─────────────────────────────────────────────
- * - 正常: Google 同意後 `/cockpit?drive=connected` に戻り、コックピットでフラッシュ表示
+ * - 正常: Google 同意後 `/?drive=connected` に戻り、ホームでフラッシュ表示
  * - 返却する `NextResponse` は **upsert 成功後の 1 箇所だけ**（早期 return は別レスポンス）
  * - token リフレッシュの自動経路はここではなく upload 時の getValidGoogleDriveAccessForUser
  *   （テスト手順は lib/drive-user-access.ts 先頭コメント参照）
@@ -23,11 +23,12 @@ import { createRouteHandlerClient } from '@/lib/supabase/server';
 import { exchangeGoogleAuthorizationCode } from '@/lib/google-oauth-exchange';
 import { ensureNeoFolderExists, GOOGLE_DRIVE_SCOPES } from '@/lib/google-drive';
 import type { Database } from '@/lib/supabase/types';
+import { APP_HOME_HREF } from '@/components/app-nav-config';
 
 type UserIntegrationInsert = Database['public']['Tables']['user_integrations']['Insert'];
 
 function redirectWithError(request: NextRequest, reason: string) {
-  const path = process.env.NEO_OAUTH_SUCCESS_PATH ?? '/cockpit';
+  const path = process.env.NEO_OAUTH_SUCCESS_PATH ?? APP_HOME_HREF;
   return NextResponse.redirect(
     new URL(`${path}?drive_error=${encodeURIComponent(reason)}`, request.url),
   );
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
   const state = url.searchParams.get('state');
   const gErr  = url.searchParams.get('error');
 
-  const successPath = process.env.NEO_OAUTH_SUCCESS_PATH ?? '/cockpit';
+  const successPath = process.env.NEO_OAUTH_SUCCESS_PATH ?? APP_HOME_HREF;
 
   if (gErr) {
     return redirectWithError(request, gErr);

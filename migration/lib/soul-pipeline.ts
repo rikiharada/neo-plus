@@ -113,7 +113,7 @@ const AI_FAILURE_RAW: Record<AiFailureVariant, string> = {
   empty:
     '空の応答が返ってきました。脳の接続を確認し、もう一度お試しください。',
   config:
-    'AI サービスの設定が未完了です。環境をご確認ください。',
+    'Neoの頭脳（Gemini）用の API キーがまだ設定されていないみたい。開発なら migration/.env.local に GEMINI_API_KEY を書いてサーバー再起動、本番なら Vercel の Environment Variables に同じ名前で追加して再デプロイしてね。設定後も困ったら /api/chat/health で確認できるよ。',
   generic:
     '応答の生成に失敗しちゃったみたい。Neoはここにいるから、少し時間をおいてもう一度だけ試してみて。',
 };

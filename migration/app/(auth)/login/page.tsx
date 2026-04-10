@@ -4,7 +4,7 @@
  *
  * ⚠️ 落とし穴:
  *   1. このページ自体は Server Component にできる（フォームは Client Component に切り出す）
- *   2. Middleware が認証済みユーザーを /cockpit にリダイレクトするため
+ *   2. 認証済みユーザーはホーム（/）へ進む想定
  *      ここでは認証チェック不要
  *   3. searchParams は Server Component で受け取れる（Pages Router の getServerSideProps 不要）
  */

@@ -8,10 +8,8 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  uploadToDriveAndCreateActivity,
-  type UploadToDriveResult,
-} from '@/features/drive/actions';
+import { uploadToDriveAndCreateActivity } from '@/features/drive/actions';
+import type { UploadToDriveResult } from '@/features/drive/drive-types';
 
 interface DriveUploadFormProps {
   /** アップロード完了時（成功・失敗）。チャット連携で pendingDrive を渡す */

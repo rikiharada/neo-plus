@@ -194,6 +194,8 @@ export const RATE_LIMIT_PRESETS = {
   activityDelete: { limit: 40,  windowMs: 60_000 } satisfies RateLimitConfig,
   /** 収支一覧取得: 1分間に120件（チャット等からの連続呼び出し） */
   activityFetch:  { limit: 120, windowMs: 60_000 } satisfies RateLimitConfig,
+  /** プロジェクト一覧取得（コックピット Realtime 連動の再取得含む） */
+  projectFetch:   { limit: 120, windowMs: 60_000 } satisfies RateLimitConfig,
   /** Drive アップロード後 Soul メッセージ: 1分間に30件 */
   driveSoulMessage: { limit: 30, windowMs: 60_000 } satisfies RateLimitConfig,
   /** Drive へファイル本体アップロード: 1分間に15件（レシート連投対策） */

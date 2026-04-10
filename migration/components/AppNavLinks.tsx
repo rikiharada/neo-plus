@@ -1,27 +1,50 @@
 /**
- * サイドバー内ナビ — 現在パスをハイライト（Client）
+ * Sidebar nav — highlights current path (client).
  */
 
 'use client';
 
-import Link              from 'next/link';
-import { usePathname }   from 'next/navigation';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { APP_NAV_ITEMS } from './app-nav-config';
 
-const nav = [
-  { href: '/cockpit', label: 'コックピット' },
-  { href: '/chat', label: 'チャット' },
-  { href: '/settings', label: '設定' },
-] as const;
+function navItemActive(pathname: string, href: string): boolean {
+  const p = pathname || '/';
+  return p === href || (href !== '/' && p.startsWith(`${href}/`));
+}
+
+/** Same links as live nav; neutral styles for Suspense fallback */
+export function AppNavLinksFallback() {
+  return (
+    <nav className="app-nav-links" aria-label="Main navigation" aria-busy="true">
+      {APP_NAV_ITEMS.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          style={{
+            fontSize:       14,
+            fontWeight:     400,
+            color:          'var(--text-main, #0F1419)',
+            textDecoration: 'none',
+            padding:        '8px 10px',
+            borderRadius:   8,
+            background:     'transparent',
+          }}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
 
 export function AppNavLinks() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
 
   return (
-    <nav className="app-nav-links" aria-label="メインナビ">
-      {nav.map((item) => {
-        const active =
-          pathname === item.href ||
-          pathname.startsWith(`${item.href}/`);
+    <nav className="app-nav-links" aria-label="Main navigation">
+      {APP_NAV_ITEMS.map((item) => {
+        const active = navItemActive(pathname, item.href);
         return (
           <Link
             key={item.href}
