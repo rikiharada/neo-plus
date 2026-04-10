@@ -17,3 +17,8 @@ dist/
 build/
 .env
 .env*.local
+
+# Local / accidental artifacts
+old_garbage/
+**/tsconfig.tsbuildinfo
+migration/next.config.ts.bak
