@@ -25,7 +25,13 @@ export async function registerAgenticPendingNonce(
     if (error.code === '23505') {
       return { ok: true };
     }
-    console.error('[agentic-pending-nonces] insert failed:', error.code, error.message);
+    console.error(
+      '[agentic-pending-nonces] insert failed:',
+      error.code,
+      error.message,
+      (error as { details?: string }).details,
+      (error as { hint?: string }).hint,
+    );
     return { ok: false, error: error.message };
   }
   return { ok: true };

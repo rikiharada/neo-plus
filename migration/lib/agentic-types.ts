@@ -4,9 +4,13 @@
  * ReAct 風の軽量ループ: Goal → Plan → Tool 選択 → Confirm → Execute
  */
 
-/** ツール（Server Action 相当）の宣言。実実行はユーザー承認後のみ。 */
+/**
+ * ツール（Server Action 相当）の宣言。実実行はユーザー承認後のみ。
+ * 複合 intent は INSERT_PROJECT を先頭にし、続けて INSERT_ACTIVITY（`project_id` 省略時は承認実行で付与）。
+ */
 export interface ParsedAction {
   type:
+    | 'INSERT_PROJECT'
     | 'INSERT_ACTIVITY'
     | 'UPDATE_ACTIVITY'
     | 'DELETE_ACTIVITY'
@@ -48,4 +52,9 @@ export interface HandleInstructionAgentMeta {
   pendingApprovalToken?: string;
   pendingApprovalNonce?: string;
   pendingApprovalIssuedAt?: number;
+  /**
+   * 開発時: nonce 行を DB に置けない場合でも1 ターン目が成功したときだけ立つ。
+   * 2 回目の handleInstruction で同フラグを返し、claim をスキップする。
+   */
+  pendingApprovalDevBypass?: boolean;
 }

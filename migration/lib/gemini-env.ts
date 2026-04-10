@@ -19,8 +19,9 @@
  * 3. Redeploy after saving.
  * 4. Visit https://<your-host>/api/chat/health and confirm configured: true.
  *
- * Optional (server): `GEMINI_MODEL` (default `gemini-2.0-flash`) and
- * `GEMINI_MODEL_FALLBACK` (default `gemini-1.5-flash`) — primary が HTTP エラーのとき 1 回だけフォールバックします（401/403 は除く）。
+ * プライマリは **Gemini 3 Flash**（既定 `gemini-3-flash`。`GEMINI_MODEL_PRIMARY` で上書き可。404 時は `_callGemini` 内で `gemini-3-flash-preview` を 1 回試行）。
+ * それでも失敗時は **1 回** `gemini-1.5-flash`（`GEMINI_MODEL_FALLBACK` で上書き可）。401/403・安全ブロックは除く。
+ * REST の API 版は `GEMINI_API_VERSION`（`v1` | `v1beta`、**未設定は `v1beta`** — `@google/generative-ai` の既定と一致）。
  *
  * Common mistakes:
  * - Using NEXT_PUBLIC_GEMINI_API_KEY (server secrets must NOT use NEXT_PUBLIC_).
@@ -29,6 +30,42 @@
  */
 
 const DEV = process.env.NODE_ENV === 'development';
+
+/** Gemini 3 Flash（ユーザー指定 ID。環境・リージョンにより `gemini-3-flash-preview` が必要な場合あり） */
+export const DEFAULT_GEMINI_MODEL = 'gemini-3-flash' as const;
+
+/** `gemini-3-flash` が 404 のとき、`_callGemini` が試す別名（Google公式プレビュー表記） */
+export const GEMINI_3_FLASH_ALIAS_PREVIEW = 'gemini-3-flash-preview' as const;
+
+/** プライマリ（およびプレビュー別名）がともに失敗したときの安定版 Flash */
+export const DEFAULT_GEMINI_MODEL_FALLBACK = 'gemini-1.5-flash' as const;
+
+export type GeminiApiVersion = 'v1' | 'v1beta';
+
+/**
+ * チャット用プライマリモデル — 既定 {@link DEFAULT_GEMINI_MODEL}（`gemini-3-flash`）。
+ * `GEMINI_MODEL_PRIMARY` があれば最優先。
+ */
+export function resolveGeminiModel(): string {
+  const raw = process.env.GEMINI_MODEL_PRIMARY?.trim();
+  return raw && raw.length > 0 ? raw : DEFAULT_GEMINI_MODEL;
+}
+
+/**
+ * プライマリ失敗時のフォールバック（{@link DEFAULT_GEMINI_MODEL_FALLBACK}）。
+ * `GEMINI_MODEL_FALLBACK` で上書き可。
+ */
+export function resolveGeminiModelFallback(): string {
+  const raw = process.env.GEMINI_MODEL_FALLBACK?.trim();
+  return raw && raw.length > 0 ? raw : DEFAULT_GEMINI_MODEL_FALLBACK;
+}
+
+/** Reads `GEMINI_API_VERSION`: `v1` or `v1beta`; otherwise defaults to `v1beta` (SDK default). */
+export function resolveGeminiApiVersion(): GeminiApiVersion {
+  const v = process.env.GEMINI_API_VERSION?.trim().toLowerCase();
+  if (v === 'v1beta' || v === 'v1') return v;
+  return 'v1beta';
+}
 
 export type GeminiEnvSource =
   | 'GEMINI_API_KEY'
@@ -54,11 +91,15 @@ function debugLogGeminiEnvOnce(): void {
   _geminiEnvDebugLogged = true;
 
   const { key, source } = resolveGeminiApiKeyWithSource();
+  const configured = Boolean(key);
+  const model = resolveGeminiModel();
   console.log('[gemini-env]', {
     resolvedSource: source ?? 'none',
-    configured:     Boolean(key),
-    keyLength:      key ? key.length : 0,
-    checkedNames:   [
+    configured,
+    model,
+    apiVersion: resolveGeminiApiVersion(),
+    keyLength:  key ? key.length : 0,
+    checkedNames: [
       'GEMINI_API_KEY',
       'GOOGLE_GENERATIVE_AI_API_KEY',
       'GOOGLE_API_KEY',

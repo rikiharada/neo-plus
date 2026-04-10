@@ -55,6 +55,7 @@ export function DriveConnectionBanner({
   variant?: 'default' | 'settings';
   suppressUnlinkedCta?: boolean;
 }) {
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const drive = searchParams.get('drive');
@@ -63,6 +64,10 @@ export function DriveConnectionBanner({
 
   /** クエリ除去後、refresh 完了までの一瞬で「未連携」に見えないようにする */
   const [syncingAfterOAuth, setSyncingAfterOAuth] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (drive !== 'connected') {
@@ -113,6 +118,10 @@ export function DriveConnectionBanner({
   }, [drive, driveError, router]);
 
   const margin = variant === 'settings' ? '0' : '0 0 16px';
+
+  if (!mounted) {
+    return null;
+  }
 
   if (drive === 'connected') {
     return (

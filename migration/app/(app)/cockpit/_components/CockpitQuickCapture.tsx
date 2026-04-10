@@ -11,7 +11,10 @@ import {
   type KeyboardEvent,
 } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { handleInstruction } from '@/features/chat/actions';
+import type { ParsedAction } from '@/lib/agentic-types';
+import type { HandleInstructionResult } from '@/features/chat/chat-types';
 import { notifyCockpitDataInvalidate } from '@/lib/supabase/chat-realtime';
 
 const MAX_LEN = 2000;
@@ -19,10 +22,62 @@ const MAX_LEN = 2000;
 const IS_DEV = process.env.NODE_ENV === 'development';
 
 const PLACEHOLDER =
-  '例: 5月20日、渋谷パルコでドラマ撮影、経費は撮影費40万、人件費10万\n' +
+  '例: 6月20日、六本木でドラマ撮影、撮影40万、人件50万。新規プロジェクトを作って経として追加。\n' +
   '（Enterで送信 · Shift+Enterで改行）';
 
+function cloneParsedActions(actions: ParsedAction[]): ParsedAction[] {
+  return JSON.parse(JSON.stringify(actions)) as ParsedAction[];
+}
+
+/**
+ * Gemini が <actions> を返したら「実行して」で2 回目の handleInstruction を送る。
+ * nonce 登録失敗・承認情報欠落時は明確なエラーを返す。
+ */
+async function runQuickCaptureWithAutoConfirm(
+  message: string,
+): Promise<HandleInstructionResult> {
+  const first = await handleInstruction({ message, history: [] });
+  if (!first.ok) return first;
+
+  const awaiting = first.agent?.awaitingConfirmation === true;
+  const nActions = first.actions?.length ?? 0;
+  if (!awaiting || nActions === 0) return first;
+
+  const tok = first.agent?.pendingApprovalToken;
+  const nonce = first.agent?.pendingApprovalNonce;
+  const issuedRaw = first.agent?.pendingApprovalIssuedAt;
+  const issuedAt =
+    issuedRaw == null ? NaN : Number(issuedRaw);
+
+  if (!tok || nonce == null || !Number.isFinite(issuedAt) || issuedAt <= 0) {
+    return {
+      ok:    false,
+      error:
+        '登録案はできましたが、自動実行の準備が整いませんでした。チャットで「実行して」と送るか、少し待ってからもう一度お試しください。',
+      code:  'AGENTIC_PENDING_INCOMPLETE',
+      reply: first.reply,
+      actions: first.actions,
+      agent: first.agent,
+    };
+  }
+
+  const actionsPayload = cloneParsedActions(first.actions!);
+
+  return await handleInstruction({
+    message:                 '実行して',
+    history:                 [],
+    pendingActionsToConfirm: actionsPayload,
+    pendingApprovalToken:    tok,
+    pendingApprovalNonce:    nonce,
+    pendingApprovalIssuedAt: issuedAt,
+    ...(first.agent?.pendingApprovalDevBypass === true
+      ? { pendingApprovalDevBypass: true }
+      : {}),
+  });
+}
+
 export function CockpitQuickCapture() {
+  const router = useRouter();
   const [text, setText] = useState('');
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{
@@ -30,6 +85,7 @@ export function CockpitQuickCapture() {
     message: string;
   } | null>(null);
   const [devAiToast, setDevAiToast] = useState<string | null>(null);
+  const [showLedgerHint, setShowLedgerHint] = useState(false);
 
   const submit = useCallback(() => {
     const message = text.trim();
@@ -55,31 +111,33 @@ export function CockpitQuickCapture() {
     }
     setFeedback(null);
     setDevAiToast(null);
+    setShowLedgerHint(false);
     startTransition(async () => {
       console.log('[CockpitQuickCapture] handleInstruction 呼び出し', {
         messagePreview: message.slice(0, 120),
       });
       try {
-        const result = await handleInstruction({ message, history: [] });
+        const finalResult = await runQuickCaptureWithAutoConfirm(message);
         console.log('[CockpitQuickCapture] handleInstruction 完了', {
-          ok: result.ok,
-          code: result.code,
+          ok: finalResult.ok,
+          code: finalResult.code,
         });
-        if (!result.ok) {
-          console.error('[CockpitQuickCapture] handleInstruction エラー応答', result);
+
+        if (!finalResult.ok) {
+          console.error('[CockpitQuickCapture] handleInstruction エラー応答', finalResult);
           setFeedback({
             kind: 'err',
             message:
-              result.error ??
+              finalResult.error ??
               'ちょっと接続が不安定みたい…。もう一度だけ試してみて。',
           });
           if (
             IS_DEV &&
-            result.code === 'AI_ERROR' &&
-            result._debug &&
-            typeof result._debug === 'object'
+            finalResult.code === 'AI_ERROR' &&
+            finalResult._debug &&
+            typeof finalResult._debug === 'object'
           ) {
-            const d = result._debug as Record<string, unknown>;
+            const d = finalResult._debug as Record<string, unknown>;
             const tech =
               typeof d.geminiTechnicalError === 'string'
                 ? d.geminiTechnicalError
@@ -96,15 +154,52 @@ export function CockpitQuickCapture() {
                 : `[AI_ERROR _debug]\n${JSON.stringify(d, null, 2).slice(0, 1200)}`,
             );
           }
+          // 失敗してもプロジェクトが作られている可能性があるため refresh は実行する
+          notifyCockpitDataInvalidate('quick-capture-error');
+          router.refresh();
           return;
         }
         setDevAiToast(null);
         setText('');
         setFeedback({
           kind: 'ok',
-          message: result.reply?.trim() || 'Neo が内容を整理しました。',
+          message: finalResult.reply?.trim() || 'Neo が内容を整理しました。',
         });
+        const executed =
+          finalResult.agent?.loopPhase === 'executed' ||
+          finalResult.agent?.phase === 'confirm_executed';
+        setShowLedgerHint(Boolean(executed));
         notifyCockpitDataInvalidate('quick-capture');
+
+        // RSC キャッシュを即時 + 1フレーム後の2段階 refresh
+        // → server の revalidatePath が浸透する前に fetch しても古いデータを掴まないように
+        router.refresh();
+        if (executed) {
+          // 少し待ってから再 refresh（Supabase → Next.js RSC cache 浸透待ち）
+          setTimeout(() => router.refresh(), 500);
+        }
+
+        // 作成されたプロジェクトへのナビゲーション優先度:
+        // 1. serverが明示的に clientNavigation を返した場合（Ledger Desk など）
+        // 2. Agentic 実行で作成されたプロジェクト ID がある場合は詳細ページへ
+        const nav = finalResult.clientNavigation?.href;
+        if (nav) {
+          router.push(nav);
+        } else if (
+          executed &&
+          finalResult.executedProjectId &&
+          typeof finalResult.executedProjectId === 'string'
+        ) {
+          // プロジェクト詳細ページへ遷移してもよいかを判断:
+          // 経費が紐づいた場合のみ遷移（プロジェクト作成のみなら一覧）
+          const actCount = finalResult.executedActivityCount ?? 0;
+          const dest = actCount > 0
+            ? `/projects/${finalResult.executedProjectId}`
+            : '/projects';
+          console.log('[CockpitQuickCapture] Navigating to:', dest, { actCount });
+          // 少し待ってから遷移（router.refresh() の後にページ遷移すると RSC が stale になる場合がある）
+          setTimeout(() => router.push(dest), 600);
+        }
       } catch (err) {
         console.error('[CockpitQuickCapture] handleInstruction 例外', err);
         setFeedback({
@@ -114,7 +209,7 @@ export function CockpitQuickCapture() {
         });
       }
     });
-  }, [text, isPending]);
+  }, [text, isPending, router]);
 
   function onKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -133,7 +228,7 @@ export function CockpitQuickCapture() {
           すばやく記録
         </h2>
         <p className="cockpit-quick-capture__lead">
-          日付・場所・作業内容・金額などを、そのまま文章で入力。Neo が解読して記録案を出します。
+          日付・場所・作業内容・金などを、そのまま文章で入力。Neo が解読して記録案を出します。
         </p>
         <textarea
           className="cockpit-quick-capture__textarea"
@@ -158,15 +253,15 @@ export function CockpitQuickCapture() {
               type="button"
               className="cockpit-quick-capture__submit"
               onPointerDown={() => {
-                const message = text.trim();
-                console.log('ボタンが押されました', message, {
-                  disabled: isPending || message.length === 0,
+                const msg = text.trim();
+                console.log('ボタンが押されました', msg, {
+                  disabled: isPending || msg.length === 0,
                   isPending,
                 });
               }}
               onClick={() => {
-                const message = text.trim();
-                console.log('ボタン onClick', message);
+                const msg = text.trim();
+                console.log('ボタン onClick', msg);
                 submit();
               }}
               disabled={isPending || text.trim().length === 0}
@@ -185,6 +280,13 @@ export function CockpitQuickCapture() {
             role="status"
           >
             {feedback.message}
+            {feedback.kind === 'ok' && showLedgerHint ? (
+              <div className="cockpit-quick-capture__ledger-hint">
+                <Link href="/accounting-desk" className="cockpit-quick-capture__ledger-link">
+                  Ledger Desk で請求書・見書を作成
+                </Link>
+              </div>
+            ) : null}
           </div>
         ) : null}
         {IS_DEV && devAiToast ? (

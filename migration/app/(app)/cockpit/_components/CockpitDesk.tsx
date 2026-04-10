@@ -10,7 +10,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 import type { NeoSoul } from '@/features/soul/server';
 import { fetchActivities } from '@/features/activities/actions';
 import { fetchProjects } from '@/features/projects/actions';
@@ -28,6 +28,7 @@ import { CockpitQuickCapture } from './CockpitQuickCapture';
 import { SummaryCards } from './SummaryCards';
 import { ActivityFeed } from './ActivityFeed';
 import { CockpitProjectFocus } from './CockpitProjectFocus';
+import { sanitizeLegacyProjectIdsInLocalStorage } from '@/lib/neo-project-local-storage';
 import { calcCockpitSummary } from './cockpit-summary-utils';
 import type { CockpitSummary } from './types';
 
@@ -44,12 +45,21 @@ export function CockpitDesk({
   initialActivities,
   initialProjects,
 }: CockpitDeskProps) {
-  const supabase = getSupabaseBrowserClient();
+  /** createBrowserClient はマウント後にだけ生成（SSR レンダーで window/cookie に触れない） */
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
   const [activities, setActivities] = useState<ActivityRow[]>(initialActivities);
   const [projects, setProjects]     = useState<ProjectRow[]>(initialProjects);
   const [summary, setSummary]       = useState<CockpitSummary>(() =>
     calcCockpitSummary(initialActivities),
   );
+
+  useEffect(() => {
+    setSupabase(getSupabaseBrowserClient());
+  }, []);
+
+  useEffect(() => {
+    sanitizeLegacyProjectIdsInLocalStorage();
+  }, []);
 
   const refreshData = useCallback(async () => {
     const [a, p] = await Promise.allSettled([
@@ -78,6 +88,7 @@ export function CockpitDesk({
   }, [refreshData]);
 
   useEffect(() => {
+    if (!supabase) return;
     if (isChatRealtimeDisabledFromEnv()) {
       return;
     }

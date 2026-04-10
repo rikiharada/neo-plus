@@ -8,6 +8,8 @@ import {
   GeminiEnvConfigurationError,
   getGeminiApiKey,
   resolveGeminiApiKeyWithSource,
+  resolveGeminiModel,
+  resolveGeminiApiVersion,
 } from '@/lib/gemini-env';
 
 export const dynamic = 'force-dynamic';
@@ -21,6 +23,8 @@ export async function GET() {
       gemini: {
         configured: true,
         envSource:  source,
+        model:      resolveGeminiModel(),
+        apiVersion: resolveGeminiApiVersion(),
       },
     });
   } catch (e) {

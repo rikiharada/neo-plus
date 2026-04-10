@@ -470,6 +470,176 @@ html.dark {
   gap:        14px;
 }
 
+.cockpit-project-card-link {
+  cursor:         pointer;
+  border-radius:  14px;
+  outline-offset: 3px;
+}
+
+.cockpit-project-card-link:focus-visible {
+  outline: 2px solid var(--color-neo-primary, #4f46e5);
+}
+
+.cockpit-project-card-link:hover .cockpit-project-card--deep {
+  border-color: rgba(79, 70, 229, 0.28);
+}
+
+/* ─── /projects index & detail (Day theme, 12px float) ─ */
+.projects-page-header {
+  margin: 0 0 16px;
+}
+
+.projects-page-lead {
+  margin: 6px 0 10px;
+}
+
+.projects-page-back {
+  font-size:   13px;
+  font-weight: 600;
+  color:       var(--color-neo-primary, #4f46e5);
+  text-decoration: none;
+}
+
+.projects-page-back:hover {
+  text-decoration: underline;
+}
+
+.projects-index-list {
+  list-style: none;
+  margin:     0;
+  padding:    0;
+  display:    flex;
+  flex-direction: column;
+  gap:        14px;
+}
+
+.project-detail-breadcrumb {
+  font-size:  13px;
+  color:      var(--text-muted);
+  margin:     0 0 12px;
+}
+
+.project-detail-breadcrumb a {
+  color:           var(--color-neo-primary, #4f46e5);
+  text-decoration: none;
+  font-weight:     600;
+}
+
+.project-detail-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.project-detail-hero {
+  margin: 0 0 20px;
+}
+
+.project-detail-note {
+  margin:     10px 0 0;
+  font-size:  13px;
+  line-height: 1.5;
+  color:      var(--text-muted);
+}
+
+.project-detail-section-title {
+  margin:      0 0 6px;
+  font-size:   1.05rem;
+  font-weight: 700;
+  color:       var(--text-main);
+}
+
+.project-detail-section-lead {
+  margin:      0 0 12px;
+  font-size:   13px;
+  line-height: 1.5;
+  color:       var(--text-muted);
+}
+
+.project-detail-doc-actions {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       10px;
+  margin:    0 0 24px;
+}
+
+.project-detail-doc-btn {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         10px 16px;
+  border-radius:   12px;
+  font-size:       14px;
+  font-weight:     600;
+  color:           #fff;
+  background:      linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  border:          1px solid rgba(79, 70, 229, 0.35);
+  box-shadow:      var(--shadow-float);
+  text-decoration: none;
+}
+
+.project-detail-doc-btn:hover {
+  filter: brightness(1.03);
+}
+
+.project-detail-doc-btn--ghost {
+  background: var(--panel-elevated);
+  color:      var(--text-main);
+  border:     1px solid rgba(79, 70, 229, 0.18);
+  box-shadow: none;
+}
+
+.project-activity-list {
+  list-style: none;
+  margin:     0;
+  padding:    0;
+  display:    flex;
+  flex-direction: column;
+  gap:        12px;
+}
+
+.project-activity-row {
+  padding:    12px 14px;
+  list-style: none;
+}
+
+.project-activity-row__top {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             8px;
+  margin-bottom:   8px;
+}
+
+.project-activity-date {
+  font-size: 12px;
+  color:     var(--text-muted);
+}
+
+.project-activity-row__body {
+  display:         flex;
+  align-items:     baseline;
+  justify-content: space-between;
+  gap:             12px;
+}
+
+.project-activity-title {
+  font-size:   14px;
+  font-weight: 600;
+  color:       var(--text-main);
+}
+
+.project-activity-amount {
+  font-size:   14px;
+  font-weight: 700;
+  color:       var(--text-main);
+  flex-shrink: 0;
+}
+
+.project-activity-meta {
+  margin-top: 4px;
+  font-size:  12px;
+  color:      var(--text-muted);
+}
+
 /** Deep Focus project cards (vertical motion: .neo-float-12) */
 .cockpit-project-card--deep {
   margin:         0;

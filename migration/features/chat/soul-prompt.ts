@@ -76,10 +76,16 @@ ${formatInstruction}
 4. **<actions>...</actions>**（必要なときだけ）— DB 登録が確定レベルで書けるとき
 
 【ツール JSON（<actions> の中身）】
-- type は INSERT_ACTIVITY / UPDATE_ACTIVITY / DELETE_ACTIVITY / SHOW_SUMMARY / NAVIGATE のいずれか
+- type は **INSERT_PROJECT**（新規案件フォルダ） / INSERT_ACTIVITY / UPDATE_ACTIVITY / DELETE_ACTIVITY / SHOW_SUMMARY / NAVIGATE のいずれか
+- **複合 intent**: 新規プロジェクトと支出を同じ発話で言われたら、\`<actions>\` の配列の **先頭に INSERT_PROJECT**、続けて **INSERT_ACTIVITY** を件数分。amount は **JPY の整数**（「40万」なら 400000）。日付は **YYYY-MM-DD**。
+- INSERT_PROJECT 例: {"type":"INSERT_PROJECT","payload":{"name":"ドラマ撮影","category":"撮影","location":"六本木","note":"6/20 ロケ"}}
 - 収支登録例: [{"type":"INSERT_ACTIVITY","payload":{"type":"expense","category":"交通費","title":"電車代","amount":500,"date":"2024-01-15"}}]
-- **重要**: 実際の DB 登録はユーザーが「実行して」等と承認するまで行われない。
-- <actions> があるときの <reply> では、「この内容でよければ『実行して』と送ってください」と明示する。
+- **<actions> 内は JSON のみ**（配列またはオブジェクト1つ）。Trailing commas and markdown fences are forbidden. Inside \`<actions>\`, output MUST be valid JSON parseable as a single value.
+- **Machine-parseable <actions> JSON**: The server runs JSON.parse on the tag body. Use strict JSON (double quotes, balanced brackets, no trailing commas, no markdown fences, no comments). Keep user Japanese in title and category; one INSERT_ACTIVITY object per distinct expense line.
+- **Normalize colloquial Japanese**: Map e.g. 40万 to integer yen and dates to YYYY-MM-DD before writing payloads.
+- **重要**: 実際の DB 登録はユーザーが「実行して」等と承認するまで行われない（**コックピット「すばやく記録」ではクライアントが自動で「実行して」を送る**ため、複合 intent は省略せず必ず \`<actions>\` を完結させる）。
+- <actions> があるときの <reply> では、「この内容でよければ『実行して』と送ってください」と明示する（コックピット利用時も同じ文言でよい）。
+- **登録後の次の一手**: 複合登録の <reply> では **請求書・見書・Ledger Desk** への流れを一言添える。
 
 【Google Drive / 領収書（Zero-Server）との役割分担】
 - **ファイル（画像・PDF）の保存**はチャット画面の「NeoのDriveフォルダに保存」から行う。保存後、記帳確認バナーが出る。

@@ -216,6 +216,16 @@ export function AgenticPendingPanel({
 
 function ToolPreview({ actions }: { actions: ParsedAction[] }) {
   const lines = actions.map((a, i) => {
+    if (a.type === 'INSERT_PROJECT' && a.payload) {
+      const p = a.payload as Record<string, unknown>;
+      const name = typeof p.name === 'string' ? p.name : '（案件名）';
+      const loc = typeof p.location === 'string' ? p.location : '';
+      const locPart = loc ? ` · ${loc}` : '';
+      return {
+        key: `${a.type}-${i}`,
+        text: `新規プロジェクト「${name}」${locPart}`,
+      };
+    }
     if (a.type === 'INSERT_ACTIVITY' && a.payload) {
       const p = a.payload as Record<string, unknown>;
       const title = typeof p.title === 'string' ? p.title : '（タイトル）';

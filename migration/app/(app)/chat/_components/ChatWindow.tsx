@@ -173,6 +173,8 @@ export function ChatWindow({
   const [pendingApprovalIssuedAt, setPendingApprovalIssuedAt] = useState<
     number | null
   >(null);
+  const [pendingApprovalDevBypass, setPendingApprovalDevBypass] =
+    useState(false);
   /** Drive アップロード後の記帳保留（Zero-Server） */
   const [pendingDrive, setPendingDrive] = useState<PendingDriveConfirmation | null>(null);
   const [driveBookAmount, setDriveBookAmount] = useState<number>(1);
@@ -270,6 +272,7 @@ export function ChatWindow({
           setPendingApprovalToken(null);
           setPendingApprovalNonce(null);
           setPendingApprovalIssuedAt(null);
+          setPendingApprovalDevBypass(false);
           setInfoMessage(
             'ほかのタブですでに進めたみたい。このタブの保留は手元で閉じたよ。',
           );
@@ -479,6 +482,9 @@ export function ChatWindow({
               pendingApprovalToken,
               pendingApprovalNonce,
               pendingApprovalIssuedAt,
+              ...(pendingApprovalDevBypass
+                ? { pendingApprovalDevBypass: true }
+                : {}),
             }
           : {}),
       });
@@ -530,6 +536,7 @@ export function ChatWindow({
       setPendingApprovalToken(null);
       setPendingApprovalNonce(null);
       setPendingApprovalIssuedAt(null);
+      setPendingApprovalDevBypass(false);
       if (result.ok && result.agent?.awaitingConfirmation && result.actions?.length) {
         setPendingActions(result.actions);
         setPlanSummary(result.agent.planSummary ?? null);
@@ -537,6 +544,9 @@ export function ChatWindow({
         setPendingApprovalToken(result.agent.pendingApprovalToken ?? null);
         setPendingApprovalNonce(result.agent.pendingApprovalNonce ?? null);
         setPendingApprovalIssuedAt(result.agent.pendingApprovalIssuedAt ?? null);
+        setPendingApprovalDevBypass(
+          result.agent.pendingApprovalDevBypass === true,
+        );
       }
 
       if (broadcastNonce) {
@@ -548,6 +558,10 @@ export function ChatWindow({
         } catch {
           /* プライベートモード等 */
         }
+      }
+
+      if (result.ok && result.clientNavigation?.href) {
+        routerRef.current.push(result.clientNavigation.href);
       }
     } catch (err) {
       console.error('[ChatWindow] handleInstruction error:', err);
@@ -567,6 +581,7 @@ export function ChatWindow({
     pendingApprovalToken,
     pendingApprovalNonce,
     pendingApprovalIssuedAt,
+    pendingApprovalDevBypass,
     requestRscRefresh,
   ]);
 

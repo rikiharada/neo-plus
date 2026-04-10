@@ -4,23 +4,13 @@
 
 'use client';
 
+import Link from 'next/link';
 import type { ProjectRow } from '@/lib/supabase/types';
-
-function tagToneIndex(seed: string): number {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) {
-    h = (h + seed.charCodeAt(i)) % 6;
-  }
-  return h;
-}
-
-function formatYen(n: number): string {
-  return new Intl.NumberFormat('ja-JP', {
-    style:    'currency',
-    currency: 'JPY',
-    maximumFractionDigits: 0,
-  }).format(n);
-}
+import {
+  formatProjectYen,
+  hrefForProjectDetail,
+  projectTagToneIndex,
+} from '@/lib/project-display-utils';
 
 export function CockpitProjectFocus({ projects }: { projects: ProjectRow[] }) {
   const active = projects.filter((p) => p.status === 'active');
@@ -42,34 +32,41 @@ export function CockpitProjectFocus({ projects }: { projects: ProjectRow[] }) {
       ) : (
         <ul className="cockpit-project-focus__list">
           {active.map((p) => {
-            const tone = tagToneIndex(p.category || p.name || '—');
+            const tone = projectTagToneIndex(p.category || p.name || '—');
+            const detailHref = hrefForProjectDetail(p.id);
             return (
               <li key={p.id}>
-                <article
-                  className="cockpit-project-card cockpit-project-card--deep neo-float-12"
+                <Link
+                  href={detailHref}
+                  className="cockpit-project-card-link"
+                  style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
                 >
-                  <div className="cockpit-project-card__head">
-                    <span
-                      className={`cockpit-project-tag cockpit-project-tag--${tone}`}
-                    >
-                      {p.category || '未分類'}
-                    </span>
-                    <span className="cockpit-project-card__status">進行中</span>
-                  </div>
-                  <h3 className="cockpit-project-card__name">{p.name}</h3>
-                  <dl className="cockpit-project-card__stats">
-                    <div>
-                      <dt>売上</dt>
-                      <dd>{formatYen(p.revenue)}</dd>
+                  <article
+                    className="cockpit-project-card cockpit-project-card--deep neo-float-12"
+                  >
+                    <div className="cockpit-project-card__head">
+                      <span
+                        className={`cockpit-project-tag cockpit-project-tag--${tone}`}
+                      >
+                        {p.category || '未分類'}
+                      </span>
+                      <span className="cockpit-project-card__status">進行中</span>
                     </div>
-                    {p.client_name ? (
+                    <h3 className="cockpit-project-card__name">{p.name}</h3>
+                    <dl className="cockpit-project-card__stats">
                       <div>
-                        <dt>クライアント</dt>
-                        <dd>{p.client_name}</dd>
+                        <dt>売上</dt>
+                        <dd>{formatProjectYen(p.revenue)}</dd>
                       </div>
-                    ) : null}
-                  </dl>
-                </article>
+                      {p.client_name ? (
+                        <div>
+                          <dt>クライアント</dt>
+                          <dd>{p.client_name}</dd>
+                        </div>
+                      ) : null}
+                    </dl>
+                  </article>
+                </Link>
               </li>
             );
           })}

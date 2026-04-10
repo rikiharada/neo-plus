@@ -196,6 +196,8 @@ export const RATE_LIMIT_PRESETS = {
   activityFetch:  { limit: 120, windowMs: 60_000 } satisfies RateLimitConfig,
   /** プロジェクト一覧取得（コックピット Realtime 連動の再取得含む） */
   projectFetch:   { limit: 120, windowMs: 60_000 } satisfies RateLimitConfig,
+  /** プロジェクト新規作成（Agentic 複合 intent 用） */
+  projectInsert:  { limit: 30,  windowMs: 60_000 } satisfies RateLimitConfig,
   /** Drive アップロード後 Soul メッセージ: 1分間に30件 */
   driveSoulMessage: { limit: 30, windowMs: 60_000 } satisfies RateLimitConfig,
   /** Drive へファイル本体アップロード: 1分間に15件（レシート連投対策） */

@@ -13,6 +13,14 @@ export interface AgenticParseResult {
 }
 
 /**
+ * Intent routing 入口 — Gemini 応答テキストを構造化データへ。
+ * @see parseAgenticGeminiResponse
+ */
+export function parseInputToData(text: string): AgenticParseResult {
+  return parseAgenticGeminiResponse(text);
+}
+
+/**
  * `<goal>` `<plan>` `<reply>` `<actions>` をパース。
  * `<reply>` が無い場合は、タグを剥がした残りを本文とみなす（後方互換）。
  */
@@ -39,10 +47,18 @@ export function parseAgenticGeminiResponse(text: string): AgenticParseResult {
     try {
       const parsedActions = JSON.parse(actionsMatch[1].trim());
       const arr = Array.isArray(parsedActions) ? parsedActions : [parsedActions];
-      actions = arr.map((a: ParsedAction) => ({
-        ...a,
-        autoExecute: false,
-      }));
+      actions = arr.map((raw: unknown) => {
+        const a = raw as ParsedAction;
+        const t = (raw as Record<string, unknown>)['type'];
+        const rawType = typeof t === 'string' ? t : '';
+        const type: ParsedAction['type'] =
+          rawType === 'CREATE_PROJECT' ? 'INSERT_PROJECT' : a.type;
+        return {
+          ...a,
+          type,
+          autoExecute: false,
+        };
+      });
     } catch {
       console.warn('[agentic-parser] Failed to parse <actions> JSON');
     }

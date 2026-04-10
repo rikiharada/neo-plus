@@ -34,6 +34,7 @@ import {
   ActivityDeleteSchema,
   FetchActivitiesOptsSchema,
   formatZodError,
+  isValidUuidString,
 }                                                      from '@/lib/validation';
 import { checkRateLimit, RATE_LIMIT_PRESETS }          from '@/lib/rate-limit';
 import { loadSoulServer }                              from '@/features/soul/server';
@@ -122,7 +123,12 @@ export async function insertActivity(
     });
 
     // ⑦ キャッシュ無効化
-    revalidatePath(APP_HOME_HREF);
+    revalidatePath('/', 'layout');
+    revalidatePath(APP_HOME_HREF, 'layout');
+    revalidatePath('/projects', 'layout');
+    if (input.project_id && isValidUuidString(input.project_id)) {
+      revalidatePath(`/projects/${input.project_id}`, 'layout');
+    }
 
     return {
       ok:      true,
@@ -266,12 +272,42 @@ export async function fetchActivities(opts?: {
     const user = await requireAuth();
     await checkRateLimit(`activity:fetch:${user.id}`, RATE_LIMIT_PRESETS.activityFetch);
 
-    const optsParsed = FetchActivitiesOptsSchema.safeParse(opts ?? {});
+    const raw = opts ?? {};
+    if (raw.projectId !== undefined && raw.projectId !== null) {
+      if (typeof raw.projectId !== 'string') {
+        console.warn(
+          '[fetchActivities] projectId must be a UUID string, got',
+          typeof raw.projectId,
+          raw.projectId,
+        );
+        return [];
+      }
+      const pid = raw.projectId.trim();
+      if (
+        pid === '' ||
+        pid === 'undefined' ||
+        pid === 'null' ||
+        !isValidUuidString(pid)
+      ) {
+        console.warn(
+          '[fetchActivities] invalid projectId; skip query:',
+          raw.projectId,
+        );
+        return [];
+      }
+      raw.projectId = pid;
+    }
+
+    const optsParsed = FetchActivitiesOptsSchema.safeParse(raw);
     if (!optsParsed.success) {
       console.warn('[fetchActivities] Invalid opts:', formatZodError(optsParsed.error));
       return [];
     }
     const o = optsParsed.data;
+
+    if (o.projectId) {
+      console.log('[fetchActivities] fetching with UUID:', o.projectId);
+    }
 
     const supabase = await createServerActionClient();
 

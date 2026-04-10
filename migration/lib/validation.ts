@@ -39,6 +39,11 @@ const ActivityType = z.enum(['expense', 'income', 'transfer'], {
 
 const UUIDString = z.string().uuid('無効な ID です');
 
+/** project_id / fetchActivities 用（空・"undefined" 文字列などを除外） */
+export function isValidUuidString(value: string): boolean {
+  return z.string().uuid().safeParse(value.trim()).success;
+}
+
 const ShortText = (label: string) =>
   z
     .string({ required_error: `${label}は必須です` })
@@ -92,13 +97,17 @@ export type ActivityDeleteInput = z.infer<typeof ActivityDeleteSchema>;
 
 // ─── 収支一覧クエリ（Server Action の opts） ───────────────────────
 
+/** fetchActivities: projectId は文字列の UUID のみ（数値は不可） */
 export const FetchActivitiesOptsSchema = z
   .object({
-    limit:     z.number().int().min(1).max(100).optional(),
-    projectId: z.string().uuid().optional(),
-    type:      z.enum(['expense', 'income', 'transfer']).optional(),
-    dateFrom:  z.string().max(32).optional(),
-    dateTo:    z.string().max(32).optional(),
+    limit: z.number().int().min(1).max(100).optional(),
+    projectId: z
+      .string()
+      .uuid({ message: 'projectId は UUID 形式の文字列である必要があります' })
+      .optional(),
+    type:     z.enum(['expense', 'income', 'transfer']).optional(),
+    dateFrom: z.string().max(32).optional(),
+    dateTo:   z.string().max(32).optional(),
   })
   .strict();
 
@@ -117,7 +126,8 @@ export const ChatMessageSchema = z.object({
 
 /** Agentic 確認フロー: クライアントが保持していたアクションをユーザー承認後に送る */
 export const PendingActionConfirmSchema = z.object({
-  type: z.enum([
+   type: z.enum([
+    'INSERT_PROJECT',
     'INSERT_ACTIVITY',
     'UPDATE_ACTIVITY',
     'DELETE_ACTIVITY',
@@ -129,6 +139,18 @@ export const PendingActionConfirmSchema = z.object({
   autoExecute: z.boolean().optional(),
 });
 
+/** Agentic `<actions>` 内のプロジェクト作成（DB `projects` 行の最小セット） */
+/** Gemini / フロントから `id` を渡させない（PK は DB の gen_random_uuid のみ） */
+export const AgenticProjectInsertSchema = z
+  .object({
+    name:        ShortText('プロジェクト名'),
+    category:    z.string().max(200).trim().optional(),
+    note:        z.string().max(1000).optional(),
+    client_name: z.string().max(200).nullable().optional(),
+    location:    z.string().max(200).nullable().optional(),
+  })
+  .strict();
+
 export const HandleInstructionSchema = z
   .object({
     message: z
@@ -138,13 +160,15 @@ export const HandleInstructionSchema = z
       .transform((s) => s.trim()),
     history: z.array(ChatMessageSchema).max(20).optional().default([]),
     /** 前ターンで提案されたアクション（ユーザーが「実行して」等と送ったときに同梱） */
-    pendingActionsToConfirm: z.array(PendingActionConfirmSchema).max(5).optional(),
+    pendingActionsToConfirm: z.array(PendingActionConfirmSchema).max(8).optional(),
     /**
      * サーバー発行の承認トークン（HMAC）。pendingActionsToConfirm と同時必須。
      */
     pendingApprovalToken: z.string().min(32).max(512).optional(),
     pendingApprovalNonce: z.string().uuid().optional(),
     pendingApprovalIssuedAt: z.coerce.number().int().positive().optional(),
+    /** Dev: 1st turn sets true; client echoes on confirm (server still verifies HMAC + TTL). */
+    pendingApprovalDevBypass: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
     const n = data.pendingActionsToConfirm?.length ?? 0;
