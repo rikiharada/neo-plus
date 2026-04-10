@@ -176,8 +176,18 @@ export interface Database {
         Relationships: [];
       };
     };
-    Views:     Record<string, never>;
-    Functions: Record<string, never>;
-    Enums:     Record<string, never>;
+    /** Supabase `GenericSchema` 互換（`Record<string, never>`だと postgrest-js で Schema が never になる） */
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
 }

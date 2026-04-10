@@ -1,0 +1,2082 @@
+/* Buttons - HUGE and accessible */
+button {
+    font-size: var(--text-base);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    text-align: center;
+    /* Added for consistency with original btn-huge */
+    border-radius: var(--radius-lg);
+    /* Added for consistency with original btn-huge */
+    padding: var(--spacing-md);
+    /* Added for consistency with original btn-huge, will be overridden by btn-huge specific padding */
+    width: auto;
+    /* Added for consistency, will be overridden by btn-huge specific width */
+    margin: 0 auto;
+    
+    /* FastClick / iOS Native Button Speed */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    border: 1.2px solid var(--btn-primary-border);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    font-family: var(--font-family);
+    font-weight: 700;
+}
+
+.btn-primary:hover {
+    border-color: var(--accent-neo-blue);
+    color: var(--accent-neo-blue);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15);
+    /* Subtle blue glow */
+}
+
+.btn-primary:active {
+    background-color: var(--btn-secondary-bg);
+}
+
+.btn-secondary {
+    background-color: var(--btn-secondary-bg);
+    color: var(--btn-secondary-text);
+    border: 1.2px solid transparent;
+    /* or matching border if needed */
+    font-family: var(--font-family);
+    font-weight: 700;
+    font-size: var(--text-large);
+    /* Original .btn-secondary had this */
+    padding: var(--spacing-md);
+    /* Original .btn-secondary had this */
+    border-radius: var(--radius-md);
+    /* Original .btn-secondary had this */
+}
+
+.btn-huge {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: var(--text-large);
+    font-weight: 700;
+    border-radius: var(--radius-lg);
+    min-height: 80px;
+    /* The following properties were already in btn-huge and are now covered by the general button style:
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md); // Changed to --spacing-sm in general button, keeping original for huge
+    text-align: center;
+    */
+    gap: var(--spacing-md);
+    /* Re-applying original gap for btn-huge */
+}
+
+/* Neo AI Concierge Component */
+.neo-container {
+    width: 100%;
+    /* display: none !important; removed to prevent absolute hiding */
+}
+
+.neo-avatar-row {
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.neo-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, silver, var(--accent-neo-blue));
+    border: 2px solid var(--accent-neo-yellow);
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--bg-color);
+    font-size: var(--text-small);
+    overflow: hidden;
+}
+
+.neo-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+    /* Temporary placeholder styling */
+}
+
+.neo-name {
+    font-size: var(--text-base);
+    color: var(--accent-neo-yellow);
+    font-weight: bold;
+    letter-spacing: 0.1em;
+}
+
+.neo-message {
+    font-size: var(--text-base);
+    line-height: 1.6;
+    color: var(--text-main);
+}
+
+/* Select Box for Setup */
+.select-huge {
+    width: 100%;
+    padding: var(--spacing-md);
+    font-size: var(--text-large);
+    background-color: transparent;
+    color: var(--accent-neo-blue);
+    border: 2px solid var(--accent-neo-blue);
+    border-radius: var(--radius-md);
+    appearance: none;
+    outline: none;
+}
+
+/* List Card (Filing List) */
+.list-card {
+    background-color: var(--btn-secondary-bg);
+    border: 1.2px solid var(--btn-secondary-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    display: grid;
+
+    gap: var(--spacing-sm);
+}
+
+.list-card-header {
+    display: grid; grid-auto-flow: column;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    color: var(--text-main);
+    font-size: var(--text-large);
+}
+
+.list-card-body {
+    display: grid; grid-auto-flow: column;
+    gap: var(--spacing-md);
+    color: var(--text-muted);
+}
+
+.tag {
+    background-color: var(--btn-primary-bg);
+    border: 1.2px solid var(--btn-primary-border);
+    color: var(--accent-neo-blue);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: var(--text-small);
+}
+
+/* Data Repository Style Project Card */
+.project-list-item {
+    background-color: var(--bg-color);
+    border: 1.2px solid var(--btn-secondary-border);
+    border-radius: 16px;
+    display: grid;
+
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-decoration: none;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    margin-bottom: var(--spacing-sm);
+}
+
+.project-list-item:hover,
+.project-list-item:active {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.project-list-item-cover {
+    width: 100%;
+    height: 100px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--btn-secondary-bg);
+    /* Fallback */
+    position: relative;
+}
+
+.project-list-item-balance {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.project-list-item-info {
+    padding: 16px;
+    display: grid;
+
+    gap: 8px;
+}
+
+.project-list-item-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+}
+
+.project-list-item-meta {
+    display: grid; grid-auto-flow: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.project-list-item-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-main);
+    background-color: var(--btn-secondary-bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.project-list-item-docs {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Aggressive Unpaid Styling Overlay */
+.project-list-item.is-unpaid {
+    border: 1px solid var(--accent-neo-blue);
+}
+
+.project-list-item.is-unpaid::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background-color: var(--accent-neo-blue);
+    z-index: 10;
+}
+
+.alert-banner {
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    gap: 8px;
+    background: rgba(29, 155, 240, 0.1);
+    /* Electric blue background */
+    border: 1.2px solid var(--accent-neo-blue);
+    color: var(--accent-neo-blue);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+    width: 100%;
+}
+
+
+.project-list-item-body {
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    gap: var(--spacing-lg);
+    color: var(--text-muted);
+}
+
+.project-list-item-metric {
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-small);
+}
+
+.project-list-item-metric .lucide {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    /* Thin lines */
+}
+
+.project-list-item-note {
+    
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.project-list-item-note span {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.color-tag {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: var(--spacing-sm);
+    vertical-align: middle;
+    transform: translateY(-2px);
+}
+
+/* Neo+ Logo Styling */
+.title-plus {
+    font-size: 1.1em;
+    color: var(--accent-neo-blue);
+    position: relative;
+    top: 0.34em;
+    left: -0.05em;
+    text-shadow: 0 0 8px rgba(29, 155, 240, 0.5);
+    /* Electric blue glow */
+    font-weight: 800;
+    line-height: 0;
+}
+
+/* Feature Card (Thin Icon + Text) */
+.feature-card {
+    background-color: transparent;
+    border: none;
+    border-bottom: 1.2px solid var(--btn-primary-border);
+    padding: var(--spacing-md) 0;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    /* Gap between icon and text */
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    text-decoration: none;
+    width: 100%;
+    border-radius: 0;
+    opacity: 0.8;
+    /* Subtle baseline */
+}
+
+.feature-card:hover,
+.feature-card:active {
+    background-color: transparent;
+    opacity: 1;
+    /* Monotone interaction */
+}
+
+[data-theme="dark"] .feature-card:hover,
+[data-theme="dark"] .feature-card:active {
+    background-color: transparent;
+    opacity: 1;
+}
+
+/* Thin Monotone Icons */
+.feature-card-icon {
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-main);
+    /* Monotone */
+}
+
+.feature-card-icon .lucide {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    /* Extreme thin */
+}
+
+.feature-card-content {
+    display: grid;
+
+    gap: 2px;
+    
+}
+
+.feature-card-title {
+    font-size: var(--text-large);
+    /* Enlarge text since icon is gone */
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.feature-card-desc {
+    font-size: var(--text-small);
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Chat UI */
+.chat-container {
+    display: grid;
+
+    gap: var(--spacing-md);
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    font-size: var(--text-base);
+    line-height: 1.4;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.chat-bubble.user {
+    align-self: end;
+    background-color: var(--accent-neo-blue, #1D9BF0) !important;
+    border: none !important;
+    color: #ffffff !important;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(29, 155, 240, 0.35);
+}
+
+.chat-bubble.neo {
+    align-self: start;
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    color: var(--text-main) !important;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Quick Replies */
+.quick-replies {
+    display: grid; grid-auto-flow: column;
+    gap: var(--spacing-sm);
+    
+    margin-top: var(--spacing-sm);
+}
+
+.btn-quick-reply {
+    background-color: transparent;
+    border: 1.2px solid var(--accent-neo-blue);
+    color: var(--accent-neo-blue);
+    padding: 6px 16px;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-small);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-quick-reply:hover,
+.btn-quick-reply:active {
+    background-color: rgba(0, 122, 255, 0.1);
+}
+
+.chat-input-area {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: var(--spacing-sm);
+    margin-top: auto;
+    align-items: center;
+}
+
+.chat-action-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 var(--spacing-sm);
+    display: grid; place-items: center;
+    transition: color 0.2s;
+}
+
+.chat-action-btn .lucide {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 2;
+}
+
+.chat-action-btn:hover {
+    color: var(--text-main);
+}
+
+.chat-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1.2px solid var(--btn-secondary-border);
+    background-color: var(--btn-secondary-bg);
+    color: var(--text-main);
+    font-size: var(--text-base);
+}
+
+/* Neo Full-Color Cute Badge */
+.neo-fab-container {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom) + 90px);
+    /* Raised safely above bottom nav */
+    right: 20px;
+    z-index: 9999 !important;
+    /* Adjusted safely to stay above everything (CEO request) */
+    display: grid;
+
+    align-items: end;
+    gap: var(--spacing-sm);
+    pointer-events: none;
+    /* Let clicks pass through empty space */
+}
+
+/* Rounded, soft bubble */
+.neo-fab-bubble {
+    background-color: var(--bg-color);
+    border: 1.2px solid var(--btn-secondary-border);
+    color: var(--text-main);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-lg);
+    font-size: var(--text-small);
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* bouncy transition */
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* Soft shadow */
+    white-space: nowrap;
+}
+
+.neo-fab-bubble.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.neo-fab-button {
+    pointer-events: auto;
+    /* Re-enable clicks for the button */
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #000;
+    border: 2px solid var(--accent-neo-blue);
+    /* Electric blue border */
+    cursor: pointer;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 15px rgba(0, 122, 255, 0.4);
+    /* Glow effect */
+}
+
+.neo-fab-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    transition: filter 0.3s ease;
+}
+
+/* Phase 10: Elegant Toast Notification UI */
+.neo-toast-container {
+    position: fixed;
+    top: env(safe-area-inset-top, 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    display: grid;
+    gap: 8px;
+    z-index: 10000;
+    pointer-events: none;
+    width: 90%;
+    max-width: 400px;
+}
+
+.neo-toast {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+}
+
+.neo-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.neo-toast.success .toast-icon {
+    color: var(--accent-neo-blue);
+}
+
+.neo-toast.error .toast-icon {
+    color: #ef4444; /* Standard deep red for error */
+}
+
+.neo-toast-content {
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+}
+/* Dashboard specific centering bubble */
+.dashboard-bubble {
+    pointer-events: auto;
+    max-width: 90vw;
+    width: fit-content;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    text-align: center;
+    transform: translateY(10px) scale(0.9);
+    margin: 0 auto;
+}
+
+.dashboard-bubble.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+/* Marquee Ticker CSS */
+.telop-container {
+    display: flex;
+    align-items: center; /* 垂直方向の中央揃えを保証 */
+    height: 32px; /* 高さを明示的に固定して安定させる */
+    background: #000;
+    overflow: hidden;
+    border-top: 1px solid #333; /* 上下の境界をシャープに */
+    border-bottom: 1px solid #333;
+}
+
+.neo-marquee-track {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 20s linear infinite;
+    padding-left: 100vw; /* Start offscreen from the right edge */
+}
+
+/* 流れるテキストの修正 */
+.telop-text {
+    font-family: 'Courier New', Courier, monospace; /* サイバー感を出すフォント */
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #00ff00; /* ネオングリーン（または electric blue） */
+    white-space: nowrap;
+    line-height: 1; /* 行間の干干渉を排除 */
+    padding: 0 50vw 0 20px; /* 前後の余白 + ループバッファ */
+}
+
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+}
+
+/* Remove thin bot lucide styles */
+.neo-fab-button .lucide {
+    display: none;
+}
+
+.neo-fab-button:hover {
+    box-shadow: 0 0 25px rgba(0, 122, 255, 0.7);
+    /* Stronger glow on hover */
+    transform: scale(1.05);
+    /* Slight enlargement */
+}
+
+/* Bounce Animation */
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-20px);
+    }
+
+    60% {
+        transform: translateY(-10px);
+    }
+}
+
+.neo-bounce {
+    animation: bounce 0.6s cubic-bezier(0.280, 0.840, 0.420, 1) both;
+}
+
+/* Phase 10: Smooth Pulse Animation for Global Loading */
+@keyframes neo-pulse {
+    0% {
+        box-shadow: 0 0 15px rgba(0, 122, 255, 0.4);
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(0, 122, 255, 0.8), inset 0 0 10px rgba(0, 122, 255, 0.5);
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        box-shadow: 0 0 15px rgba(0, 122, 255, 0.4);
+        transform: scale(1);
+        opacity: 0.9;
+    }
+}
+
+.neo-loading {
+    animation: neo-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+    pointer-events: none; /* Prevent clicks while strictly loading */
+    filter: brightness(1.2);
+}
+
+/* Zero-Server Cloud Sync Connected Pulse (Cyberpunk Neon Glow) */
+@keyframes neo-pulse-sync {
+    0% {
+        box-shadow: 0 0 5px rgba(0, 229, 255, 0.4), 0 0 10px rgba(0, 229, 255, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(0, 229, 255, 0.9), 0 0 40px rgba(0, 229, 255, 0.5), inset 0 0 10px rgba(0, 229, 255, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(0, 229, 255, 0.4), 0 0 10px rgba(0, 229, 255, 0.2);
+    }
+}
+
+.neo-pulse-sync {
+    animation: neo-pulse-sync 2s cubic-bezier(0.25, 0.1, 0.25, 1) infinite !important;
+    border-color: #00e5ff !important;
+    background: rgba(0, 229, 255, 0.05) !important;
+    transition: all 0.3s ease;
+}
+
+/* Dark mode enhancements */
+[data-theme="dark"] .neo-fab-button {
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
+    /* Stronger glow in dark mode */
+}
+
+[data-theme="dark"] .neo-fab-button:hover {
+    box-shadow: 0 0 35px rgba(0, 229, 255, 0.9);
+}
+
+/* Ripple Effect Animation */
+.neo-fab-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--accent-neo-blue);
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   Healthcare Wallet UI (Dashboard)
+   ========================================================================== */
+
+/* Profit Ring Animation */
+.profit-ring-progress {
+    stroke-dashoffset: 628;
+    /* Full circumference 2*pi*r -> 2 * 3.14 * 100 = 628 */
+    /* Target JS will set this to reflect profit. e.g. 50% = 314 */
+}
+
+/* 3 Indicators */
+.health-indicator-card {
+    
+    background: rgba(29, 155, 240, 0.03);
+    border: 1px solid rgba(29, 155, 240, 0.1);
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+
+    gap: 4px;
+}
+
+.health-indicator-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.health-indicator-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+}
+
+.health-indicator-bar-container {
+    width: 100%;
+    height: 4px;
+    background: var(--btn-secondary-border);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.health-indicator-bar {
+    height: 100%;
+    border-radius: 2px;
+}
+
+/* Cash Flow Wave */
+.cf-bar-group {
+    display: grid;
+
+    align-items: center;
+    justify-content: end;
+    height: 100%;
+    width: 32px;
+    gap: 6px;
+    position: relative;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.cf-bar-group.active {
+    opacity: 1;
+}
+
+.cf-bar {
+    width: 12px;
+    border-radius: 4px;
+}
+
+.cf-bar.income {
+    background-color: var(--accent-neo-blue);
+    margin-bottom: -4px;
+    /* Slight overlap or tight grouping */
+    z-index: 2;
+}
+
+.cf-bar.expense {
+    background-color: #ef4444;
+    /* Red for expenses or dark grey depending on strict styling, sticking to standard for now */
+    z-index: 1;
+}
+
+.cf-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.cf-label.active-label {
+    color: var(--text-main);
+}
+
+.neo-fab-button.ripple-active::after {
+    animation: fab-ripple 0.6s cubic-bezier(0.1, 0.82, 0.25, 1) forwards;
+}
+
+@keyframes fab-ripple {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.8;
+        border-width: 4px;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1.8);
+        opacity: 0;
+        border-width: 1px;
+    }
+}
+
+/* Filter Dropdown (X-style minimalist) */
+.filter-dropdown {
+    position: absolute;
+    top: 36px;
+    right: 0;
+    background-color: var(--bg-color);
+    border: 1.2px solid var(--btn-primary-border);
+    border-radius: var(--radius-xl);
+    /* Rounded pill shape */
+    display: grid;
+
+    /* Horizontal flex */
+    gap: 4px;
+    padding: 6px;
+    z-index: 100;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    /* slightly stronger distinct shadow */
+    white-space: nowrap;
+    /* Prevent wrapping */
+}
+
+.filter-dropdown.hidden {
+    display: grid; grid-auto-flow: column;
+    /* Override utility display:none to allow transition */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+}
+
+#btn-filter-projects.filter-active {
+    color: var(--accent-neo-blue);
+}
+
+[data-theme="light"] #btn-filter-projects.filter-active .lucide,
+[data-theme="dark"] #btn-filter-projects.filter-active .lucide,
+#btn-filter-projects.filter-active .lucide {
+    stroke: var(--accent-neo-blue) !important;
+}
+
+.filter-option {
+    background: transparent;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: center;
+    font-size: 13px;
+    /* Smaller, responsive text */
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background-color 0.2s ease, font-weight 0.2s ease;
+    border-radius: var(--radius-md);
+    /* Inner pill shape */
+    margin: 0;
+}
+
+.filter-option:hover,
+.filter-option:active {
+    background-color: var(--btn-secondary-bg);
+}
+
+.filter-option.active {
+    font-weight: 700;
+    background-color: var(--btn-secondary-bg);
+    /* Highlight active state */
+}
+
+/* New Project Button */
+.btn-new-project {
+    width: 100%;
+    background-color: #f5f5f5;
+    color: #000;
+    border-radius: 12px;
+    padding: 8px 16px;
+    /* Smarter, thinner padding */
+    border: none;
+    font-weight: 500;
+    /* Modest weight */
+    font-size: var(--text-base);
+    display: grid; grid-auto-flow: column;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+[data-theme="dark"] .btn-new-project {
+    background-color: var(--btn-secondary-bg);
+    color: var(--text-main);
+}
+
+/* Modal specific elements for ultimate minimalism */
+.modal-close-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+    z-index: 2;
+}
+
+.modal-close-icon:hover {
+    color: var(--text-main);
+}
+
+.btn-new-project:hover {
+    background-color: #e0e0e0;
+}
+
+[data-theme="dark"] .btn-new-project:hover {
+    background-color: #333;
+}
+
+/* Modals */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999 !important;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.modal-overlay.show {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    pointer-events: auto !important;
+    z-index: 9999 !important;
+}
+
+.modal-content {
+    background: var(--bg-color);
+    width: 90%;
+    max-width: 400px;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg) var(--spacing-lg) 100px var(--spacing-lg) !important;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, calc(-50% + 20px));
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: grid;
+    gap: var(--spacing-md);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border: 1.2px solid var(--btn-primary-border);
+    z-index: 10000 !important;
+}
+
+.modal-overlay.show .modal-content {
+    transform: translate(-50%, -50%);
+}
+
+.modal-title {
+    font-size: clamp(16px, 5vw, 1.25rem);
+    /* Scaled down slightly to guarantee fit */
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+.form-group {
+    display: grid;
+
+    gap: 4px;
+}
+
+.form-group label {
+    font-size: var(--text-small);
+    color: var(--text-muted);
+}
+
+.form-control {
+    padding: var(--spacing-md);
+    border: 1.2px solid #ccc;
+    /* Thin generic border */
+    border-radius: var(--radius-md);
+    background-color: #f5f5f5;
+    /* Minimalist grey background */
+    color: var(--text-main);
+    font-size: var(--text-base);
+    outline: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Background Scanning Pulse */
+.scan-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    background-color: rgba(16, 185, 129, 0.4);
+    /* Tailwind emerald-500 */
+    border-radius: 50%;
+    z-index: -1;
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
+}
+
+/* Neo Terminology Tooltip */
+.neo-tooltip-trigger {
+    position: relative;
+    cursor: help;
+}
+
+.neo-tooltip {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: #17181C;
+    /* Dark background always for contrast */
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    width: max-content;
+    max-width: 260px;
+    display: grid; grid-auto-flow: column;
+    align-items: start;
+    gap: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 100;
+}
+
+/* Tooltip Caret (Arrow) */
+.neo-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #17181C transparent transparent transparent;
+}
+
+.neo-tooltip img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.2px solid var(--accent-neo-yellow);
+    
+}
+
+.neo-tooltip-trigger:hover .neo-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+
+/* --- Smart Selector (Phase 2) --- */
+.smart-selector {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--card-bg);
+    border-top: 1.2px solid var(--border-color);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    z-index: 20;
+    padding-bottom: calc(var(--spacing-md) + 60px);
+    /* Leave space for bottom input */
+}
+
+.smart-selector:not(.hidden) {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.smart-selector-header {
+    display: grid; grid-auto-flow: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.smart-selector-options {
+    display: grid;
+
+    gap: 8px;
+}
+
+/* Shared Layout Feeling Animated Cards */
+.smart-option {
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--btn-secondary-bg);
+    border: 1.2px solid var(--btn-secondary-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-main);
+    transition: all 0.2s ease;
+    transform-origin: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.smart-option .icon-wrapper {
+    display: grid; grid-auto-flow: column;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(29, 155, 240, 0.1);
+    /* Subtle neo blue tint */
+    border-radius: 50%;
+    color: var(--accent-neo-blue);
+}
+
+.smart-option:hover {
+    border-color: var(--accent-neo-blue);
+    background-color: rgba(29, 155, 240, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.smart-option:active {
+    transform: scale(0.98);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+[data-theme="dark"] .form-control {
+    background-color: var(--btn-secondary-bg);
+    border-color: var(--btn-primary-border);
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+}
+
+.form-control:focus {
+    border-color: var(--accent-neo-blue);
+}
+
+.btn-electric {
+    background-color: var(--accent-neo-blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    display: grid; grid-auto-flow: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-electric:hover {
+    opacity: 0.9;
+}
+
+/* Color Picker */
+.color-picker-container {
+    display: grid; grid-auto-flow: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    /* Center the color drops */
+    padding: var(--spacing-sm) 0;
+}
+
+.color-picker-drop {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+    padding: 0;
+}
+
+.color-picker-drop:hover {
+    transform: scale(1.1);
+}
+
+.color-picker-drop.selected {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 4px var(--text-main);
+}
+
+/* Business Cockpit */
+.timeline-list-item {
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1.2px solid #EFF3F4;
+}
+
+.timeline-list-item:last-child {
+    border-bottom: none;
+}
+
+.timeline-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-hover);
+    color: var(--text-muted);
+}
+
+.timeline-info {
+    
+    min-width: 0;
+    /* for ellipsis */
+    display: grid;
+
+    gap: 2px;
+}
+
+.timeline-title {
+    font-size: var(--text-small);
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.timeline-date {
+    font-size: var(--text-tiny);
+    color: var(--text-muted);
+}
+
+.timeline-amount {
+    font-size: var(--text-small);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.timeline-amount.positive {
+    color: var(--accent-neo-blue);
+}
+
+.timeline-amount.negative {
+    color: var(--text-main);
+}
+
+.alert-banner {
+    background-color: #FFF4F4;
+    border: 1.2px solid #FFE4E4;
+    color: #D92D20;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--text-tiny);
+    font-weight: 600;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Intelligent Cockpit (Neo+ Final Build) */
+.dashboard-cockpit {
+    
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl) 0;
+}
+
+.neo-agent-center {
+    display: grid;
+
+    align-items: center;
+    width: 100%;
+    margin-top: -10vh;
+    /* slightly elevated */
+}
+
+.neo-eyes {
+    margin-bottom: var(--spacing-xl);
+}
+
+.avatar-circle {
+  width: 44px !important;  /* ホーム画面に合わせたサイズ */
+  height: 44px !important; /* 正方形を維持 */
+  border-radius: 50% !important; /* 完全に丸くする */
+  object-fit: cover !important;  /* 画像を歪ませずに中央を切り取る */
+  
+  /* Neo+のアイデンティティ：エレクトリックブルーの光 */
+  border: 1.5px solid rgba(0, 122, 255, 0.6) !important;
+  box-shadow: 0 0 10px rgba(0, 122, 255, 0.3) !important;
+  
+  /* 位置の微調整（文章との間隔） */
+  margin-right: 12px;
+  flex-shrink: 0; /* 親がFlexboxの場合に画像が潰れるのを防ぐ */
+  background: #000;
+}
+
+/* アイコンを包むコンテナ（もしあれば） */
+.avatar-wrapper {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.instruction-box-container {
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+}
+
+.instruction-input {
+    width: 100%;
+    padding: var(--spacing-lg) 60px var(--spacing-lg) var(--spacing-lg);
+    border: 1.2px solid var(--text-muted);
+    border-radius: 40px;
+    /* highly pill-shaped */
+    background: transparent;
+    color: var(--text-main);
+    font-size: var(--text-base);
+    outline: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.instruction-input:focus {
+    border-color: var(--accent-neo-blue);
+    box-shadow: 0 0 15px rgba(29, 155, 240, 0.3);
+}
+
+.instruction-mic-btn {
+    position: absolute;
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.instruction-mic-btn:hover,
+.instruction-input:focus~.instruction-mic-btn {
+    color: var(--accent-neo-blue);
+}
+
+.geometric-mic {
+    font-size: 24px;
+    line-height: 1;
+    font-weight: 300;
+}
+
+/* Half Modal (Bottom Sheet) */
+.half-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99999 !important;
+    display: grid; grid-auto-flow: column;
+    align-items: end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
+}
+
+.half-modal-overlay.show {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    pointer-events: auto !important;
+    z-index: 99999 !important;
+}
+
+.half-modal-content {
+    background: var(--bg-color);
+    width: 100%;
+    max-width: 480px;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    padding: var(--spacing-lg) var(--spacing-lg) 100px var(--spacing-lg) !important;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1);
+    display: grid;
+
+    gap: var(--spacing-md);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+    max-height: 75vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.half-modal-content::-webkit-scrollbar {
+    display: none;
+}
+
+/* Cockpit Minimized State for Modals */
+.cockpit-minimized {
+    display: none !important;
+}
+
+.cockpit-minimized>div {
+    border-radius: 16px !important;
+}
+
+.cockpit-minimized textarea {
+    min-height: 48px !important;
+    height: 48px !important;
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+}
+
+.cockpit-minimized #cockpit-tools {
+    display: none !important;
+}
+
+.cockpit-minimized #cockpit-action-chips {
+    display: block !important;
+}
+
+.half-modal-overlay.show .half-modal-content {
+    transform: translateY(0);
+}
+
+.half-modal-handle {
+    width: 40px;
+    height: 4px;
+    background-color: var(--text-muted);
+    opacity: 0.3;
+    border-radius: 2px;
+    margin: 0 auto var(--spacing-sm) auto;
+}
+/* Document Line Item Grid Structure */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   明細テーブル: コンテナ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.line-items-container {
+  margin-top: 8px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: #fff !important;
+}
+
+/* テーブルヘッダー行 */
+.line-items-header {
+  display: grid !important;
+  grid-template-columns: 1fr 52px 90px 32px !important;
+  gap: 8px !important;
+  padding: 8px 12px !important;
+  background: #f8fafc !important;
+  border-bottom: 1.5px solid #e2e8f0 !important;
+}
+
+.line-items-header span {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+}
+
+.line-items-header span.col-qty  { text-align: center !important; }
+.line-items-header span.col-price { text-align: right !important; }
+
+/* 明細一行 */
+.line-item {
+  display: grid !important;
+  grid-template-columns: 1fr 52px 90px 32px !important;
+  gap: 8px !important;
+  align-items: center !important;
+  padding: 10px 12px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  position: relative !important;
+  transition: background 0.15s !important;
+}
+
+.line-item:last-child {
+  border-bottom: none !important;
+}
+
+.line-item:hover {
+  background: #fafbff !important;
+}
+
+/* ラベルは非表示（ヘッダーで代替） */
+.line-item .input-group label {
+  display: none !important;
+}
+
+/* 内容フィールド：AIタグをインライン表示するためrelative */
+.line-item .input-group {
+  position: relative !important;
+}
+
+/* 各入力フィールドの共通スタイル */
+.line-item .form-control {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 9px 10px !important;
+  font-size: 14px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: #0f172a !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+
+.line-item .form-control:focus {
+  outline: none !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+}
+
+.line-item .input-group.qty .form-control  { text-align: center !important; }
+.line-item .input-group.price .form-control { text-align: right !important; padding-right: 8px !important; }
+
+/* 削除ボタン */
+.delete-button,
+.delete-row-btn {
+  position: static !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  border-radius: 50% !important;
+  color: #cbd5e1 !important;
+  font-size: 18px !important;
+  cursor: pointer !important;
+  display: grid !important;
+  place-items: center !important;
+  transition: background 0.15s, color 0.15s !important;
+  justify-self: center !important;
+}
+
+.delete-button:hover,
+.delete-row-btn:hover {
+  background: #fef2f2 !important;
+  color: #ef4444 !important;
+}
+
+/* ─── AIタグバッジ（インライン） ─────────── */
+.ai-tag-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: rgba(99, 102, 241, 0.08) !important;
+  color: #6366f1 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 2px 7px 2px 6px !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(99, 102, 241, 0.2) !important;
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.15) !important;
+  margin-bottom: 4px !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
+  cursor: default !important;
+  animation: aiBadgeFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.ai-tag-badge .ai-badge-dismiss {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: rgba(99, 102, 241, 0.5) !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  display: grid !important;
+  place-items: center !important;
+  transition: color 0.15s !important;
+}
+
+.ai-tag-badge .ai-badge-dismiss:hover {
+  color: #6366f1 !important;
+}
+
+@keyframes aiBadgeFadeIn {
+  from { opacity: 0; transform: translateY(-3px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 行追加ボタン */
+.add-line-wrapper {
+  margin: 0 !important;
+  padding: 2px 0 12px 0 !important;
+}
+
+#add-item-btn {
+  width: 100% !important;
+  padding: 10px !important;
+  background: none !important;
+  border: none !important;
+  color: #6366f1 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  letter-spacing: 0.02em !important;
+  transition: color 0.15s !important;
+}
+
+#add-item-btn:hover { color: #4f46e5 !important; }
+
+/* レシート読取ボタン */
+.receipt-scan-wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  width: 100% !important;
+  padding: 14px 0 !important;
+  border-top: 1px dashed #e2e8f0 !important;
+}
+
+/* ─── 合計エリア ────────────────────── */
+.doc-total-area {
+  text-align: center !important;
+  margin: 0 !important;
+  padding: 20px !important;
+  background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%) !important;
+  border: 1.5px solid #fecaca !important;
+  border-radius: 16px !important;
+  box-shadow: 0 2px 12px rgba(239, 68, 68, 0.08) !important;
+}
+
+.doc-tax-label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  margin-bottom: 6px !important;
+}
+
+.doc-total-label {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #ef4444 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 4px !important;
+}
+
+#doc-total-calc {
+  display: block !important;
+  font-size: clamp(2rem, 8vw, 3rem) !important;
+  font-weight: 900 !important;
+  color: #ef4444 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.1 !important;
+  text-shadow: 0 2px 8px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Document Line Item labels */
+.line-item .input-group label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 4px;
+  display: none;
+}
+
+.line-item .input-group.qty label {
+  text-align: center;
+}
+
+.line-item .input-group.price label {
+  text-align: right;
+}
+
+.chat-bubble.first-message {
+  display: inline-block;
+  max-width: 80%;       /* 1行が長すぎず、読みやすい幅に制限 */
+  padding: 14px 18px;   /* 窮屈さを消し、余白で高級感を出す */
+  line-height: 1.5;     /* 行間を広げ、視覚的な重なりを防止 */
+  word-break: break-word; /* 長い単語でも枠を突き抜けないように */
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 15px 15px 15px 0;
+  
+  /* アイコンの垂直位置と合わせる */
+  vertical-align: top;
+  margin-top: 4px;
+}
+
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ホームフィード（cockpit-timeline-feed）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* フィードアイテム共通 */
+.feed-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--btn-secondary-border);
+  cursor: pointer;
+  transition: background 0.15s;
+  animation: feedSlideIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.feed-item:hover { background: var(--btn-secondary-bg); }
+
+@keyframes feedSlideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* アイコン */
+.feed-icon {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.feed-icon.expense  { background: rgba(239,68,68,0.10); color: #ef4444; }
+.feed-icon.project  { background: rgba(99,102,241,0.10); color: #6366f1; }
+.feed-icon.revenue  { background: rgba(16,185,129,0.10); color: #10b981; }
+.feed-icon.default  { background: var(--btn-secondary-bg); color: var(--text-muted); }
+
+/* ボディ */
+.feed-body { flex: 1; min-width: 0; }
+.feed-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 3px;
+}
+.feed-title {
+  font-weight: 700; color: var(--text-main); font-size: 15px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 220px;
+}
+.feed-time  { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
+.feed-sub   { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; line-height: 1.4; }
+.feed-amount {
+  font-size: 16px; font-weight: 700; color: var(--text-main);
+}
+.feed-amount.expense { color: #ef4444; }
+.feed-amount.revenue { color: #10b981; }
+
+/* Neo確認メッセージバブル（フィード内） */
+.feed-item.neo-msg {
+  align-items: flex-start;
+  gap: 10px;
+  cursor: default;
+  background: transparent;
+}
+.feed-item.neo-msg:hover { background: transparent; }
+
+.feed-neo-avatar {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  object-fit: cover;
+  background: var(--btn-secondary-bg);
+}
+
+.feed-neo-bubble {
+  background: var(--chat-neo-bg, #F2F2F7);
+  color: var(--chat-neo-text, #1C1C1E);
+  border-radius: 16px 16px 16px 4px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  max-width: calc(100% - 50px);
+  position: relative;
+}
+
+.feed-neo-bubble .feed-time {
+  display: block;
+  font-size: 11px;
+  color: var(--chat-timestamp, #8E8E93);
+  margin-top: 5px;
+  text-align: right;
+}
+
+/* プレースホルダー（アクティビティなし） */
+.feed-empty {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40px 24px; color: var(--text-muted); text-align: center;
+  gap: 10px;
+}
+.feed-empty svg { opacity: 0.3; }
+.feed-empty p { font-size: 14px; line-height: 1.5; margin: 0; }
+
+/* ─── Feed Pagination ─────────────────────────────────────────────────────── */
+.feed-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px 8px 16px;
+}
+
+.feed-page-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.feed-page-arrow {
+  background: var(--btn-secondary-bg, rgba(255,255,255,0.06));
+  border: 1px solid var(--btn-secondary-border, rgba(255,255,255,0.10));
+  color: var(--text-muted);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: background 0.18s, color 0.18s, transform 0.12s;
+  flex-shrink: 0;
+}
+.feed-page-arrow:hover:not(:disabled) {
+  background: var(--accent-neo-blue, #1D9BF0);
+  color: #fff;
+  transform: scale(1.08);
+  border-color: transparent;
+}
+.feed-page-arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.feed-page-nums {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.feed-page-num {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  min-width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 4px;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+.feed-page-num:hover:not(.active) {
+  background: var(--btn-secondary-bg, rgba(255,255,255,0.06));
+  color: var(--text-main);
+  border-color: var(--btn-secondary-border, rgba(255,255,255,0.10));
+}
+.feed-page-num.active {
+  background: var(--accent-neo-blue, #1D9BF0);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 700;
+  cursor: default;
+}
+
+.feed-page-ellipsis {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 0 2px;
+  pointer-events: none;
+  user-select: none;
+  line-height: 34px;
+}
+
+.feed-page-info {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  font-weight: 500;
+  opacity: 0.8;
+}

@@ -1,0 +1,447 @@
+<!DOCTYPE html><html lang="ja"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neo+</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+    </style>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/index.css?v=FINAL_FORCE_RECOVERY_31">
+    <link rel="stylesheet" href="css/layout.css?v=FINAL_FORCE_RECOVERY_31">
+    <link rel="stylesheet" href="css/components.css?v=FINAL_FORCE_RECOVERY_31">
+
+    <!-- Supabase SDK & Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js?v=neo-99-RECOVERY14"></script>
+
+    <!-- Industry Lexicons & Knowledge -->
+    <script src="js/StaticLexicon.js?v=2.6.5" defer=""></script>
+    <script src="js/industries.js?v=2.6.5" defer=""></script>
+    <script src="js/GoldenKnowledge.js" defer=""></script>
+    
+    <!-- Cloud Integration: Google Identity Services (GIS) Zero-Server Auth -->
+    <script src="https://accounts.google.com/gsi/client" async="" defer=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Global Error Debugger for Mobile Vercel -->
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            var string = msg.toLowerCase();
+            var substring = "script error";
+            if (string.indexOf(substring) > -1) {
+                alert('Script Error: See Browser Console for Detail');
+            } else {
+                var message = [
+                    'Message: ' + msg,
+                    'URL: ' + url,
+                    'Line: ' + lineNo,
+                    'Column: ' + columnNo,
+                    'Error object: ' + JSON.stringify(error)
+                ].join(' - ');
+                alert(message);
+            }
+            return false;
+        };
+        window.onunhandledrejection = function (event) {
+            alert('Unhandled Promise Rejection: ' + event.reason);
+        };
+    </script>
+<style id="googleidentityservice_button_styles">.qJTHM{-moz-user-select:none;-webkit-user-select:none;-ms-user-select:none;color:#202124;direction:ltr;-webkit-touch-callout:none;font-family:"Roboto-Regular",arial,sans-serif;-webkit-font-smoothing:antialiased;font-weight:400;margin:0;overflow:hidden;-webkit-text-size-adjust:100%}.ynRLnc{left:-9999px;position:absolute;top:-9999px}.L6cTce{display:none}.bltWBb{overflow-wrap:break-word;word-break:break-word}.hSRGPd{color:#1a73e8;cursor:pointer;font-weight:500;text-decoration:none}.Bz112c-W3lGp{height:16px;width:16px}.Bz112c-E3DyYd{height:20px;width:20px}.Bz112c-r9oPif{height:24px;width:24px}.Bz112c-u2z5K{height:36px;width:36px}.Bz112c-uaxL4e{border-radius:10px}.LgbsSe-Bz112c{display:block}.S9gUrf-YoZ4jf{border:none;margin:0;padding:0}.S9gUrf-YoZ4jf *{border:none;margin:0;padding:0}.fFW7wc-ibnC6b>.aZ2wEe>div{border-color:#4285f4}.P1ekSe-ZMv3u{-webkit-transition:height linear .2s;transition:height linear .2s}.P1ekSe-ZMv3u>div:nth-child(1){background-color:#1a73e8!important;-webkit-transition:width linear .3s;transition:width linear .3s}.P1ekSe-ZMv3u>div:nth-child(2){background-image:-webkit-gradient(linear,left top,right top,from(rgba(255,255,255,.7)),to(rgba(255,255,255,.7))),-webkit-gradient(linear,left top,right top,from(#1a73e8),to(#1a73e8))!important;background-image:-webkit-linear-gradient(left,rgba(255,255,255,.7),rgba(255,255,255,.7)),-webkit-linear-gradient(left,#1a73e8,#1a73e8)!important;background-image:linear-gradient(to right,rgba(255,255,255,.7),rgba(255,255,255,.7)),linear-gradient(to right,#1a73e8,#1a73e8)!important}.P1ekSe-ZMv3u>div:nth-child(3){background-image:-webkit-gradient(linear,left top,right top,from(rgba(255,255,255,.7)),to(rgba(255,255,255,.7))),-webkit-gradient(linear,left top,right top,from(#1a73e8),to(#1a73e8))!important;background-image:-webkit-linear-gradient(left,rgba(255,255,255,.7),rgba(255,255,255,.7)),-webkit-linear-gradient(left,#1a73e8,#1a73e8)!important;background-image:linear-gradient(to right,rgba(255,255,255,.7),rgba(255,255,255,.7)),linear-gradient(to right,#1a73e8,#1a73e8)!important}.haAclf{display:inline-block}.nsm7Bb-HzV7m-LgbsSe{border-radius:4px;box-sizing:border-box;-webkit-transition:background-color .218s,border-color .218s;transition:background-color .218s,border-color .218s;-moz-user-select:none;-webkit-user-select:none;-ms-user-select:none;-webkit-appearance:none;background-color:#fff;background-image:none;border:1px solid #dadce0;color:#3c4043;cursor:pointer;font-family:"Google Sans",arial,sans-serif;font-size:14px;height:40px;letter-spacing:.25px;outline:none;overflow:hidden;padding:0 12px;position:relative;text-align:center;vertical-align:middle;white-space:nowrap;width:auto}@media screen and (-ms-high-contrast:active){.nsm7Bb-HzV7m-LgbsSe{border:2px solid windowText;color:windowText}}@media screen and (preferes-contrast:more){.nsm7Bb-HzV7m-LgbsSe{color:#000}}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe{font-size:14px;height:32px;letter-spacing:.25px;padding:0 10px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe{font-size:11px;height:20px;letter-spacing:.3px;padding:0 8px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe{padding:0;width:40px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.pSzOP-SxQuSe{width:32px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.purZT-SxQuSe{width:20px}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK{border-radius:20px}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK.pSzOP-SxQuSe{border-radius:16px}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK.purZT-SxQuSe{border-radius:10px}.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc{border:none;color:#fff}.nsm7Bb-HzV7m-LgbsSe.MFS4be-v3pZbf-Ia7Qfc{background-color:#1a73e8}.nsm7Bb-HzV7m-LgbsSe.MFS4be-JaPV2b-Ia7Qfc{background-color:#202124;color:#e8eaed}@media screen and (prefers-contrast:more){.nsm7Bb-HzV7m-LgbsSe.MFS4be-JaPV2b-Ia7Qfc{color:#fff}}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{height:18px;margin-right:8px;min-width:18px;width:18px}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{height:14px;min-width:14px;width:14px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{height:10px;min-width:10px;width:10px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-Bz112c{margin-left:8px;margin-right:-4px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{margin:0;padding:10px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.pSzOP-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{padding:8px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c{padding:4px}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-top-left-radius:3px;border-bottom-left-radius:3px;display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-pack:center;-webkit-justify-content:center;justify-content:center;-webkit-box-align:center;-webkit-align-items:center;align-items:center;background-color:#fff;height:36px;margin-left:-10px;margin-right:12px;min-width:36px;width:36px}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf .nsm7Bb-HzV7m-LgbsSe-Bz112c,.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf .nsm7Bb-HzV7m-LgbsSe-Bz112c{margin:0;padding:0}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{height:28px;margin-left:-8px;margin-right:10px;min-width:28px;width:28px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{height:16px;margin-left:-6px;margin-right:8px;min-width:16px;width:16px}.nsm7Bb-HzV7m-LgbsSe.Bz112c-LgbsSe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-radius:3px;margin-left:2px;margin-right:0;padding:0}.nsm7Bb-HzV7m-LgbsSe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-radius:18px}.nsm7Bb-HzV7m-LgbsSe.pSzOP-SxQuSe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-radius:14px}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-radius:8px}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-bN97Pc-sM5MNb{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-align-items:center;-webkit-box-align:center;align-items:center;-webkit-flex-direction:row;-webkit-box-orient:horizontal;-webkit-box-direction:normal;flex-direction:row;-webkit-box-pack:justify;-webkit-justify-content:space-between;justify-content:space-between;-webkit-flex-wrap:nowrap;flex-wrap:nowrap;height:100%;position:relative;width:100%}.nsm7Bb-HzV7m-LgbsSe .oXtfBe-l4eHX{-webkit-box-pack:center;-webkit-justify-content:center;justify-content:center}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-BPrWId{-webkit-flex-grow:1;-webkit-box-flex:1;flex-grow:1;font-family:"Google Sans",arial,sans-serif;font-weight:500;overflow:hidden;text-overflow:ellipsis;vertical-align:top}.nsm7Bb-HzV7m-LgbsSe.purZT-SxQuSe .nsm7Bb-HzV7m-LgbsSe-BPrWId{font-weight:300}.nsm7Bb-HzV7m-LgbsSe .oXtfBe-l4eHX .nsm7Bb-HzV7m-LgbsSe-BPrWId{-webkit-flex-grow:0;-webkit-box-flex:0;flex-grow:0}.nsm7Bb-HzV7m-LgbsSe .nsm7Bb-HzV7m-LgbsSe-MJoBVe{-webkit-transition:background-color .218s;transition:background-color .218s;bottom:0;left:0;position:absolute;right:0;top:0}.nsm7Bb-HzV7m-LgbsSe:hover,.nsm7Bb-HzV7m-LgbsSe:focus{box-shadow:none;border-color:rgb(210,227,252);outline:none}.nsm7Bb-HzV7m-LgbsSe:focus-within{outline:2px solid #00639b;border-color:transparent}.nsm7Bb-HzV7m-LgbsSe:hover .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(66,133,244,.08)}.nsm7Bb-HzV7m-LgbsSe:active .nsm7Bb-HzV7m-LgbsSe-MJoBVe,.nsm7Bb-HzV7m-LgbsSe:focus .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(66,133,244,.1)}.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc:hover .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(255,255,255,.24)}.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc:active .nsm7Bb-HzV7m-LgbsSe-MJoBVe,.nsm7Bb-HzV7m-LgbsSe.MFS4be-Ia7Qfc:focus .nsm7Bb-HzV7m-LgbsSe-MJoBVe{background:rgba(255,255,255,.32)}.nsm7Bb-HzV7m-LgbsSe .n1UuX-DkfjY{border-radius:50%;display:-webkit-box;display:-webkit-flex;display:flex;height:20px;margin-left:-4px;margin-right:8px;min-width:20px;width:20px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId{font-family:"Roboto";font-size:12px;text-align:left}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .ssJRIf,.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff .fmcmS{overflow:hidden;text-overflow:ellipsis}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-align-items:center;-webkit-box-align:center;align-items:center;color:#5f6368;fill:#5f6368;font-size:11px;font-weight:400}.nsm7Bb-HzV7m-LgbsSe.jVeSEe.MFS4be-Ia7Qfc .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff{color:#e8eaed;fill:#e8eaed}@media screen and (prefers-contrast:more){.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff,.nsm7Bb-HzV7m-LgbsSe.jVeSEe.MFS4be-Ia7Qfc .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff{color:#000;fill:#000}}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-BPrWId .K4efff .Bz112c{height:18px;margin:-3px -3px -3px 2px;min-width:18px;width:18px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-top-left-radius:0;border-bottom-left-radius:0;border-top-right-radius:3px;border-bottom-right-radius:3px;margin-left:12px;margin-right:-10px}.nsm7Bb-HzV7m-LgbsSe.jVeSEe.JGcpL-RbRzK .nsm7Bb-HzV7m-LgbsSe-Bz112c-haAclf{border-radius:18px}.L5Fo6c-sM5MNb{border:0;display:block;left:0;position:relative;top:0}.L5Fo6c-bF1uUb{border-radius:4px;bottom:0;cursor:pointer;left:0;position:absolute;right:0;top:0}.L5Fo6c-bF1uUb:focus{border:none;outline:none}sentinel{}</style></head>
+
+<body>
+
+    <!-- AUTHENTICATION GATEKEEPER (Phase 5) -->
+    <div id="view-auth" class="hidden" style="display: none; height: 100vh; background-color: var(--bg-color); place-items: center; padding: 24px;">
+        <div style="width: 100%; max-width: 400px; text-align: center;">
+            <div style="margin-bottom: 40px;">
+                <h1 class="title" style="font-size: 36px; justify-content: center; margin-bottom: 8px;">Neo<sup class="title-plus">+</sup></h1>
+                <p style="color: var(--text-muted); font-size: 14px;">CEO専用 AIコックピットへようこそ</p>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.02); padding: 24px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.03); text-align: left;">
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Email</label>
+                <input type="email" id="auth-email" placeholder="ceo@example.com" class="input-modern" style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; margin-bottom: 16px;">
+
+                <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 4px;">Password</label>
+                <input type="password" id="auth-password" placeholder="••••••••" class="input-modern" style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--btn-secondary-border); background: var(--bg-color); color: var(--text-main); font-size: 14px; margin-bottom: 24px;">
+
+                <button id="btn-auth-login" class="btn-huge btn-primary" style="width: 100%; box-shadow: 0 8px 25px rgba(29, 155, 240, 0.4);">
+                    ログイン
+                </button>
+                <div style="text-align: center; margin-top: 16px;">
+                    <a href="#" id="link-auth-signup" style="color: var(--accent-neo-blue); font-size: 13px; font-weight: 600; text-decoration: none;">新規アカウント作成はこちら</a>
+                </div>
+                <p id="auth-error-msg" style="text-align: center; color: #ef4444; font-size: 12px; font-weight: 600; margin-top: 16px; display: none;">
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER (Hidden by Gatekeeper until authenticated) -->
+    <div id="app-container" style="display: none;">
+
+        <!-- GLOBAL HEADER (Phase 6) -->
+        <header id="global-header" class="header-area" style="position: sticky; top: 0; z-index: 1000; background: var(--bg-color); border-bottom: 1px solid var(--btn-secondary-border);">
+            <h1 class="title">Neo<sup class="title-plus">+</sup></h1>
+            <div class="header-actions">
+                <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; gap: var(--spacing-sm); color: var(--text-muted);">
+                    <div class="system-health-indicator" style="width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); margin-right: 4px; transition: background-color 0.3s ease, box-shadow 0.3s ease;" title="System Health: Online"></div>
+                    <div style="position: relative;">
+                        <i data-lucide="cloud-check" style="width: 18px; height: 18px; stroke-width: 1.5px; color: #10b981;" title="iCloud同期中"></i>
+                        <div class="scan-pulse"></div>
+                    </div>
+                    <button class="theme-toggle" aria-label="Toggle Theme"><i data-lucide="sun" class="icon-sun"></i><i data-lucide="moon" class="icon-moon" style="display: none;"></i></button>
+                    <div class="user-info-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-neo-blue), var(--accent-purple)); display: grid; place-items: center; color: white; font-weight: 700; font-size: 14px; cursor: pointer;">
+                        <span class="user-info-avatar-text" id="global-header-avatar">A</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area Container (for the views) -->
+        <main id="main-content" style="position: relative; display: block; height: 100%; min-height: 100vh; padding-bottom: 80px;">
+
+            <!-- SETUP VIEW (GATEKEEPER V2) -->
+            <div id="router-view-setup"></div>
+
+
+            <!-- DASHBOARD VIEW (INTERACTIVE COCKPIT) -->
+            <div id="router-view-dash"></div>
+
+            <!-- ==========================================
+             N+ CHAT ROOM (AI COCKPIT)
+             ========================================== -->
+            <div id="router-view-chat"></div>
+
+            <!-- SITES VIEW (BANK ACCOUNTS OVERVIEW) -->
+            <div id="router-view-sites"></div>
+            <div id="router-view-project-detail"></div>
+            <!-- EXPENSE & AI VIEW -->
+            <div id="view-expense" class="view hidden" style="padding-top: 24px;">
+
+                <div class="content-area chat-container" id="expense-chat-container" style="display: none;">
+                    <!-- Deprecated. Unified into views/chat.html -->
+                </div>
+
+                <div class="chat-input-area" style="position: sticky; bottom: 0; background-color: var(--bg-color); padding-top: var(--spacing-sm); z-index: 10;">
+                    <button class="chat-action-btn" title="Camera">📸</button>
+                    <input type="text" class="chat-input" data-i18n-placeholder="ai_chat_placeholder" style="">
+                    <button class="chat-action-btn" title="Voice">🎙️</button>
+                    <button class="btn-primary" style="padding: 0 var(--spacing-md); border-radius: var(--radius-md);" data-i18n="btn_send"></button>
+                </div>
+            </div>
+            <!-- WALLET VIEW ANCHOR -->
+            <div id="router-view-wallet"></div>
+
+            <!-- NEW: Settings View Router Anchor -->
+            <div id="router-view-settings"></div>
+
+            <!-- PROJECT DETAIL VIEW (BUSINESS COCKPIT) -->
+            
+            <!-- NEO FAB Has been moved to the bottom of the body (Singleton) -->
+
+
+            <!-- Document Generation view (tab-docs) -->
+            <div id="tab-docs" class="tab-content hidden" style=" overflow-y: auto; padding: var(--spacing-lg); display: none; align-items: center; justify-content: center; text-align: center;">
+                <div style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.4)); border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 24px; padding: var(--spacing-xxl) var(--spacing-lg); max-width: 400px; width: 100%; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); backdrop-filter: blur(10px);">
+
+                    <div style="margin-bottom: var(--spacing-lg); position: relative; display: inline-block;">
+                        <i data-lucide="file-text" style="width: 48px; height: 48px; stroke-width: 1px; color: var(--accent-neo-blue);"></i>
+                    </div>
+
+                    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: var(--spacing-sm); letter-spacing: -0.02em;">
+                        Document Generator</h2>
+                    <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: var(--spacing-xl);">
+                        AIがプロジェクトの進捗と経費から、<br>最適な請求書や領収書をワンタップで自動生成します。
+                    </p>
+
+                    <div id="docgen-btn-container" style="display: block; gap: var(--spacing-md); width: 100%;">
+                        <!-- Buttons injected dynamically via app.js based on industry -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: Full Screen Document Generator Modal Router Anchor -->
+            <div id="router-modal-doc-gen"></div>
+    </main></div>
+
+
+
+    <!-- NEO PARSING OVERLAY -->
+    
+    <style>
+        @keyframes docPulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(29, 155, 240, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 15px rgba(29, 155, 240, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(29, 155, 240, 0);
+            }
+        }
+
+        #doc-neo-parsing-overlay:not(.hidden) {
+            display: block !important;
+        }
+    </style>
+    <!-- BOTTOM SECTION: MOVED ABOVE -->
+    
+
+    <!-- NEW: Dedicated Slide-Up Preview Modal -->
+    
+
+    <!-- Action Menu Dropdown (Enlarged Centered Modal) -->
+    
+    <!-- Scripts cleanly pushed to EOF -->
+    <!-- New Project Modal -->
+    
+
+    <!-- Edit Project Modal (Converted to Half Modal) -->
+    
+
+    <!-- Delete Confirm Modal -->
+    
+    
+
+    <!-- BOTTOM NAV BAR (Visible after setup) -->
+    <!-- Removed: Replaced with dynamic JS renderBottomNav() -->
+
+    
+
+
+    <!-- Invoice Document View -->
+    
+
+    <!-- ADD EXPENSE MODAL (Data-First with Camera Trigger) -->
+    <div id="modal-add-expense" class="modal-overlay hidden" style="z-index: 10001;">
+        <div class="modal-content" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);">
+            <h3 class="modal-title" style="margin-bottom: var(--spacing-lg);">経費の追加</h3>
+
+            <div style="display: grid; grid-auto-flow: column; gap: 12px; margin-bottom: 16px;">
+                <button id="btn-modal-camera-trigger" tabindex="-1" onclick="document.getElementById('hidden-receipt-upload').click();" class="btn-secondary" style=" display: grid; place-items: center; gap: 8px; font-size: 14px; padding: 12px; border-radius: 12px; border: 1.2px solid var(--btn-secondary-border); background-color: var(--btn-secondary-bg); color: var(--text-main); font-weight: 600;">
+                    <i data-lucide="camera" style="width: 18px; height: 18px; color: var(--accent-neo-blue);"></i>
+                    レシート撮影で自動入力
+                </button>
+            </div>
+
+            <div class="form-group" style="margin-bottom: var(--spacing-md);">
+                <label>日付</label>
+                <input type="date" id="add-expense-date" data-testid="expense-input-date" class="form-control" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border); font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-md);">
+                <label>内容 (使途・店舗名)</label>
+                <input type="text" id="add-expense-title" data-testid="expense-input-title" class="form-control" placeholder="例: コーナンで木材" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                <label>金額 (円)</label>
+                <input type="number" id="add-expense-amount" data-testid="expense-input-amount" class="form-control" placeholder="0" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border); font-size: 14px; font-weight: 600;">
+            </div>
+            <div class="modal-actions" style="margin-top: auto;">
+                <button class="btn-huge btn-secondary" onclick="window.closeAddExpenseModal()" style="height: 100%;">キャンセル</button>
+                <button class="btn-huge btn-primary" id="btn-execute-add-expense" data-testid="expense-btn-save" onclick="window.saveAddExpense()" style="height: 100%;">追加する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 5: Intelligent A4 PDF Grid Modal (Reconstructed Preview) -->
+     <!-- Close modal-receipt-grid -->
+
+
+
+    <!-- Modals previously wrapped here are cleared to unify setup -->
+
+    <!-- ADD INCOME MODAL -->
+    <div id="modal-add-income" class="modal-overlay hidden" style="z-index: 10001;">
+        <div class="modal-content" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);">
+            <h3 class="modal-title" style="margin-bottom: var(--spacing-xl);">売上 / 入金の追加</h3>
+            <div class="form-group">
+                <label>内容 (取引先など)</label>
+                <input type="text" id="add-income-title" class="form-control" placeholder="例: A社 3月分売上" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                <label>金額 (円)</label>
+                <input type="number" id="add-income-amount" class="form-control" placeholder="0" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);">
+            </div>
+            <div class="modal-actions" style="margin-top: auto;">
+                <button class="btn-huge btn-secondary" onclick="window.closeAddIncomeModal()" style="height: 100%;">キャンセル</button>
+                <button class="btn-huge btn-primary" onclick="window.saveAddIncome()" style="height: 100%;">追加する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEO CONFIRMATION MODAL (Validator Gate) -->
+    <div id="modal-neo-confirm" class="modal-overlay hidden" style="z-index: 10002;">
+        <div class="modal-content" style="background-color: var(--bg-surface); border: 1.5px solid var(--accent-blue);">
+            <div style="display: grid; grid-auto-flow: column; justify-content: start; align-items: center; margin-bottom: var(--spacing-md);">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: grid; place-items: center; margin-right: 12px; box-shadow: 0 0 10px rgba(0,122,255,0.3);">
+                    <i data-lucide="sparkles" style="color: white; width: 16px; height: 16px;"></i>
+                </div>
+                <h3 class="modal-title" style="margin: 0; font-size: 1.2rem;">AIの判定結果</h3>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--spacing-sm);">
+                以下の内容で記録を保存してよろしいですか？（タップで修正可能）</p>
+
+            <!-- Tax Rate Hint Box -->
+            <div id="confirm-tax-hint" class="hidden" style="background: rgba(29, 155, 240, 0.1); border: 1px solid var(--accent-neo-blue); padding: 12px; border-radius: 8px; margin-bottom: var(--spacing-md); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;">
+                <i data-lucide="info" style="color: var(--accent-neo-blue); width: 16px; height: 16px;  margin-top: 2px;"></i>
+                <div style="font-size: 0.85rem; color: var(--text-main); line-height: 1.4;">
+                    <span style="font-weight: 700; color: var(--accent-neo-blue);">💡 税率の確認:</span>
+                    AIの推測によると、この項目は <span id="confirm-tax-rate-val" style="font-weight: 700;">8%</span>
+                    の可能性があります。（持ち帰りは8%、店内飲食は10%です）
+                </div>
+            </div>
+
+            <!-- Tax Rejection (CoT) Hint Box -->
+            <div id="confirm-rejection-hint" class="hidden" style="background: rgba(255, 59, 48, 0.1); border: 1px solid #FF3B30; padding: 12px; border-radius: 8px; margin-bottom: var(--spacing-md); display: grid; grid-auto-flow: column; justify-content: start; align-items: start; gap: 8px;">
+                <i data-lucide="alert-triangle" style="color: #FF3B30; width: 16px; height: 16px;  margin-top: 2px;"></i>
+                <div style="font-size: 0.85rem; color: var(--text-main); line-height: 1.4;">
+                    <span style="font-weight: 700; color: #FF3B30;">🚨 税理士AI見解:</span>
+                    <span id="confirm-rejection-val"></span>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: var(--spacing-md);">
+                <label style="color: var(--accent-blue);">タイトル</label>
+                <input type="text" id="confirm-tx-title" data-testid="confirm-tx-title" class="form-control" style="font-weight: 500;">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-md);">
+                <label style="color: var(--accent-blue);">金額 (円)</label>
+                <input type="number" id="confirm-tx-amount" data-testid="confirm-tx-amount" class="form-control" style="font-weight: 700; color: var(--text-main);">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                <label style="color: var(--accent-blue);">勘定科目</label>
+                <select id="confirm-tx-category" data-testid="confirm-tx-category" class="form-control" style="font-weight: 500;">
+                    <!-- Injected dynamically or use standard list -->
+                    <option value="expense">経費 (一般)</option>
+                    <option value="labor">人工 / 外注費</option>
+                    <option value="material">材料費 / 資材</option>
+                    <option value="transport">旅費交通費</option>
+                    <option value="entertainment">接待交際費</option>
+                    <option value="sales">売上高 (収入)</option>
+                    <option value="other">その他</option>
+                </select>
+            </div>
+
+            <!-- Hidden original parsed values -->
+            <input type="hidden" id="confirm-tx-original-category" style="">
+
+            <div class="modal-actions" style="margin-top: auto;">
+                <button class="btn-huge btn-secondary" onclick="window.cancelNeoConfirm()" style="height: 100%;">戻る</button>
+                <button class="btn-huge btn-primary" data-testid="confirm-btn-save" onclick="window.saveNeoConfirm()" style="height: 100%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); border: none;">保存して学習</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT EXPENSE MODAL (Semantic Bookkeeping Training) -->
+    <div id="modal-edit-expense" class="modal-overlay hidden" style="z-index: 10001;">
+        <div class="modal-content" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);">
+            <h3 class="modal-title" style="margin-bottom: var(--spacing-xl);">AI判定の修正 🧠</h3>
+            <input type="hidden" id="edit-tx-id" style="">
+            <div class="form-group">
+                <label>内容 (使途)</label>
+                <input type="text" id="edit-tx-title" class="form-control" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);">
+            </div>
+            <div class="form-group">
+                <label>金額 (円)</label>
+                <input type="number" id="edit-tx-amount" class="form-control" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-xl);">
+                <label>勘定科目マスター</label>
+                <select id="edit-tx-category" class="form-control" style="background-color: var(--bg-color); border: 1.2px solid var(--btn-secondary-border);">
+                    <option value="旅費交通費">旅費交通費</option>
+                    <option value="消耗品費">消耗品費</option>
+                    <option value="接待交際費">接待交際費</option>
+                    <option value="外注工賃">外注工賃</option>
+                    <option value="通信費">通信費</option>
+                    <option value="雑費">雑費</option>
+                    <option value="売上高">売上高 (事業収入)</option>
+                    <option value="役員報酬">役員報酬</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 24px; text-align: right;">
+                <span onclick="window.deleteTransaction()" style="color: #ef4444; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px;"><i data-lucide="trash-2" style="width: 14px; height: 14px; margin-right: 4px; vertical-align: middle;"></i>この項目を削除</span>
+            </div>
+            <div class="modal-actions" style="margin-top: auto;">
+                <button class="btn-huge btn-secondary" onclick="window.closeEditExpenseModal()" style="height: 100%;">戻る</button>
+                <button class="btn-huge btn-primary" onclick="window.saveEditedExpense()" style="height: 100%;">修正・学習</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPLIANCE & ToS ENFORCEMENT MODAL -->
+    <div id="modal-account-suspended" class="modal-overlay hidden" style="z-index: 99999; background: rgba(0, 0, 0, 0.95);">
+        <div class="modal-content" style="background-color: var(--bg-color); border: 2px solid #FF3B30; box-shadow: 0 0 40px rgba(255, 59, 48, 0.3);">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <div style="width: 64px; height: 64px; background: rgba(255, 59, 48, 0.1); border-radius: 50%; margin: 0 auto 16px auto; display: grid; place-items: center; color: #FF3B30;">
+                    <i data-lucide="shield-alert" style="width: 32px; height: 32px;"></i>
+                </div>
+                <h2 style="color: #FF3B30; font-size: 22px; font-weight: 800; margin: 0 0 8px 0;">アカウント利用停止</h2>
+                <p style="color: var(--text-main); font-weight: 600;">Terms of Service Violation</p>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6; text-align: justify; margin-bottom: 24px;">
+                Neo+の利用規約およびAI倫理ガイドラインに対する重大な違反（犯罪行為の示唆、法規制に反する経理処理の要求、または不適切な言語の使用）が連続して検知されました。<br><br>
+                システムの安全およびコンプライアンス維持のため、本アカウントのアクセスを強制停止いたしました。異議申し立てがある場合は管理者へお問い合わせください。
+            </p>
+
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 16px; border-radius: 8px; text-align: center; margin-bottom: 8px;">
+                <span style="color: var(--text-muted); font-size: 12px; font-family: monospace;">Error Code:
+                    NEO_COMPLIANCE_LOCK_0x3</span>
+            </div>
+
+            <!-- Notice: No close button provided. This is a hard lock. -->
+        </div>
+    </div>
+    <!-- END app-container -->
+    <!-- Instant Touch Library for iOS Safari -->
+    <script src="js/fastclick.min.js?v=FINAL_FORCE_RECOVERY_30"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if ('addEventListener' in document) {
+                // Attach FastClick to body
+                FastClick.attach(document.body);
+
+                // FIXED: iOS "long press to focus" bug under FastClick
+                // FastClick's 'needsclick' class is sometimes ignored by newer WebKit versions.
+                // We must manually intercept touchend on inputs and force focus.
+                document.body.addEventListener('touchend', function (e) {
+                    const tag = e.target.tagName;
+                    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+                        // If it's an input, force the browser to focus it immediately
+                        e.target.focus();
+                    }
+                }, { passive: false }); // We need passive: false just in case, but standard inputs bounce fine.
+            }
+        }, false);
+    </script>
+
+    <!-- Core App Scripts -->
+    <script type="module" src="lib/utils.js"></script>
+    <script type="module" src="lib/cloud/googleDrive.js"></script>
+    <script src="js/store.js?v=NEO_SAFE_11"></script>
+    <script src="js/gemini.js?v=NEO_SAFE_11"></script>
+    <script src="js/neo-brain.js?v=NEO_SAFE_11"></script>
+    <script src="js/doc-engine.js?v=NEO_SAFE_11"></script>
+    <script src="js/i18n.js?v=neo-99-RECOVERY11"></script>
+    <script type="module" src="js/app.js?v=NEO_SAFE_11"></script>
+    <script type="module" src="pages/chat.js?v=ROUTER_1"></script>
+
+
+
+
+</body></html>

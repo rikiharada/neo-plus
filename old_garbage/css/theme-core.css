@@ -1,0 +1,77 @@
+/* ==========================================
+ *  NEO+ CORE THEME TOKENS
+ * ========================================== */
+
+/* 1. Dashboard 12px Cockpit Floating Effect */
+.neo-cockpit-float {
+    animation: float 6s ease-in-out infinite;
+    box-shadow: 0 12px 32px rgba(29, 155, 240, 0.4); /* 12px elevation */
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-12px); } /* Fixed 12px float */
+    100% { transform: translateY(0px); }
+}
+
+/* 2. Cockpit Layout Constraints */
+.neo-cockpit-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    border-radius: 24px;
+    border: 1.2px solid var(--btn-secondary-border, rgba(255,255,255,0.1));
+    background: var(--bg-color, #0f172a);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+    overflow: hidden;
+}
+
+/* 3. Global Tag Colors */
+.badge-blue {
+    background: rgba(0, 122, 255, 0.1);
+    color: #007AFF;
+}
+
+.badge-red {
+    background: rgba(248, 113, 113, 0.1);
+    color: #f87171;
+}
+
+.badge-green {
+    background: rgba(52, 211, 153, 0.1);
+    color: #34d399;
+}
+
+.badge-common {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+
+/* 4. Character Limit Styles (300 / 400) */
+.char-counter {
+    position: absolute;
+    top: -26px;
+    right: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted, #94a3b8);
+    transition: color 0.2s;
+}
+
+.char-counter.limit-warning {
+    color: #f59e0b; /* Orange */
+}
+
+.char-counter.limit-exceeded {
+    color: #ef4444; /* Red */
+}

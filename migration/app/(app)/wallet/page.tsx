@@ -5,6 +5,9 @@ import {
   createServerComponentClient,
   isNextRedirectError,
 } from '@/lib/supabase/server';
+import type { ActivityRow } from '@/lib/supabase/types';
+
+type WalletActivityPick = Pick<ActivityRow, 'type' | 'amount'>;
 
 export const metadata: Metadata = {
   title: 'Wallet | Neo+',
@@ -38,7 +41,8 @@ export default async function WalletPage() {
 
     let income = 0;
     let expense = 0;
-    for (const r of rows ?? []) {
+    const typedRows = (rows ?? []) as WalletActivityPick[];
+    for (const r of typedRows) {
       if (r.type === 'income') income += r.amount;
       if (r.type === 'expense') expense += r.amount;
     }

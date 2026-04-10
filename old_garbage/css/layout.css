@@ -1,0 +1,1048 @@
+/* Spin animation for loading indicators */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* App Container Constraint (Mobile by default, wide on PC) */
+#app-container {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    margin: 0 auto;
+    position: relative;
+    background-color: var(--bg-color);
+    display: block;
+    pointer-events: auto !important;
+}
+
+/* PC block removed */
+
+/* Views */
+.view {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    min-height: 100%;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: calc(60px + env(safe-area-inset-top, 0px) + var(--spacing-lg)) var(--spacing-lg) calc(100px + env(safe-area-inset-bottom, 0px) + var(--spacing-lg)) var(--spacing-lg);
+    gap: var(--spacing-lg);
+    overflow: hidden;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+.view.is-active {
+    display: block !important;
+    opacity: 1 !important;
+    z-index: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.view.hidden {
+    display: none !important;
+}
+
+#view-chat.view.is-active {
+    display: flex !important;
+}
+
+/* PC block removed */
+
+/* Header areas */
+.header-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    height: calc(60px + env(safe-area-inset-top, 0px)); /* Reduced from default to enforce tight bounds */
+    padding: env(safe-area-inset-top, 0px) var(--spacing-lg) 0;
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--header-bg);
+    z-index: 9000;
+    border-bottom: 1px solid var(--header-separator, #f0f0f0);
+    box-shadow: var(--header-float-shadow, 0 12px 24px -10px rgba(0, 0, 0, 0.08));
+}
+
+/* JS 注入の #global-header: インライン border を上書きし装飾ライン（グラデ/ネオン）を排除 */
+#global-header.header-area {
+    border-bottom: 1px solid var(--header-separator, #f0f0f0) !important;
+    box-shadow: var(--header-float-shadow, 0 12px 24px -10px rgba(0, 0, 0, 0.08)) !important;
+}
+
+/* PC block removed */
+
+/* Absolute position for the theme toggle to keep title centered */
+.header-actions {
+    position: absolute;
+    right: var(--spacing-lg);
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.theme-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    display: grid; grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.header-settings-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.header-settings-btn .lucide {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+}
+
+.header-settings-btn:hover {
+    color: var(--text-main);
+    transform: scale(1.05);
+}
+
+/* PC: hide settings gear (mobile keeps it for account access) */
+@media (min-width: 769px) {
+    #global-header .header-settings-btn {
+        display: none !important;
+    }
+
+    #global-header .header-actions {
+        right: var(--spacing-lg);
+        gap: 0;
+    }
+}
+
+.theme-toggle .lucide {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    /* Extremely thin */
+}
+
+/* Force stroke color on toggle icons just to be absolutely sure */
+[data-theme="light"] .theme-toggle .lucide {
+    stroke: #000000 !important;
+}
+
+[data-theme="dark"] .theme-toggle .lucide {
+    stroke: #FFFFFF !important;
+}
+
+.theme-toggle:hover {
+    color: var(--text-main);
+    transform: scale(1.05);
+    /* subtle bump */
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: var(--line-height-base);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    letter-spacing: var(--letter-spacing-base);
+    transition: background-color 0.4s ease, color 0.4s ease;
+    pointer-events: auto !important;
+}
+
+.title {
+    font-family: 'Inter', 'Helvetica', sans-serif;
+    font-size: var(--text-large);
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: normal;
+    display: grid; grid-auto-flow: column;
+    align-items: start;
+}
+
+.title-tm {
+    font-size: 0.4em;
+    font-weight: 400;
+    line-height: 1;
+    margin-left: 2px;
+    margin-top: 4px;
+}
+
+/* Content blocks */
+.content-area {
+    display: grid;
+    gap: var(--spacing-xl);
+}
+
+/* Actions */
+.action-area {
+    margin-top: auto;
+    padding-top: var(--spacing-md);
+    padding-bottom: calc(var(--spacing-xl) + env(safe-area-inset-bottom));
+    position: relative;
+    /* 固定フッターナビより極端に上げない（タップがナビに届かない原因になる） */
+    z-index: 30;
+    pointer-events: auto !important;
+}
+
+/* Bottom Navigation - Icon Only */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    background-color: var(--bg-color);
+    border-top: 1.2px solid var(--btn-primary-border);
+    display: grid; grid-auto-flow: column;
+    justify-content: space-around;
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Sidebar styling for desktop */
+.desktop-sidebar {
+    display: none; /* Hidden on mobile */
+}
+
+/* PC block removed */
+
+/* Neo+ Cyberpunk LoFi - Core Aesthetic */
+:root {
+  --neo-cyan: #00ffff;
+  --neo-magenta: #ff00ff;
+  --neo-bg: rgba(10, 10, 20, 0.75);
+  /* フロート .neo-bottom-nav: bottom(16) + 高さ(72) + 中央N+の上にはみ出し(30) + 余白 — iPhone ホームインジケータ含む */
+  --neo-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --neo-nav-stack-clearance: calc(16px + 72px + 30px + var(--neo-safe-bottom) + 20px);
+}
+
+.neo-bottom-nav {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)); /* iPhone ホームインジケータ */
+  left: 16px;
+  right: 16px;
+  height: 72px;
+  background: var(--neo-bg);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-radius: 36px;
+  border: 1px solid rgba(0, 255, 255, 0.15);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.1);
+  /* ダッシュ入力(#neo-cockpit)の backdrop-filter スタックより手前に固定し、常にタップ可能に */
+  z-index: 10000;
+  isolation: isolate;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.nav-item {
+  cursor: pointer;
+  transition: transform 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+}
+
+.nav-item.active .neon-icon {
+  color: var(--neo-cyan);
+  text-shadow: 0 0 15px var(--neo-cyan);
+  stroke: var(--neo-cyan); /* SVG inherit */
+  filter: drop-shadow(0 0 10px var(--neo-cyan));
+}
+
+.neon-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  color: rgba(0, 255, 255, 0.5); /* 通常時は少し暗め */
+  stroke: rgba(0, 255, 255, 0.5); /* SVG inherit */
+  transition: all 0.3s;
+}
+
+/* ミニマル Neo AI タブ（中央の浮遊ボタンは廃止） */
+.nav-item-ai {
+  position: relative;
+}
+.nav-item-ai::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+.nav-item-ai.active::after {
+  color: var(--neo-cyan);
+  opacity: 1;
+}
+
+/* 中央 N+ ボタン */
+.main-btn {
+  background: linear-gradient(135deg, var(--neo-magenta), var(--neo-cyan));
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -30px; /* 突き出し強調 */
+  box-shadow: 0 0 25px rgba(255, 0, 255, 0.6);
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+
+.neo-logo {
+  color: #000;
+  font-weight: 900;
+  font-size: 20px;
+}
+
+/* チャットシェル・コンポーザーは css/chat.css（visualViewport 連動 --vv-keyboard-inset） */
+
+/* ── ホーム（ダッシュ）: コックピットはナビより下のレイヤーに固定（入力がナビを隠さない） ── */
+#view-dash #neo-cockpit {
+  position: relative;
+  z-index: 1;
+}
+
+/* ホーム: コックピット上部 Neo 立ち絵風 + 大きな吹き出し（初回／その日の初回表示） */
+.neo-cockpit-welcome {
+  margin: 12px 16px 0;
+  padding: 0;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.neo-cockpit-welcome.neo-cockpit-welcome--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.neo-cockpit-welcome-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.neo-cockpit-welcome-art {
+  flex-shrink: 0;
+  width: 112px;
+  height: 168px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 12px 36px rgba(29, 155, 240, 0.35),
+    0 0 0 2px rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(29, 155, 240, 0.15), rgba(24, 24, 28, 0.4));
+}
+
+.neo-cockpit-standee {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.neo-cockpit-welcome-bubble-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: var(--chat-neo-bg, #f2f2f7);
+  color: var(--chat-neo-text, #1c1c1e);
+  border-radius: 22px 22px 22px 8px;
+  padding: 18px 40px 18px 20px;
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.neo-cockpit-welcome-bubble-wrap::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  bottom: 28px;
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 10px solid var(--chat-neo-bg, #f2f2f7);
+  filter: drop-shadow(-1px 0 0 rgba(0, 0, 0, 0.04));
+}
+
+.neo-cockpit-welcome-msg {
+  margin: 0;
+  font-size: clamp(1.28rem, 5vw, 1.72rem);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.neo-cockpit-welcome-sub {
+  margin: 0.55rem 0 0;
+  font-size: clamp(0.78rem, 2.9vw, 0.92rem);
+  line-height: 1.5;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.neo-cockpit-welcome-dismiss {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.neo-cockpit-welcome-dismiss:hover {
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+html[data-theme='dark'] .neo-cockpit-welcome-bubble-wrap {
+  background: rgba(44, 44, 48, 0.95);
+  color: var(--text-main);
+  box-shadow:
+    0 10px 32px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme='dark'] .neo-cockpit-welcome-bubble-wrap::before {
+  border-right-color: rgba(44, 44, 48, 0.95);
+}
+
+@media (max-width: 380px) {
+  .neo-cockpit-welcome-inner {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .neo-cockpit-welcome-bubble-wrap {
+    width: 100%;
+    border-radius: 20px;
+    padding-right: 38px;
+  }
+
+  .neo-cockpit-welcome-bubble-wrap::before {
+    display: none;
+  }
+}
+
+/* ホーム用スクロール領域: フロートナビ + safe-area ぶん下に必ず余白 */
+#view-dash .dash-scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* --neo-nav-stack-clearance 内に safe-area 済み。従来 210px との大きい方 */
+  padding-bottom: max(210px, var(--neo-nav-stack-clearance));
+  box-sizing: border-box;
+}
+
+/* ホームの .view 下パディングもナビ実寸に合わせて底上げ（二重に効かせすぎないよう控えめ） */
+#view-dash.view {
+  padding-bottom: calc(24px + var(--neo-nav-stack-clearance));
+}
+
+/* ── ホーム画面コックピット: フォーカス時の見た目 ────────────── */
+#neo-cockpit:focus-within {
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.32),
+    0 6px 20px rgba(0, 122, 255, 0.15),
+    0 1px 0 rgba(255, 255, 255, 0.10) inset,
+    0 0 0 1px rgba(0, 122, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+/* ダッシュコックピット: テキストエリア + 横マイク */
+#neo-cockpit .cockpit-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 10px 12px 6px 10px;
+  box-sizing: border-box;
+}
+
+#neo-cockpit .btn-cockpit-mic {
+  flex-shrink: 0;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  border-radius: 50%;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#neo-cockpit .btn-cockpit-mic:hover {
+  color: var(--text-main);
+}
+
+#neo-cockpit .btn-cockpit-mic.recording {
+  color: #ff3b30;
+  animation: neo-mic-pulse 1.1s ease-in-out infinite;
+}
+
+#neo-cockpit .btn-cockpit-mic:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#neo-cockpit .cockpit-instruction-textarea {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: none;
+  padding: 10px 8px 8px 4px;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 14px;
+  resize: none;
+  min-height: 72px;
+  max-height: 220px;
+  line-height: 1.6;
+  outline: none;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+@keyframes neo-mic-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.06); opacity: 0.85; }
+}
+
+/* メッセージ行 */
+.chat-message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+  width: 100%;
+  animation: chat-fadein 0.18s ease;
+}
+
+@keyframes chat-fadein {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* アバター */
+.chat-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* バブルラッパー */
+.chat-bubble-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 78%;
+}
+.chat-bubble-col.neo  { align-items: flex-start; }
+.chat-bubble-col.ceo  { align-items: flex-end; }
+
+/* Neoバブル: 淡いグレー (iOS #F2F2F7) + 黒文字 (#1C1C1E) */
+.message-bubble.neo {
+  background: var(--chat-neo-bg, #F2F2F7);
+  color: var(--chat-neo-text, #1C1C1E);
+  border: none;
+  border-radius: 18px 18px 18px 4px;   /* 左下: iMessage 左テール */
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 400;
+  word-break: break-word;
+  box-shadow: 0 1px 4px var(--chat-neo-shadow, rgba(0,0,0,0.10)),
+              0 0 0 0.5px rgba(0,0,0,0.04);
+}
+
+/* CEOバブル: iOS Blue (#007AFF) + 白文字 */
+.message-bubble.ceo {
+  background: var(--chat-ceo-bg, #007AFF);
+  color: var(--chat-ceo-text, #FFFFFF);
+  border: none;
+  border-radius: 18px 18px 4px 18px;   /* 右下: iMessage 右テール */
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 400;
+  word-break: break-word;
+  box-shadow: 0 2px 10px var(--chat-ceo-shadow, rgba(0,122,255,0.30)),
+              0 1px 3px rgba(0,0,0,0.12);
+}
+
+/* タイムスタンプ */
+.chat-timestamp {
+  font-size: 11px;
+  color: var(--chat-timestamp, #8E8E93);
+  padding: 0 4px;
+  line-height: 1;
+}
+
+/* 連続メッセージの余白調整: 同sender連続なら縮小 */
+.chat-message-row + .chat-message-row {
+  margin-top: 2px;
+}
+
+/* ローディングアニメーション (考え中...) */
+.message-bubble.neo .lucide-loader {
+  animation: spin 0.9s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+}
+
+/* Explicit size enforcement for Minimalist Cockpit Icons */
+#btn-camera svg,
+#btn-voice svg,
+#btn-attach-image svg,
+#main-mic-btn svg {
+    width: 28px !important;
+    height: 28px !important;
+}
+
+#btn-send svg,
+#btn-send-instruction svg {
+    width: 24px !important;
+    height: 24px !important;
+}
+/* チャット入力プレースホルダー */
+#chat-input-field::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PC / TABLET RESPONSIVE LAYOUT  (≥ 768px)
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Desktop Sidebar ─────────────────────────────────────────── */
+.neo-desktop-sidebar {
+  display: none; /* hidden on mobile */
+}
+
+@media (min-width: 768px) {
+
+  /* 1. モバイルボトムナビを非表示 */
+  .neo-bottom-nav {
+    display: none !important;
+  }
+
+  /* 2. デスクトップサイドバー */
+  .neo-desktop-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    background: var(--header-bg, rgba(255,255,255,0.95));
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 200;
+    padding: 24px 12px 32px;
+    gap: 4px;
+    backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: 2px 0 20px rgba(0,0,0,0.04);
+  }
+
+  [data-theme="dark"] .neo-desktop-sidebar {
+    border-right-color: rgba(255,255,255,0.07);
+    background: rgba(10,10,20,0.92);
+    box-shadow: 2px 0 20px rgba(0,0,0,0.3);
+  }
+
+  /* サイドバーロゴ */
+  .neo-desktop-sidebar .sidebar-logo {
+    padding: 8px 16px 24px;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    margin-bottom: 12px;
+    user-select: none;
+  }
+  [data-theme="dark"] .neo-desktop-sidebar .sidebar-logo {
+    border-bottom-color: rgba(255,255,255,0.07);
+  }
+
+  /* 通常ナビアイテム */
+  .neo-desktop-sidebar .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    color: var(--text-muted, #536471);
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.18s, color 0.18s;
+    user-select: none;
+  }
+  .neo-desktop-sidebar .sidebar-item:hover {
+    background: rgba(0,0,0,0.05);
+    color: var(--text-main);
+  }
+  [data-theme="dark"] .neo-desktop-sidebar .sidebar-item:hover {
+    background: rgba(255,255,255,0.07);
+  }
+  .neo-desktop-sidebar .sidebar-item.active {
+    background: rgba(29, 155, 240, 0.12);
+    color: var(--accent-neo-blue, #1D9BF0);
+    font-weight: 600;
+  }
+  .neo-desktop-sidebar .sidebar-item svg,
+  .neo-desktop-sidebar .sidebar-item .lucide {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  /* N+ AIボタン (サイドバー内) */
+  .neo-desktop-sidebar .sidebar-main-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    margin: 8px 0;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--neo-magenta, #ff00ff), var(--neo-cyan, #00ffff));
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 4px 16px rgba(255,0,255,0.25);
+    transition: transform 0.15s, box-shadow 0.15s;
+    user-select: none;
+  }
+  .neo-desktop-sidebar .sidebar-main-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255,0,255,0.35);
+  }
+  .neo-desktop-sidebar .sidebar-main-btn svg,
+  .neo-desktop-sidebar .sidebar-main-btn .lucide {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  /* 3. メインコンテンツをサイドバー分右にシフト */
+  #app-container {
+    margin-left: 220px !important;
+    max-width: calc(100vw - 220px) !important;
+  }
+
+  /* 4. 固定ヘッダーもサイドバー分調整 */
+  .header-area {
+    left: 220px !important;
+    max-width: calc(100vw - 220px) !important;
+    right: 0 !important;
+  }
+
+  /* 5. ビューのコンテンツ最大幅を拡張（PC で余白活用） */
+  .view {
+    max-width: 860px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* 6. チャット入力: メイン列（サイドバー右）の中央に配置（viewport 50% だと左がサイドバーに隠れる） */
+  .chat-input-floating {
+    left: calc(220px + (100vw - 220px) / 2) !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(calc(100vw - 220px - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 800px) !important;
+    max-width: min(calc(100vw - 220px - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 800px) !important;
+    margin: 0 !important;
+  }
+
+  #view-chat .chat-input-floating:focus-within {
+    transform: translateX(-50%) translateY(-1px) !important;
+  }
+
+  /* 6b. チャットヘッダー: デスクトップでは水平パディングを統一 */
+  .chat-header {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  /* 7. チャットスクロールエリアの余白調整 */
+  .chat-scroll-area {
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* 8. ホームダッシュのコックピットカード: 2カラムグリッド */
+  #neo-cockpit {
+    max-width: 860px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* 9. ウォレット指標カード: PC では横2列 */
+  .health-indicator-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+}
+
+/* ── Tablet only (768–1023px) 微調整 ─────────────────────────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .neo-desktop-sidebar { width: 200px; }
+  #app-container { margin-left: 200px !important; max-width: calc(100vw - 200px) !important; }
+  .header-area { left: 200px !important; max-width: calc(100vw - 200px) !important; }
+  .chat-input-floating {
+    left: calc(200px + (100vw - 200px) / 2) !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(calc(100vw - 200px - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 800px) !important;
+    max-width: min(calc(100vw - 200px - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 800px) !important;
+  }
+  #view-chat .chat-input-floating:focus-within {
+    transform: translateX(-50%) translateY(-1px) !important;
+  }
+}
+
+/* ── Wide Desktop (≥ 1280px) コンテンツ中央寄せ ──────────────── */
+@media (min-width: 1280px) {
+  .view {
+    max-width: 960px;
+  }
+  #neo-cockpit {
+    max-width: 960px;
+  }
+}
+
+/* ── Mobile fit: 入力/UI を画面幅いっぱいに使う ─────────────── */
+@media (max-width: 767px) {
+  #view-dash.view,
+  #view-sites.view,
+  #view-chat.view {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  #view-dash #neo-cockpit {
+    margin: 12px 0 !important;
+    width: 100%;
+    max-width: none;
+    border-radius: 16px;
+  }
+
+  #view-dash #cockpit-timeline-feed,
+  #view-sites .content-area,
+  #view-sites #project-list-container,
+  #view-sites #project-pagination-container {
+    width: 100%;
+    max-width: none;
+  }
+
+  #view-sites .content-area {
+    padding: 0 !important;
+  }
+
+  .chat-input-floating {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(
+      calc(100vw - 20px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
+      800px
+    ) !important;
+    max-width: min(
+      calc(100vw - 20px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
+      800px
+    ) !important;
+    margin: 0 !important;
+  }
+
+  #view-chat .chat-input-floating:focus-within {
+    transform: translateX(-50%) translateY(-1px) !important;
+  }
+
+  #view-chat .content-area,
+  #view-chat .chat-scroll-area {
+    width: 100%;
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Auth gate (#view-auth) — ログイン / サインアップ サイバーパンク浮遊パネル
+   ═══════════════════════════════════════════════════════════════ */
+
+#view-auth:not(.hidden) {
+  display: grid !important;
+}
+
+.auth-panels-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, auto);
+  align-items: start;
+  min-height: 120px;
+}
+
+.auth-panel {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  transition:
+    opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.38s;
+  will-change: opacity, transform;
+}
+
+.auth-panel.auth-panel--hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(14px) scale(0.985);
+  z-index: 0;
+}
+
+.auth-panel:not(.auth-panel--hidden) {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  z-index: 2;
+}
+
+.auth-panel-surface {
+  background: rgba(15, 23, 42, 0.5);
+  padding: 24px;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.auth-floating {
+  border-radius: 12px;
+  border: 1px solid rgba(29, 155, 240, 0.42);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(139, 92, 246, 0.28),
+    0 0 32px rgba(29, 155, 240, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transform: translateY(-2px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.auth-panel--signup .auth-floating {
+  border-color: rgba(139, 92, 246, 0.45);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(139, 92, 246, 0.35),
+    0 0 36px rgba(139, 92, 246, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.auth-link-signup {
+  transition: color 0.2s ease, filter 0.2s ease, text-shadow 0.2s ease;
+}
+
+.auth-link-signup:hover {
+  text-decoration: underline !important;
+  text-shadow: 0 0 12px rgba(29, 155, 240, 0.55);
+}
+
+.auth-link-back {
+  transition: color 0.2s ease;
+}
+
+.auth-link-back:hover {
+  color: var(--accent-neo-blue) !important;
+}
+
+.auth-success-msg {
+  background: rgba(16, 185, 129, 0.12);
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  box-shadow:
+    0 0 24px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-panel {
+    transition: opacity 0.2s ease, visibility 0.2s;
+  }
+  .auth-panel.auth-panel--hidden {
+    transform: none;
+  }
+  .auth-panel:not(.auth-panel--hidden) {
+    transform: none;
+  }
+}

@@ -1,0 +1,207 @@
+/* desk.css */
+
+.desk-container {
+    padding: 24px 16px 80px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.desk-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0 16px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--btn-secondary-border);
+}
+
+.desk-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.desk-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+/* Dropzone */
+.desk-dropzone {
+    border: 2px dashed rgba(29, 155, 240, 0.3);
+    border-radius: 16px;
+    background: rgba(29, 155, 240, 0.04);
+    text-align: center;
+    padding: 40px 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.desk-dropzone:hover, .desk-dropzone.dragover {
+    border-color: rgba(29, 155, 240, 0.8);
+    background: rgba(29, 155, 240, 0.08);
+    transform: translateY(-2px);
+}
+
+.desk-dropzone-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--accent-neo-blue, #1d9bf0);
+    opacity: 0.8;
+}
+
+.desk-dropzone-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.desk-dropzone-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* Action Bar */
+.desk-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.desk-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.desk-btn-primary {
+    background: var(--accent-neo-blue, #1d9bf0);
+    color: white;
+    box-shadow: 0 4px 12px rgba(29, 155, 240, 0.25);
+}
+
+.desk-btn-primary:active {
+    transform: scale(0.98);
+}
+
+.desk-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.desk-btn-secondary {
+    background: var(--btn-secondary-bg);
+    color: var(--text-main);
+    border: 1px solid var(--btn-secondary-border);
+}
+
+/* Processing State */
+.desk-processing {
+    background: rgba(29, 155, 240, 0.1);
+    color: var(--accent-neo-blue);
+    padding: 24px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-weight: 700;
+    animation: deskPulse 1.5s infinite;
+}
+
+@keyframes deskPulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+/* Preview Table */
+.desk-table-container {
+    background: var(--btn-secondary-bg);
+    border: 1px solid var(--btn-secondary-border);
+    border-radius: 16px;
+    overflow-x: auto;
+    margin-bottom: 24px;
+}
+
+.desk-table {
+    width: 100%;
+    min-width: 600px;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.desk-table th {
+    background: rgba(0, 0, 0, 0.04);
+    text-align: left;
+    padding: 12px 16px;
+    color: var(--text-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--btn-secondary-border);
+    white-space: nowrap;
+}
+
+.desk-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--btn-secondary-border);
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+.desk-table tr:last-child td {
+    border-bottom: none;
+}
+
+.desk-table input, .desk-table select {
+    width: 100%;
+    background: var(--bg-color);
+    border: 1px solid var(--btn-secondary-border);
+    color: var(--text-main);
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.desk-table input:focus, .desk-table select:focus {
+    border-color: var(--accent-neo-blue);
+}
+
+.desk-table-row-error {
+    background: rgba(248, 113, 113, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .desk-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .desk-actions {
+        flex-direction: column;
+    }
+}

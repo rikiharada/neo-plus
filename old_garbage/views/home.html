@@ -1,0 +1,113 @@
+<div id="view-dash" class="view hidden" data-view-key="home" data-view-instance-key="home" style="background-color: var(--bg-color); display: flex; flex-direction: column; height: 100%; min-height: 100vh;">
+    <!-- Global header injected by app.js -> lib/components.js -->
+    <!-- Timeline Content Area — padding-bottom reserves space for the global fixed cockpit -->
+    <div class="dash-scroll-area">
+        <!-- 初回アクセス or その日の初回ホーム表示: Neo 立ち絵風 + 大きな吹き出し -->
+        <div id="neo-cockpit-welcome" class="neo-cockpit-welcome hidden" role="region" aria-label="Neoからのメッセージ" aria-hidden="true">
+            <div class="neo-cockpit-welcome-inner">
+                <div class="neo-cockpit-welcome-art" aria-hidden="true">
+                    <img src="img/neo_avatar.jpg" alt="" class="neo-cockpit-standee"
+                        width="112" height="168"
+                        onerror="this.style.display='none'">
+                </div>
+                <div class="neo-cockpit-welcome-bubble-wrap">
+                    <button type="button" class="neo-cockpit-welcome-dismiss" id="neo-cockpit-welcome-dismiss" aria-label="メッセージを閉じる">×</button>
+                    <p class="neo-cockpit-welcome-msg" id="neo-cockpit-welcome-msg">今すぐ入力してみて！</p>
+                    <p class="neo-cockpit-welcome-sub">下のコックピットに話しかけるだけで、経費やプロジェクトを記録できます。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- COCKPIT REPLACED TREND GRAPH -->
+        <div id="neo-cockpit" style="
+            display: block;
+            position: relative;
+            margin: 16px;
+            border-radius: 20px;
+            background: var(--chat-input-bg, rgba(24, 24, 28, 0.82));
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05),
+                        0 1px 0 rgba(255,255,255,0.05) inset, 0 0 0 1px rgba(255,255,255,0.05);
+            transition: box-shadow 0.25s ease, transform 0.25s ease;
+            overflow: hidden;">
+
+            <!-- Trinity Auto-Input Preview -->
+            <div id="trinity-preview"
+                style="display: flex; flex-wrap: wrap; gap: 5px; padding: 10px 16px 6px 16px; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; align-items: center; max-width: 100%;">
+                <span style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.1em; flex-shrink: 0;">DETECTED:</span>
+                <span class="badge" style="background: rgba(29,155,240,0.12); color: #1D9BF0; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: inline-flex; align-items: center; gap: 3px; max-width: 180px;"><i data-lucide="tag" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-title" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</span></span>
+                <span class="badge" id="preview-loc-badge" style="background: rgba(248,113,113,0.12); color: #f87171; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="map-pin" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-loc">-</span></span>
+                <span class="badge" id="preview-date-badge" style="background: rgba(52,211,153,0.12); color: #34d399; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="calendar" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-date">-</span></span>
+                <span class="badge" id="preview-cat-badge" style="background: rgba(251,191,36,0.12); color: #f59e0b; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="layers" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-cat">-</span></span>
+                <span class="badge" id="preview-amount-badge" style="background: rgba(16,185,129,0.12); color: #10b981; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px; font-weight: 700;"><i data-lucide="coins" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-amount">-</span></span>
+                <span class="badge" id="preview-entity-badge" style="background: rgba(139,92,246,0.12); color: #8b5cf6; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="user" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-entity">-</span></span>
+                <span class="badge" id="preview-revenue-badge" style="background: rgba(251,146,60,0.12); color: #fb923c; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px; font-weight: 700;"><i data-lucide="trending-up" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-revenue">売上</span></span>
+                <span class="badge" id="preview-doc-badge" style="background: rgba(6,182,212,0.12); color: #06b6d4; font-size: 11px; padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 3px;"><i data-lucide="file-text" style="width: 10px; height: 10px; flex-shrink: 0;"></i><span id="preview-doc">-</span></span>
+            </div>
+
+            <!-- BRAND TAGLINE -->
+            <div style="text-align: center; margin-top: 8px; margin-bottom: -4px;">
+                <span style="font-size: 11px; font-weight: 600; color: var(--accent-neo-blue); letter-spacing: 0.05em; opacity: 0.9;">確かなマネーマネジメントを、あなたと共に。</span>
+            </div>
+
+            <!-- 入力欄の左にマイク（SpeechRecognition / タップで開始・停止） -->
+            <div class="cockpit-input-row">
+                <button type="button" id="btn-voice" data-testid="dash-btn-voice" class="btn-cockpit-mic btn-mic" title="音声入力"
+                    aria-label="音声入力">
+                    <i data-lucide="mic" style="width: 20px; height: 20px;"></i>
+                </button>
+                <textarea id="main-instruction-input" data-testid="dash-main-input" class="form-control cockpit-instruction-textarea"
+                    placeholder="今日はどのプロジェクトを進めますか？"
+                    rows="2"></textarea>
+            </div>
+
+            <!-- Action Chips -->
+            <div id="cockpit-action-chips"
+                style="display: flex; gap: 6px; overflow-x: auto; padding: 0 12px 10px 12px; white-space: nowrap; scrollbar-width: none;">
+                <style>
+                    #cockpit-action-chips::-webkit-scrollbar { display: none; }
+                    .cockpit-chip { background: var(--btn-secondary-bg); border: 1px solid var(--btn-secondary-border); color: var(--text-muted); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+                    .cockpit-chip:hover { background: var(--btn-primary-border); color: var(--text-main); }
+                </style>
+                <button class="cockpit-chip" onclick="document.getElementById('main-instruction-input').value='前回の内容をコピーして';">前回の内容をコピー</button>
+                <button class="cockpit-chip" onclick="document.getElementById('main-instruction-input').value='源泉税を計算して';">源泉税を計算</button>
+                <button class="cockpit-chip" onclick="document.getElementById('main-instruction-input').value='端数を切り捨てて';">端数を切り捨て</button>
+            </div>
+
+            <!-- Divider -->
+            <div style="height: 1px; background: var(--btn-secondary-border); margin: 0 12px;"></div>
+
+            <div id="cockpit-tools"
+                style="display: grid; grid-auto-flow: column; justify-content: space-between; align-items: center; padding: 8px 12px; width: 100%; box-sizing: border-box;">
+                <!-- Hidden OCR Input -->
+                <input type="file" id="ocr-upload" accept="image/*" style="display: none;">
+                <!-- [📷] カメラ -->
+                <button id="btn-camera" data-testid="dash-btn-camera" title="レシート読込 (OCR)"
+                    style="background: transparent; color: var(--text-muted); border: none; border-radius: 50%; min-width: 40px; min-height: 40px; padding: 8px; display: grid; place-items: center; cursor: pointer; transition: color 0.2s;"
+                    onmouseover="this.style.color='var(--text-main)';" onmouseout="this.style.color='var(--text-muted)';">
+                    <i data-lucide="camera" style="width: 19px; height: 19px;"></i>
+                </button>
+                <div style="display: grid; grid-auto-flow: column; align-items: center; gap: 4px;">
+                    <!-- [✈︎] 送信 -->
+                    <button id="btn-send" data-testid="dash-btn-send" title="送信"
+                        style="background: var(--accent-neo-blue); color: white; border: none; border-radius: 50%; min-width: 40px; min-height: 40px; display: grid; place-items: center; cursor: pointer; box-shadow: 0 3px 10px rgba(29, 155, 240, 0.40); transition: transform 0.15s, box-shadow 0.15s;"
+                        onmouseover="this.style.transform='scale(1.07)'; this.style.boxShadow='0 5px 16px rgba(29,155,240,0.5)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 3px 10px rgba(29,155,240,0.40)';">
+                        <i data-lucide="send" style="width: 17px; height: 17px; stroke-width: 2.5px;"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction Feed — populated by window.renderCockpitFeed() in home.js -->
+        <div id="cockpit-timeline-feed" style="display: flex; flex-direction: column;"></div>
+
+        <!-- GLOBAL FOOTER -->
+        <div style="padding: 40px 16px 80px 16px; text-align: center; opacity: 0.5;">
+            <p style="font-size: 11px; color: var(--text-muted); margin: 0; letter-spacing: 0.05em; font-weight: 500;">確かなマネーマネジメントを、あなたと共に。</p>
+            <p style="font-size: 10px; color: var(--text-muted); margin: 6px 0 0 0;">&copy; Neo+ AI Business System</p>
+        </div>
+    </div>
+    <!-- #neo-cockpit is a global fixed element defined in index.html.
+         It is shown/hidden by switchView() and is never a child of this view. -->
+</div>

@@ -10,13 +10,12 @@
  */
 
 import { createBrowserClient } from '@supabase/ssr';
-import type { Database }       from './types';
 import { REALTIME_SOCKET_TIMEOUT_MS } from './realtime-config';
 import { getSupabasePublicAnonKey, getSupabasePublicUrl } from './public-env';
 
 // ─── シングルトン保持 ─────────────────────────────────────────────
 
-let _client: ReturnType<typeof createBrowserClient<Database>> | null = null;
+let _client: ReturnType<typeof createBrowserClient> | null = null;
 
 /**
  * ブラウザ用 Supabase クライアント（シングルトン）。
@@ -39,7 +38,7 @@ let _client: ReturnType<typeof createBrowserClient<Database>> | null = null;
  */
 export const getSupabaseBrowserClient = () => {
   if (!_client) {
-    _client = createBrowserClient<Database>(
+    _client = createBrowserClient(
       getSupabasePublicUrl(),
       getSupabasePublicAnonKey(),
       {

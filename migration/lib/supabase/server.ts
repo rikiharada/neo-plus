@@ -21,7 +21,6 @@ import { cookies }              from 'next/headers';
 import { redirect }             from 'next/navigation';
 import type { NextRequest }     from 'next/server';
 import type { NextResponse }    from 'next/server';
-import type { Database }        from './types';
 import type { User }            from '@supabase/supabase-js';
 import { getSupabasePublicAnonKey, getSupabasePublicUrl } from './public-env';
 
@@ -64,7 +63,7 @@ export const createServerComponentClient = async () => {
     throw e;
   }
 
-  return createServerClient<Database>(
+  return createServerClient(
     getSupabasePublicUrl(),
     getSupabasePublicAnonKey(),
     {
@@ -108,17 +107,25 @@ export const createServerActionClient = async () => {
     throw e;
   }
 
-  return createServerClient<Database>(
+  return createServerClient(
     getSupabasePublicUrl(),
     getSupabasePublicAnonKey(),
     {
       cookies: {
         getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
+        setAll: (
+          cookiesToSet: ReadonlyArray<{
+            name:     string;
+            value:    string;
+            options?: Record<string, unknown>;
+          }>,
+        ) => {
           // Server Actions では cookies().set() が使える
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+              cookieStore.set(name, value, options as Parameters<
+                typeof cookieStore.set
+              >[2]),
             );
           } catch {
             // Middleware が refresh を担うためここでの失敗は許容
@@ -144,15 +151,25 @@ export const createRouteHandlerClient = (
   request: NextRequest,
   response: NextResponse,
 ) => {
-  return createServerClient<Database>(
+  return createServerClient(
     getSupabasePublicUrl(),
     getSupabasePublicAnonKey(),
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
-        setAll: (cookiesToSet) => {
+        setAll: (
+          cookiesToSet: ReadonlyArray<{
+            name:     string;
+            value:    string;
+            options?: Record<string, unknown>;
+          }>,
+        ) => {
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
+            response.cookies.set(
+              name,
+              value,
+              options as Parameters<typeof response.cookies.set>[2],
+            ),
           );
         },
       },
