@@ -1,10 +1,12 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /** リポジトリ直下に別 lockfile があるとき、トレースのルートをこのアプリに固定（Vercel / ローカル警告対策） */
+  outputFileTracingRoot: path.join(__dirname),
   env: {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   },
-  // 既存の他の設定はここに追加できます
-  // 例: typescript: { ignoreBuildErrors: true },
 };
 
 module.exports = nextConfig;
