@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { fetchActivities } from '@/features/activities/actions';
 import { fetchProjectById } from '@/features/projects/actions';
+import { isNextRedirectError } from '@/lib/supabase/server';
 import {
   formatProjectYen,
   projectTagToneIndex,
@@ -41,10 +42,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProjectDetailPage({ params }: PageProps) {
   const { id } = await params;
   if (!isValidUuidString(id)) redirect('/projects');
-  const project = await fetchProjectById(id);
+
+  let project: Awaited<ReturnType<typeof fetchProjectById>>;
+  try {
+    project = await fetchProjectById(id);
+  } catch (err) {
+    if (isNextRedirectError(err)) throw err;
+    console.error('[projects/[id]/page] fetchProjectById error:', err);
+    notFound();
+  }
   if (!project) notFound();
 
-  const activities = await fetchActivities({ projectId: id, limit: 100 });
+  let activities: Awaited<ReturnType<typeof fetchActivities>> = [];
+  try {
+    activities = await fetchActivities({ projectId: id, limit: 100 });
+  } catch (err) {
+    if (isNextRedirectError(err)) throw err;
+    console.error('[projects/[id]/page] fetchActivities error:', err);
+  }
   const tone = projectTagToneIndex(project.category || project.name || '—');
   const statusJa =
     project.status === 'active'

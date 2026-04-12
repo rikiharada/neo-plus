@@ -6,6 +6,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { fetchProjects } from '@/features/projects/actions';
 import {
+  isNextRedirectError,
+} from '@/lib/supabase/server';
+import {
   formatProjectYen,
   hrefForProjectRow,
   projectTagToneIndex,
@@ -19,7 +22,13 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function ProjectsIndexPage() {
-  const projects = await fetchProjects();
+  let projects: ProjectRow[] = [];
+  try {
+    projects = await fetchProjects();
+  } catch (err) {
+    if (isNextRedirectError(err)) throw err;
+    console.error('[projects/page] fetchProjects error:', err);
+  }
 
   return (
     <div className="neo-home-dashboard cockpit-page projects-page">
