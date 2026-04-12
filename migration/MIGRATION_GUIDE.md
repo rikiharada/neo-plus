@@ -1300,3 +1300,20 @@ Agentic Loop を区切ったあとの **全体最終調整**では、次を順�
 - **ハイエンド / 安全**: 記帳は **承認後**、Drive は **OAuth・トークン更新・RLS**（§7）。チャットは **Soul 必須**（§8-4）。  
 
 **この段階のゴール**: 「生きる自律型 AI 会計エージェント」として、**チャット・Drive・Soul が一本の体験**に感じられること。Agentic は §8-8 で完成、本節は **全体の仕上げとベータのための作業台**とする。
+
+---
+
+## activities `id_uuid` 二重運用（Next.js / Supabase）
+
+**DB 前提**
+
+- `activities.id` … int4（serial）を移行完了まで残す。
+- `activities.id_uuid` … `uuid NOT NULL`、既存行はバックフィル済み。
+
+**アプリ側ルール**
+
+- `lib/supabase/types.ts` の `ActivityRow`: `id` は `number`（レガシー）、`id_uuid` は標準の `string`。`activityCanonicalId()` で list の key 用 ID を取得。
+- `features/activities/actions.ts`: INSERT は `id` / `id_uuid` を送らない。返却・更新・削除は `id_uuid` を使用。
+- **TODO（DB で int4 `id` 削除後）**: 型とクエリを最終スキーマに一本化する。
+
+**主な変更ファイル**: `lib/supabase/types.ts`, `features/activities/actions.ts`, `ActivityFeed.tsx`, `projects/[id]/page.tsx`, `features/activities/soul-pipe.ts`（型）。

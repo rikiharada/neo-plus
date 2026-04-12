@@ -13,6 +13,7 @@ chat_input_test*.png
 
 # System and Build files
 .DS_Store
+.next/
 dist/
 build/
 .env

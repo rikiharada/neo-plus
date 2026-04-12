@@ -1,0 +1,33 @@
+-- =============================================================================
+-- projects.id_uuid — DB 側の最終ガード（PostgreSQL / Supabase）
+-- =============================================================================
+-- アプリ（insertProject）は `id` / `id_uuid` を送らない想定。DB が必ず埋める。
+-- `migrate-projects-add-id-uuid.sql` 実行後、必要なら以下を有効化。
+-- =============================================================================
+
+-- (A) DEFAULT（マイグレーションで既に SET 済みなら不要なこともある）
+-- ALTER TABLE public.projects
+--   ALTER COLUMN id_uuid SET DEFAULT gen_random_uuid();
+
+-- (B) NOT NULL（マイグレーションで既に SET 済みなら不要なこともある）
+-- ALTER TABLE public.projects
+--   ALTER COLUMN id_uuid SET NOT NULL;
+
+-- (C) 任意: BEFORE INSERT で DEFAULT を迂回されても id_uuid を埋める
+-- CREATE OR REPLACE FUNCTION public.projects_ensure_id_uuid()
+-- RETURNS trigger
+-- LANGUAGE plpgsql
+-- AS $$
+-- BEGIN
+--   IF NEW.id_uuid IS NULL THEN
+--     NEW.id_uuid := gen_random_uuid();
+--   END IF;
+--   RETURN NEW;
+-- END;
+-- $$;
+--
+-- DROP TRIGGER IF EXISTS projects_ensure_id_uuid_before_insert ON public.projects;
+-- CREATE TRIGGER projects_ensure_id_uuid_before_insert
+--   BEFORE INSERT ON public.projects
+--   FOR EACH ROW
+--   EXECUTE FUNCTION public.projects_ensure_id_uuid();

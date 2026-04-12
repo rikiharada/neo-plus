@@ -1,0 +1,34 @@
+-- =============================================================================
+-- activities.id_uuid — recommended DB guard (PostgreSQL / Supabase)
+-- =============================================================================
+-- Application code (insertActivity) must NOT send id or id_uuid; DB must fill.
+-- Verify on staging before production. Assumes column id_uuid exists and is backfilled.
+-- See features/activities/actions.ts file header for the paired app-side guards.
+-- =============================================================================
+
+-- (A) DEFAULT so new rows always get a UUID when the client omits id_uuid
+-- ALTER TABLE public.activities
+--   ALTER COLUMN id_uuid SET DEFAULT gen_random_uuid();
+
+-- (B) NOT NULL so NULL rows cannot exist
+-- ALTER TABLE public.activities
+--   ALTER COLUMN id_uuid SET NOT NULL;
+
+-- (C) Optional BEFORE INSERT trigger: fills id_uuid even if DEFAULT is bypassed
+-- CREATE OR REPLACE FUNCTION public.activities_ensure_id_uuid()
+-- RETURNS trigger
+-- LANGUAGE plpgsql
+-- AS $$
+-- BEGIN
+--   IF NEW.id_uuid IS NULL THEN
+--     NEW.id_uuid := gen_random_uuid();
+--   END IF;
+--   RETURN NEW;
+-- END;
+-- $$;
+--
+-- DROP TRIGGER IF EXISTS activities_ensure_id_uuid_before_insert ON public.activities;
+-- CREATE TRIGGER activities_ensure_id_uuid_before_insert
+--   BEFORE INSERT ON public.activities
+--   FOR EACH ROW
+--   EXECUTE FUNCTION public.activities_ensure_id_uuid();
